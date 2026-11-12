@@ -1,0 +1,125 @@
+{{define "users"}}
+<section class="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
+  <h2 class="text-xl font-semibold">Local administrators</h2>
+  <ul class="space-y-4">
+    {{range .Users}}
+    <li
+      class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 py-2"
+    >
+      <div>
+        <strong>{{.Username}}</strong> · {{if
+        .Enabled}}Active{{else}}Disabled{{end}}{{if .Founder}} · Initial
+        administrator{{end}}
+      </div>
+      {{if and (not .Founder) (ne .Username $.User)}}
+      <form method="post" action="{{$.Prefix}}/admin/users">
+        <input type="hidden" name="username" value="{{.Username}}" />
+        <input
+          type="hidden"
+          name="operation"
+          value="{{if .Enabled}}disable{{else}}enable{{end}}"
+        />
+        <button
+          class="rounded-lg border border-zinc-700 px-3 py-2 text-sm hover:bg-zinc-800"
+        >
+          {{if .Enabled}}Disable{{else}}Enable{{end}}
+        </button>
+      </form>
+      {{end}}
+    </li>
+    {{end}}
+  </ul>
+</section>
+<section
+  class="max-w-lg space-y-4 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6"
+>
+  <h2 class="text-xl font-semibold">Add administrator</h2>
+  <p class="text-sm text-zinc-400">
+    This user can manage bans and other local administrators.
+  </p>
+  <form method="post" action="{{.Prefix}}/admin/users" class="grid gap-4">
+    <input type="hidden" name="operation" value="create" />
+    <label class="grid gap-2"
+      >Username<input
+        name="username"
+        required
+        maxlength="64"
+        autocomplete="off"
+        class="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2"
+    /></label>
+    <label class="grid gap-2"
+      >Initial password (12–72 bytes)<input
+        type="password"
+        name="password"
+        required
+        minlength="12"
+        maxlength="72"
+        autocomplete="new-password"
+        class="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2"
+    /></label>
+    <button
+      class="rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-zinc-950"
+    >
+      Create administrator
+    </button>
+  </form>
+</section>
+{{if ne .Mode "local"}}
+<section class="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
+  <h2 class="text-xl font-semibold">
+    {{if eq .Mode "oidc"}}OIDC identities{{else}}Trusted proxy identities{{end}}
+  </h2>
+  {{range .Links}}
+  <form
+    method="post"
+    action="{{$.Prefix}}/admin/users"
+    class="flex flex-wrap items-center gap-3"
+  >
+    <strong>{{.Username}}</strong> · {{.Subject}}
+    <input type="hidden" name="username" value="{{.Username}}" /><input
+      type="hidden"
+      name="subject"
+      value="{{.Subject}}"
+    />
+    <button
+      name="operation"
+      value="unlink"
+      class="rounded-lg border border-zinc-700 px-3 py-2"
+    >
+      Unlink
+    </button>
+  </form>
+  {{end}}
+  <h3 class="font-semibold">Pending sign-ins</h3>
+  {{range .Pending}}
+  <form
+    method="post"
+    action="{{$.Prefix}}/admin/users"
+    class="grid max-w-lg gap-4"
+  >
+    <p>
+      {{if eq $.Mode "oidc"}}Verified OIDC subject{{else}}Verified proxy
+      username{{end}}: <strong>{{.}}</strong>
+    </p>
+    <input type="hidden" name="subject" value="{{.}}" />
+    <label class="grid gap-2"
+      >Local account<select name="username" required class="bg-zinc-950">
+        <option value="">Choose an account</option>
+        {{range $.Users}}{{if .Enabled}}
+        <option>{{.Username}}</option>
+        {{end}}{{end}}
+      </select></label
+    >
+    <button
+      name="operation"
+      value="link"
+      class="rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-zinc-950"
+    >
+      Approve sign-in
+    </button>
+  </form>
+  {{else}}
+  <p>No sign-ins awaiting approval.</p>
+  {{end}}
+</section>
+{{end}} {{end}}

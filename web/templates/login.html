@@ -1,0 +1,56 @@
+{{define "login"}}
+<section
+  class="mx-auto max-w-lg rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8"
+>
+  <div class="mb-7">
+    <img
+      class="mb-5 size-11"
+      src="{{.Prefix}}/static/assets/warden-webui.svg"
+      alt=""
+    />
+    <h2 class="text-xl font-semibold tracking-tight text-zinc-100">
+      Administrator sign in
+    </h2>
+    <p class="mt-2 text-sm leading-6 text-zinc-400">
+      Enter the local administrator credentials created during first-run setup.
+    </p>
+  </div>
+  {{if .Error}}
+  <div
+    role="alert"
+    class="mb-6 flex items-start gap-3 rounded-lg border border-red-900/60 bg-red-950/30 p-4 text-sm text-red-200"
+  >
+    {{template "icon-alert"}}<span>{{.Error}}</span>
+  </div>
+  {{end}}
+  <form method="post" action="{{.Prefix}}/login" class="grid gap-6">
+    <label
+      for="login-username"
+      class="grid gap-2 text-sm font-medium text-zinc-300"
+      >Username<input
+        id="login-username"
+        name="username"
+        required
+        autocomplete="username"
+        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+    /></label>
+    <label
+      for="login-password"
+      class="grid gap-2 text-sm font-medium text-zinc-300"
+      >Password<input
+        id="login-password"
+        name="password"
+        type="password"
+        required
+        autocomplete="current-password"
+        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+    /></label>
+    <button
+      type="submit"
+      class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-500 px-5 py-3 text-sm font-semibold text-zinc-950 transition-all duration-150 hover:bg-cyan-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+    >
+      Sign in {{template "icon-arrow-up"}}
+    </button>
+  </form>
+</section>
+{{end}}

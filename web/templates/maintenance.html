@@ -1,0 +1,141 @@
+{{define "maintenance"}}
+<div
+  class="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 text-sm leading-6 text-zinc-400 sm:p-5"
+>
+  {{template "icon-info"}}
+  <p>
+    Warden schedules maintenance automatically. Trigger a manual operation only
+    when immediate cleanup or optimization is needed. Operations are serialized.
+  </p>
+</div>
+<div class="grid gap-6 lg:grid-cols-2">
+  <section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
+    <div class="flex items-start gap-3">
+      <span
+        class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300"
+        >{{template "icon-clock"}}</span
+      >
+      <div>
+        <h2 class="text-lg font-semibold text-zinc-100">Observation cleanup</h2>
+        <p class="mt-2 text-sm leading-6 text-zinc-400">
+          Remove expired failed-login observations based on the retention rule.
+        </p>
+      </div>
+    </div>
+    <dl class="mt-6 divide-y divide-zinc-800 border-y border-zinc-800 text-sm">
+      <div class="flex flex-wrap items-center justify-between gap-3 py-3">
+        <dt class="text-zinc-400">Interval</dt>
+        <dd class="font-medium text-zinc-200">
+          {{.Maintenance.PruneInterval}}
+        </dd>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-3 py-3">
+        <dt class="text-zinc-400">Status</dt>
+        <dd class="font-medium text-zinc-200">
+          {{if .Maintenance.Prune.Running}}Running{{else}}Idle{{end}}
+        </dd>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-3 py-3">
+        <dt class="text-zinc-400">Last attempt</dt>
+        <dd class="text-right text-zinc-200">
+          {{if .Maintenance.Prune.LastAttemptAt}}{{fmtTime
+          .Maintenance.Prune.LastAttemptAt}}{{else}}Not yet run{{end}}
+        </dd>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-3 py-3">
+        <dt class="text-zinc-400">Last success</dt>
+        <dd class="text-right text-zinc-200">
+          {{if .Maintenance.Prune.LastSuccessAt}}{{fmtTime
+          .Maintenance.Prune.LastSuccessAt}}{{else}}Not yet run{{end}}
+        </dd>
+      </div>
+    </dl>
+    {{if .Maintenance.Prune.LastError}}
+    <div
+      class="mt-4 flex items-start gap-3 rounded-lg border border-red-900/60 bg-red-950/30 p-3 text-sm text-red-200"
+      role="alert"
+    >
+      {{template "icon-alert"}}<span class="min-w-0 break-words"
+        >{{.Maintenance.Prune.LastError}}</span
+      >
+    </div>
+    {{end}}
+    <form method="post" action="{{.Prefix}}/maintenance/prune" class="mt-6">
+      <button
+        type="submit"
+        {{if
+        .Maintenance.Prune.Running}}disabled{{end}}
+        class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-500 px-5 py-3 text-sm font-semibold text-zinc-950 transition-all duration-150 hover:bg-cyan-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {{template "icon-bolt"}}Run cleanup now
+      </button>
+    </form>
+  </section>
+  <section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
+    <div class="flex items-start gap-3">
+      <span
+        class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300"
+        >{{template "icon-database"}}</span
+      >
+      <div>
+        <h2 class="text-lg font-semibold text-zinc-100">SQLite optimize</h2>
+        <p class="mt-2 text-sm leading-6 text-zinc-400">
+          Refresh query-planner statistics without running VACUUM.
+        </p>
+      </div>
+    </div>
+    <dl class="mt-6 divide-y divide-zinc-800 border-y border-zinc-800 text-sm">
+      <div class="flex flex-wrap items-center justify-between gap-3 py-3">
+        <dt class="text-zinc-400">Interval</dt>
+        <dd class="font-medium text-zinc-200">
+          {{.Maintenance.OptimizeInterval}}
+        </dd>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-3 py-3">
+        <dt class="text-zinc-400">Status</dt>
+        <dd class="font-medium text-zinc-200">
+          {{if .Maintenance.Optimize.Running}}Running{{else}}Idle{{end}}
+        </dd>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-3 py-3">
+        <dt class="text-zinc-400">Last attempt</dt>
+        <dd class="text-right text-zinc-200">
+          {{if .Maintenance.Optimize.LastAttemptAt}}{{fmtTime
+          .Maintenance.Optimize.LastAttemptAt}}{{else}}Not yet run{{end}}
+        </dd>
+      </div>
+      <div class="flex flex-wrap items-center justify-between gap-3 py-3">
+        <dt class="text-zinc-400">Last success</dt>
+        <dd class="text-right text-zinc-200">
+          {{if .Maintenance.Optimize.LastSuccessAt}}{{fmtTime
+          .Maintenance.Optimize.LastSuccessAt}}{{else}}Not yet run{{end}}
+        </dd>
+      </div>
+    </dl>
+    {{if .Maintenance.Optimize.LastError}}
+    <div
+      class="mt-4 flex items-start gap-3 rounded-lg border border-red-900/60 bg-red-950/30 p-3 text-sm text-red-200"
+      role="alert"
+    >
+      {{template "icon-alert"}}<span class="min-w-0 break-words"
+        >{{.Maintenance.Optimize.LastError}}</span
+      >
+    </div>
+    {{end}}
+    <form method="post" action="{{.Prefix}}/maintenance/optimize" class="mt-6">
+      <button
+        type="submit"
+        {{if
+        .Maintenance.Optimize.Running}}disabled{{end}}
+        class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-500 px-5 py-3 text-sm font-semibold text-zinc-950 transition-all duration-150 hover:bg-cyan-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {{template "icon-bolt"}}Optimize now
+      </button>
+    </form>
+  </section>
+</div>
+<p class="text-xs leading-6 text-zinc-500">
+  Maintenance never deletes ban decisions, active sources, or delivery
+  acknowledgements.
+</p>
+{{end}}

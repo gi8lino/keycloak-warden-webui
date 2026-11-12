@@ -1,0 +1,70 @@
+{
+  "realm": "warden-test",
+  "enabled": true,
+  "sslRequired": "none",
+  "groups": [
+    {
+      "name": "warden-admins"
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "webui",
+      "secret": "e2e-client-secret",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "redirectUris": ["${WEBUI_CALLBACK}"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "36a15cdc-ed1b-489e-ab8c-198790c9e920",
+      "username": "operator",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "operator",
+      "lastName": "Test",
+      "email": "operator@example.test",
+      "groups": ["warden-admins"],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test-provider-password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "visitor",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "visitor",
+      "lastName": "Test",
+      "email": "visitor@example.test",
+      "groups": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test-provider-password",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+# Alternative 2: WebUI runs separately and reaches Warden over HTTPS.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-warden-webui
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak-warden-webui
+      app.kubernetes.io/component: webui
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: keycloak-warden-webui
+        app.kubernetes.io/component: webui
+        app.kubernetes.io/warden-webui: enabled
+    spec:
+      securityContext:
+        fsGroup: 0
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: warden-webui
+          # Pin a published WebUI release tag or digest before production use.
+          image: ghcr.io/gi8lino/warden-webui:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: keycloak-warden-webui-config
+          env:
+            # Remote Warden URLs must use HTTPS; loopback HTTP is sidecar-only.
+            - name: WARDEN_WEBUI__WARDEN_URL
+              value: https://warden.example.com
+            - name: WARDEN_WEBUI__WARDEN_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-warden-webui
+                  key: warden-admin-token
+            - name: WARDEN_WEBUI__SETUP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-warden-webui
+                  key: setup-token
+          ports:
+            - name: webui-http
+              containerPort: 8092
+              protocol: TCP
+            - name: webui-mgmt
+              containerPort: 8093
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: webui-mgmt
+            periodSeconds: 2
+            timeoutSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: webui-mgmt
+            periodSeconds: 10
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: webui-mgmt
+            periodSeconds: 30
+            timeoutSeconds: 2
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 0
+          volumeMounts:
+            - name: webui-data
+              mountPath: /data
+      volumes:
+        - name: webui-data
+          persistentVolumeClaim:
+            claimName: keycloak-warden-webui-data

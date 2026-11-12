@@ -1,0 +1,167 @@
+{{define "detail"}}
+<a
+  href="{{.Prefix}}/"
+  class="inline-flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-zinc-400 transition-all duration-150 hover:text-zinc-100 focus-visible:outline-2 focus-visible:outline-cyan-400"
+  >{{template "icon-arrow-left"}}Back to active bans</a
+>
+<section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0">
+      <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+        Decision
+      </p>
+      <h2
+        class="mt-2 break-all font-mono text-xl font-semibold text-zinc-100 sm:text-2xl"
+      >
+        {{.Ban.Decision.IP}}
+      </h2>
+      <p class="mt-2 break-all text-xs text-zinc-500">
+        ID: <span class="font-mono text-zinc-400">{{.Ban.Decision.ID}}</span>
+      </p>
+    </div>
+    <span
+      class="rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium capitalize text-zinc-200"
+      >{{.Ban.Decision.State}}</span
+    >
+  </div>
+  <dl class="mt-6 grid gap-4 border-y border-zinc-800 py-5 sm:grid-cols-2">
+    <div>
+      <dt class="text-xs font-medium text-zinc-500">Revision</dt>
+      <dd class="mt-2 font-mono text-sm text-zinc-200">
+        {{.Ban.Decision.Revision}}
+      </dd>
+    </div>
+    <div>
+      <dt class="text-xs font-medium text-zinc-500">Expiry</dt>
+      <dd class="mt-2 text-sm text-zinc-200">
+        {{fmtTime .Ban.Decision.ExpiresAt}}
+      </dd>
+    </div>
+  </dl>
+  {{if eq .Ban.Decision.State "banned"}}
+  <form
+    method="post"
+    action="{{.Prefix}}/bans/{{.Ban.Decision.ID}}/release"
+    class="mt-6"
+  >
+    <button
+      type="submit"
+      class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-900/70 bg-red-950/30 px-5 py-3 text-sm font-semibold text-red-200 transition-all duration-150 hover:bg-red-900/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400 sm:w-auto"
+    >
+      {{template "icon-unlock"}}Release all ban sources
+    </button>
+  </form>
+  {{end}}
+</section>
+<section
+  class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70"
+>
+  <div class="border-b border-zinc-800 p-6 sm:p-8">
+    <h2 class="text-lg font-semibold text-zinc-100">Active sources</h2>
+    <p class="mt-2 text-sm text-zinc-400">
+      The independent reasons behind the current decision.
+    </p>
+  </div>
+  {{if .Ban.Sources}}
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead
+        class="border-b border-zinc-800 bg-zinc-950/40 text-xs font-semibold uppercase tracking-wider text-zinc-500"
+      >
+        <tr>
+          <th class="px-6 py-4">Kind</th>
+          <th class="px-6 py-4">Reason</th>
+          <th class="px-6 py-4">Expires</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-800">
+        {{range .Ban.Sources}}
+        <tr>
+          <td class="px-6 py-4 capitalize text-zinc-200">{{.Kind}}</td>
+          <td class="max-w-96 break-words px-6 py-4 text-zinc-300">
+            {{if .Reason}}{{.Reason}}{{else}}—{{end}}
+          </td>
+          <td class="px-6 py-4 text-zinc-400">{{fmtTime .ExpiresAt}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+  <div class="px-6 py-10 text-center sm:px-8">
+    <p class="text-sm font-medium text-zinc-200">No active sources</p>
+    <p class="mt-2 text-sm text-zinc-400">
+      This decision may already have been released.
+    </p>
+    <a
+      href="{{.Prefix}}/"
+      class="mt-5 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-100 transition-all duration-150 hover:bg-zinc-700"
+      >{{template "icon-arrow-left"}}View active bans</a
+    >
+  </div>
+  {{end}}
+</section>
+<section
+  class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70"
+>
+  <div class="border-b border-zinc-800 p-6 sm:p-8">
+    <h2 class="text-lg font-semibold text-zinc-100">
+      Destination acknowledgements
+    </h2>
+    <p class="mt-2 text-sm text-zinc-400">
+      Compare the most recently acknowledged revision to the desired state.
+    </p>
+  </div>
+  {{if .Ban.Deliveries}}
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead
+        class="border-b border-zinc-800 bg-zinc-950/40 text-xs font-semibold uppercase tracking-wider text-zinc-500"
+      >
+        <tr>
+          <th class="px-6 py-4">Destination</th>
+          <th class="px-6 py-4">Acknowledged</th>
+          <th class="px-6 py-4">Desired</th>
+          <th class="px-6 py-4">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-800">
+        {{range .Ban.Deliveries}}
+        <tr>
+          <td class="break-all px-6 py-4 font-mono text-xs text-zinc-200">
+            {{.Destination}}
+          </td>
+          <td class="px-6 py-4 tabular-nums text-zinc-300">{{.Revision}}</td>
+          <td class="px-6 py-4 tabular-nums text-zinc-300">
+            {{$.Ban.Decision.Revision}}
+          </td>
+          <td class="px-6 py-4">
+            {{if pending .Revision $.Ban.Decision.Revision}}<span
+              class="rounded-full border border-amber-900/70 bg-amber-950/30 px-2.5 py-1 text-xs font-medium text-amber-200"
+              >Pending</span
+            >{{else}}<span
+              class="rounded-full border border-emerald-900/70 bg-emerald-950/30 px-2.5 py-1 text-xs font-medium text-emerald-200"
+              >Acknowledged</span
+            >{{end}}
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+  <div class="px-6 py-10 text-center sm:px-8">
+    <p class="text-sm font-medium text-zinc-200">No acknowledgements yet</p>
+    <p class="mt-2 text-sm text-zinc-400">
+      Delivery results will appear after a configured destination accepts a
+      revision.
+    </p>
+    <a
+      href="{{.Prefix}}/maintenance"
+      class="mt-5 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-100 transition-all duration-150 hover:bg-zinc-700"
+      >{{template "icon-database"}}View maintenance</a
+    >
+  </div>
+  {{end}}
+</section>
+{{end}}

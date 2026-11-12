@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "name": "warden-webui-design",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build:css": "node scripts/build-css.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "tailwindcss": "4.1.10"
+  }
+}

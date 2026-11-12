@@ -1,0 +1,88 @@
+{{define "setup"}}
+<section
+  class="mx-auto max-w-lg rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8"
+>
+  <div class="mb-7">
+    <img
+      class="mb-5 size-11"
+      src="{{.Prefix}}/static/assets/warden-webui.svg"
+      alt=""
+    />
+    <h2 class="text-xl font-semibold tracking-tight text-zinc-100">
+      Create your administrator
+    </h2>
+    <p class="mt-2 text-sm leading-6 text-zinc-400">
+      First-run setup is available only until the initial administrator is
+      created. Provide the setup token from your server configuration.
+    </p>
+  </div>
+  {{if .Error}}
+  <div
+    role="alert"
+    class="mb-6 flex items-start gap-3 rounded-lg border border-red-900/60 bg-red-950/30 p-4 text-sm text-red-200"
+  >
+    {{template "icon-alert"}}<span>{{.Error}}</span>
+  </div>
+  {{end}}
+  <form method="post" action="{{.Prefix}}/setup" class="grid gap-6">
+    <label
+      for="setup-token"
+      class="grid gap-2 text-sm font-medium text-zinc-300"
+      >Setup token<input
+        id="setup-token"
+        name="setupToken"
+        type="password"
+        required
+        autocomplete="off"
+        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+    /></label>
+    <label
+      for="setup-username"
+      class="grid gap-2 text-sm font-medium text-zinc-300"
+      >Username<input
+        id="setup-username"
+        name="username"
+        required
+        maxlength="64"
+        autocomplete="username"
+        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+    /></label>
+
+    <label
+      for="setup-password"
+      class="grid gap-2 text-sm font-medium text-zinc-300"
+      >Password<input
+        id="setup-password"
+        name="password"
+        type="password"
+        minlength="12"
+        maxlength="72"
+        required
+        autocomplete="new-password"
+        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+      /><span class="text-xs font-normal text-zinc-500"
+        >Use at least 12 bytes (maximum 72 bytes).</span
+      ></label
+    >
+    <label
+      for="setup-confirm"
+      class="grid gap-2 text-sm font-medium text-zinc-300"
+      >Confirm password<input
+        id="setup-confirm"
+        name="confirmPassword"
+        type="password"
+        minlength="12"
+        maxlength="72"
+        required
+        autocomplete="new-password"
+        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+    /></label>
+    <button
+      type="submit"
+      class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-500 px-5 py-3 text-sm font-semibold text-zinc-950 transition-all duration-150 hover:bg-cyan-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+    >
+      {{template "icon-plus"}}Create administrator
+    </button>
+  </form>
+</section>
+{{end}}

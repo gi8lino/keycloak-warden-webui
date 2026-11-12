@@ -1,0 +1,20 @@
+site_name = "Warden Web UI"
+site_url = "https://gi8lino.github.io/warden-webui/"
+source_dir = "docs/content"
+output_dir = "docs/site"
+language = "en"
+navigation_style = "sidebar"
+navigation_density = "compact"
+sidebar_width = 300
+footer = "Warden Web UI · Documentation built with Kumbuka"
+
+assets_dir = "assets"
+logo = "assets/warden-webui.svg"
+favicon = "assets/favicon.png"
+
+[[external_links]]
+label = "Repository"
+url = "https://github.com/gi8lino/warden-webui"
+icon = "github-simple"
+description = "GitHub"
+hover_text = "{{label}} | {{description}}"

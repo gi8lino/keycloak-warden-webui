@@ -1,0 +1,24 @@
+package middleware
+
+import (
+	"fmt"
+	"log/slog"
+	"net/http"
+
+	httpkitmiddleware "github.com/containeroo/httpkit/middleware"
+	httpkitresponse "github.com/containeroo/httpkit/response"
+	httpresponse "github.com/gi8lino/warden-webui/internal/http/response"
+)
+
+// RecoverPanics converts handler panics into logged internal server errors.
+func RecoverPanics(logger *slog.Logger) httpkitmiddleware.Middleware {
+	return httpkitmiddleware.RecoverPanics(
+		func(w http.ResponseWriter, _ *http.Request, recovered any) {
+			httpresponse.InternalServerError(logger.With("operation", "request_panic"), w, fmt.Errorf("request panic: %v", recovered))
+		},
+		func(w http.ResponseWriter) bool {
+			response, ok := w.(*httpkitresponse.RequestWriter)
+			return ok && response.Status != 0
+		},
+	)
+}

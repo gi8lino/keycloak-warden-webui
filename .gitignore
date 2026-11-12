@@ -1,0 +1,19 @@
+/build/
+/coverage.out
+/.env
+
+# Local Web UI authentication store
+*.db
+*.db-shm
+*.db-wal
+
+# Local Tailwind build dependencies.
+/node_modules/
+
+# Cached binaries and Make modules from gi8lino/dev-tools.
+/bin/.dev-tools/
+/bin/.golangci-lint/
+
+# Generated documentation and pinned CLI cache.
+/docs/site/
+/bin/.kumbuka/

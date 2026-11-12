@@ -1,0 +1,6 @@
+# Verify outbound Warden webhooks using the fixed demo API key.
+max-body-bytes: 65536
+header:
+  enabled: true
+  name: X-API-Key
+  value-env: WEBHOOK_API_KEY
