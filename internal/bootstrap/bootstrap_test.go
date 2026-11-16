@@ -92,7 +92,7 @@ func TestNewInfrastructureHTTPPolicy(t *testing.T) {
 			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
 			"--warden-url=http://keycloak-warden.keycloak.svc.cluster.local:8080",
 			"--warden-admin-token=private-token",
-			"--allow-insecure-warden-http",
+			"--allow-insecure-warden-http=true",
 		}, "test")
 		require.NoError(t, err)
 
@@ -110,7 +110,7 @@ func TestNewInfrastructureHTTPPolicy(t *testing.T) {
 			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
 			"--warden-url=ftp://keycloak-warden.keycloak.svc.cluster.local:8080",
 			"--warden-admin-token=private-token",
-			"--allow-insecure-warden-http",
+			"--allow-insecure-warden-http=true",
 		}, "test")
 		require.NoError(t, err)
 

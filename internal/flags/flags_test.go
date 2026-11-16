@@ -54,7 +54,7 @@ func TestParse(t *testing.T) {
 	t.Run("enables non-loopback HTTP explicitly", func(t *testing.T) {
 		t.Parallel()
 
-		cfg, err := Parse([]string{"--allow-insecure-warden-http"}, "dev")
+		cfg, err := Parse([]string{"--allow-insecure-warden-http=true"}, "dev")
 
 		require.NoError(t, err)
 		assert.True(t, cfg.AllowInsecureWardenHTTP)
@@ -67,6 +67,14 @@ func TestParse(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.False(t, cfg.AllowInsecureWardenHTTP)
+	})
+
+	t.Run("requires an explicit value for non-loopback HTTP", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := Parse([]string{"--allow-insecure-warden-http"}, "dev")
+
+		require.ErrorContains(t, err, "missing value")
 	})
 
 	t.Run("no subcommands", func(t *testing.T) {

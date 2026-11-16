@@ -34,7 +34,7 @@ WARDEN_WEBUI__WARDEN_URL=http://keycloak-warden.keycloak.svc.cluster.local:8080
 WARDEN_WEBUI__ALLOW_INSECURE_WARDEN_HTTP=true
 ```
 
-The equivalent CLI flag is `--allow-insecure-warden-http`. It defaults to `false`. Enable it only when necessary: the Warden administrator bearer token travels unencrypted over the connection. Apply a restrictive Cilium network policy between WebUI and Warden; the option does not disable TLS verification for HTTPS URLs.
+The equivalent CLI flag is `--allow-insecure-warden-http=true` (or `=false` to disable it). Its default is `false`, and the CLI requires an explicit boolean value. Enable it only when necessary: the Warden administrator bearer token travels unencrypted over the connection. Apply a restrictive Cilium network policy between WebUI and Warden; the option does not disable TLS verification for HTTPS URLs.
 
 Warden's `--route-prefix` may be part of the upstream URL. The Web UI's application prefix is separate:
 

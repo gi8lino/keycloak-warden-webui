@@ -119,8 +119,8 @@ func registerWardenFlags(tf *tinyflags.FlagSet, cfg *Config) {
 	// Allow HTTP to a remote Warden Service only when explicitly requested.
 	tf.BoolVar(&cfg.AllowInsecureWardenHTTP, "allow-insecure-warden-http", false,
 		"Allow unencrypted HTTP to a non-loopback Warden URL (admin token is sent in cleartext)").
-		Strict().
 		Section(sectionWarden).
+		Strict().
 		Value()
 }
 
