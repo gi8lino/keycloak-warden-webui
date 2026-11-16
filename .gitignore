@@ -2,6 +2,7 @@
 /dist/
 /coverage.out
 /.env
+.DS_Store
 
 # Local Web UI authentication store
 *.db
@@ -14,7 +15,13 @@
 # Cached binaries and Make modules from gi8lino/dev-tools.
 /bin/.dev-tools/
 /bin/.golangci-lint/
+# Local development port assignments
+/.dev-ports.json
+/.dev-ports.json.lock
 
 # Generated documentation and pinned CLI cache.
 /docs/site/
 /bin/.kumbuka/
+plugins/*.kumbukaplugin
+plugins/.downloaded
+
