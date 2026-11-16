@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	appkitauth "github.com/containeroo/appkit/auth"
 	appkitconfig "github.com/containeroo/appkit/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -338,4 +339,166 @@ func TestAdministratorDirectory(t *testing.T) {
 	app.ServeHTTP(page, request)
 	assert.Equal(t, "/ui/login", page.Header().Get("Location"))
 	require.Equal(t, http.StatusSeeOther, postAccountForm(t, app, "/ui/login", login, nil).Code)
+}
+
+// freshExternalHandlers builds an uninitialized Web UI in proxy or OIDC mode.
+func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string) http.Handler {
+	t.Helper()
+
+	store, err := db.Open(t.Context(), filepath.Join(t.TempDir(), "webui.db"))
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, store.Close()) })
+
+	cfg := flags.Config{
+		Server: appkitconfig.Server{
+			PublicURL:   "http://127.0.0.1:8092" + prefix,
+			RoutePrefix: prefix,
+		},
+		Authentication: appkitconfig.Authentication{
+			ModeOverride: &mode,
+			LocalLogin:   mode == appkitauth.ModeOIDC,
+		},
+		AdminGroup:   "warden-admins",
+		SetupSubject: "operator",
+		SetupToken:   bootstrapSecret,
+	}
+	if mode == appkitauth.ModeProxy {
+		cfg.Proxy.TrustedCIDRs = []string{"127.0.0.1/32"}
+	}
+	if mode == appkitauth.ModeOIDC {
+		// Allow local recovery to avoid OIDC network discovery in this route test.
+		cfg.OIDC.Issuer = "https://identity.example/realms/test"
+	}
+
+	identity, err := auth.New(t.Context(), cfg, store)
+	require.NoError(t, err)
+
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	pages, err := endpoint.NewPages(web.Assets, prefix, identity.Mode(), logger, store, "")
+	require.NoError(t, err)
+	static, err := fs.Sub(web.Assets, "static")
+	require.NoError(t, err)
+
+	handlers := New(Config{
+		InfrastructureConfig: InfrastructureConfig{
+			RoutePrefix: prefix,
+			PublicURL:   cfg.Server.PublicURL,
+			Static:      static,
+			Pages:       pages,
+			Logger:      logger,
+		},
+		AuthenticationConfig: AuthenticationConfig{Identity: identity},
+		ApplicationConfig:    ApplicationConfig{Warden: &fakeAPI{}},
+	})
+	return handlers.Application
+}
+
+func TestExternalFirstRunSetup(t *testing.T) {
+	t.Parallel()
+
+	t.Run("proxy redirects to setup before rejecting an unmapped administrator", func(t *testing.T) {
+		t.Parallel()
+
+		app := freshExternalHandlers(t, appkitauth.ModeProxy, "")
+		request := authenticatedRequest(http.MethodGet, "/", "")
+		request.Header.Set("X-Forwarded-Groups", "other-group")
+		response := httptest.NewRecorder()
+
+		app.ServeHTTP(response, request)
+
+		assert.Equal(t, http.StatusSeeOther, response.Code)
+		assert.Equal(t, "/setup", response.Header().Get("Location"))
+		assert.Empty(t, response.Result().Cookies())
+
+		setup := httptest.NewRecorder()
+		app.ServeHTTP(setup, httptest.NewRequest(http.MethodGet, "/setup", nil))
+		assert.Equal(t, http.StatusOK, setup.Code)
+	})
+
+	t.Run("other protected routes still require proxy authorization", func(t *testing.T) {
+		t.Parallel()
+
+		app := freshExternalHandlers(t, appkitauth.ModeProxy, "")
+		request := authenticatedRequest(http.MethodGet, "/bans/one", "")
+		request.Header.Set("X-Forwarded-Groups", "other-group")
+		response := httptest.NewRecorder()
+
+		app.ServeHTTP(response, request)
+
+		assert.Equal(t, http.StatusForbidden, response.Code)
+	})
+
+	t.Run("proxy redirect respects the application prefix", func(t *testing.T) {
+		t.Parallel()
+
+		app := freshExternalHandlers(t, appkitauth.ModeProxy, "/ui")
+		response := httptest.NewRecorder()
+
+		app.ServeHTTP(response, authenticatedRequest(http.MethodGet, "/ui/", ""))
+
+		assert.Equal(t, http.StatusSeeOther, response.Code)
+		assert.Equal(t, "/ui/setup", response.Header().Get("Location"))
+	})
+
+	t.Run("proxy requires an approved identity after setup", func(t *testing.T) {
+		t.Parallel()
+
+		app := freshExternalHandlers(t, appkitauth.ModeProxy, "")
+		setup := httptest.NewRecorder()
+		app.ServeHTTP(setup, localForm("/setup", url.Values{
+			"setupToken":      {bootstrapSecret},
+			"username":        {"owner"},
+			"password":        {"correct-password"},
+			"confirmPassword": {"correct-password"},
+		}))
+		require.Equal(t, http.StatusSeeOther, setup.Code)
+		assert.Empty(t, setup.Result().Cookies())
+
+		approved := httptest.NewRecorder()
+		app.ServeHTTP(approved, authenticatedRequest(http.MethodGet, "/", ""))
+		assert.Equal(t, http.StatusOK, approved.Code)
+
+		unapproved := authenticatedRequest(http.MethodGet, "/", "")
+		unapproved.Header.Set("X-Forwarded-Groups", "other-group")
+		response := httptest.NewRecorder()
+		app.ServeHTTP(response, unapproved)
+		assert.Equal(t, http.StatusForbidden, response.Code)
+
+		completed := httptest.NewRecorder()
+		app.ServeHTTP(completed, httptest.NewRequest(http.MethodGet, "/setup", nil))
+		assert.Equal(t, http.StatusNotFound, completed.Code)
+	})
+
+	t.Run("OIDC redirects to setup before starting the sign-in flow", func(t *testing.T) {
+		t.Parallel()
+
+		app := freshExternalHandlers(t, appkitauth.ModeOIDC, "")
+		response := httptest.NewRecorder()
+
+		app.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/", nil))
+
+		assert.Equal(t, http.StatusSeeOther, response.Code)
+		assert.Equal(t, "/setup", response.Header().Get("Location"))
+	})
+
+	t.Run("OIDC keeps authentication after initial setup", func(t *testing.T) {
+		t.Parallel()
+
+		app := freshExternalHandlers(t, appkitauth.ModeOIDC, "")
+		setup := httptest.NewRecorder()
+		app.ServeHTTP(setup, localForm("/setup", url.Values{
+			"setupToken":      {bootstrapSecret},
+			"username":        {"owner"},
+			"password":        {"correct-password"},
+			"confirmPassword": {"correct-password"},
+		}))
+		require.Equal(t, http.StatusSeeOther, setup.Code)
+		assert.Empty(t, setup.Result().Cookies())
+
+		response := httptest.NewRecorder()
+		app.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/", nil))
+
+		assert.Equal(t, http.StatusSeeOther, response.Code)
+		assert.Equal(t, "/login", response.Header().Get("Location"))
+	})
 }
