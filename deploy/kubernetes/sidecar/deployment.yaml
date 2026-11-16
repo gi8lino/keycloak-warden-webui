@@ -95,14 +95,14 @@ spec:
               mountPath: /tmp
         - name: warden-webui
           # Pin a published WebUI release tag or digest before production use.
-          image: ghcr.io/gi8lino/warden-webui:latest
+          image: ghcr.io/gi8lino/keycloak-warden-webui:latest
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: keycloak-warden-webui-config
           env:
             - name: WARDEN_WEBUI__WARDEN_URL
-              value: http://127.0.0.1:8080
+              value: http://127.0.0.1:8082
             # Reuse the exact admin token Warden validates.
             - name: WARDEN_WEBUI__WARDEN_ADMIN_TOKEN
               valueFrom:

@@ -26,7 +26,7 @@ spec:
       containers:
         - name: warden-webui
           # Pin a published WebUI release tag or digest before production use.
-          image: ghcr.io/gi8lino/warden-webui:latest
+          image: ghcr.io/gi8lino/keycloak-warden-webui:latest
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
