@@ -1,38 +1,92 @@
+---
 name: Tests
+
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_call:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "cmd/**"
+      - "internal/**"
+      - "web/**"
+      - "themes/**"
+      - "test/**"
+      - "scripts/**"
+      - "deploy/compose*.yaml"
+      - "deploy/warden.yaml"
+      - "deploy/hookglass.yaml"
+      - "deploy/keycloak-webui-dev.json"
+      - "go.mod"
+      - "go.sum"
+      - "package.json"
+      - "package-lock.json"
+      - "Makefile"
+      - "bin/dev-tools.mk"
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/tests.yml"
+
 permissions:
   contents: read
+
 jobs:
-  test:
+  go:
+    name: Go verification
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: true
-      - name: Resolve module checksums
-        run: go mod tidy
-      - name: Verify
+
+      - name: Download dependencies and development tools
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          make dev-tools
+          go mod download
+
+      - name: Verify module manifests
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
+      - name: Format, lint and race-test
         run: make verify
 
-
   auth-e2e:
+    name: Browser authentication E2E
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-      - uses: actions/setup-node@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
         with:
           node-version: "24"
           cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: make test-auth-e2e
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser authentication tests
+        run: make test-auth-e2e
