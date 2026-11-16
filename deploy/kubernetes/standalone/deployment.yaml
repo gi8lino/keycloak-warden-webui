@@ -34,7 +34,7 @@ spec:
           env:
             # Remote Warden URLs must use HTTPS; loopback HTTP is sidecar-only.
             - name: WARDEN_WEBUI__WARDEN_URL
-              value: https://warden.example.com
+              value: http://warden.keycloak.svc.cluster.local:8080
             - name: WARDEN_WEBUI__WARDEN_ADMIN_TOKEN
               valueFrom:
                 secretKeyRef:
