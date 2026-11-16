@@ -30,7 +30,7 @@ func TestDurableSessions(t *testing.T) {
 
 		reopened, err := db.Open(t.Context(), path)
 		require.NoError(t, err)
-		defer reopened.Close()
+		defer reopened.Close() // nolint:errcheck
 		restartedManager, _ := newSessions(reopened, time.Hour, "http://localhost", "")
 		user, err := restartedManager.Resolve(t.Context(), token)
 		require.NoError(t, err)
