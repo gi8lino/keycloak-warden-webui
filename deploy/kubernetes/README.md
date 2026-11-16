@@ -20,7 +20,7 @@ The generated ConfigMap names have content hashes; the Deployment references are
 
 ## Sidecar (`sidecar/`)
 
-`sidecar/deployment.yaml` is a **complete `keycloak-warden` Deployment** with two containers. It is based on Warden's v0.13.0 Kubernetes layout. It also includes the Warden Service and existing Warden PVC name, plus a Kustomize-generated `keycloak-warden-config` from `sidecar/warden.yaml`.
+`sidecar/deployment.yaml` is a **complete `keycloak-warden` Deployment** with two containers. It pins Warden's v0.25.0 image and includes an example Warden configuration. It also includes the Warden Service and existing Warden PVC name, plus a Kustomize-generated `keycloak-warden-config` from `sidecar/warden.yaml`.
 Review and merge any custom Warden configuration first: applying this variant **updates the existing Warden Deployment and its configuration**. Never create a second Warden Deployment pointing to the same SQLite PVC.
 
 The WebUI connects to Warden at `http://127.0.0.1:8080` because both containers share a Pod network namespace. Warden uses `/data/warden.db` on `keycloak-warden-data`, while WebUI uses `/data/warden-webui.db` on its **own** `keycloak-warden-webui-data` claim. Both workloads are single replica with `Recreate` strategy to avoid SQLite multi-writer races.
@@ -38,7 +38,9 @@ The sidecar reads `WARDEN__ADMIN_TOKEN` directly from Warden's Secret, so the ad
 
 ## Standalone (`standalone/`)
 
-`standalone/deployment.yaml` manages only WebUI. Set its `WARDEN_WEBUI__WARDEN_URL` to the real reachable **HTTPS** Warden application API URL (including Warden's route prefix if configured). HTTP is deliberately accepted by the client only for loopback connections; an ordinary cluster Service URL over HTTP is not supported. Provide a TLS endpoint or terminate TLS in front of Warden. The WebUI needs an API token with administrative access.
+`standalone/deployment.yaml` manages only WebUI. The example uses Warden's internal Kubernetes Service URL (`http://keycloak-warden.keycloak.svc.cluster.local:8080`) and explicitly enables `WARDEN_WEBUI__ALLOW_INSECURE_WARDEN_HTTP=true`. Without this opt-in, remote Warden URLs must use HTTPS (loopback HTTP remains allowed). Set `WARDEN_WEBUI__WARDEN_URL` to your actual Warden application API URL, including its route prefix if configured. The WebUI needs the same Warden administrative API token configured on Warden.
+
+Plain HTTP transmits the admin token unencrypted within the cluster. Use Cilium to restrict egress from WebUI to Warden's application port and ingress to that API from WebUI, or prefer an internal HTTPS endpoint. The opt-in does **not** disable TLS certificate validation.
 
 Create/manage `keycloak-warden-webui` separately with keys:
 

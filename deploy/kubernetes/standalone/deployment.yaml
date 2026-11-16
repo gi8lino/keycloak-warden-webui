@@ -1,4 +1,5 @@
-# Alternative 2: WebUI runs separately and reaches Warden over HTTPS.
+# Alternative 2: WebUI connects to Warden through its internal ClusterIP Service.
+# Non-loopback HTTP requires an explicit opt-in; use HTTPS when possible.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -32,9 +33,12 @@ spec:
             - configMapRef:
                 name: keycloak-warden-webui-config
           env:
-            # Remote Warden URLs must use HTTPS; loopback HTTP is sidecar-only.
             - name: WARDEN_WEBUI__WARDEN_URL
-              value: http://warden.keycloak.svc.cluster.local:8080
+              value: http://keycloak-warden.keycloak.svc.cluster.local:8080
+            # This permits the internal Service's unencrypted HTTP transport.
+            # Restrict the admin API connection to this WebUI Pod with Cilium.
+            - name: WARDEN_WEBUI__ALLOW_INSECURE_WARDEN_HTTP
+              value: "true"
             - name: WARDEN_WEBUI__WARDEN_ADMIN_TOKEN
               valueFrom:
                 secretKeyRef:

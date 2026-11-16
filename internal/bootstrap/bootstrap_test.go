@@ -64,3 +64,76 @@ func TestBootstrapComposesRuntime(t *testing.T) {
 	handlers.Management.ServeHTTP(closed, httptest.NewRequest(http.MethodGet, "/readyz", nil))
 	assert.Equal(t, http.StatusServiceUnavailable, closed.Code)
 }
+
+// TestNewInfrastructureHTTPPolicy verifies that WebUI passes its URL policy to Warden's public client.
+func TestNewInfrastructureHTTPPolicy(t *testing.T) {
+	t.Parallel()
+
+	t.Run("rejects remote HTTP by default", func(t *testing.T) {
+		t.Parallel()
+
+		cfg, err := flags.Parse([]string{
+			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
+			"--warden-url=http://keycloak-warden.keycloak.svc.cluster.local:8080",
+			"--warden-admin-token=private-token",
+		}, "test")
+		require.NoError(t, err)
+
+		infrastructure, err := NewInfrastructure(t.Context(), cfg)
+
+		require.ErrorContains(t, err, "requires HTTPS")
+		assert.Nil(t, infrastructure)
+	})
+
+	t.Run("accepts remote HTTP with opt-in", func(t *testing.T) {
+		t.Parallel()
+
+		cfg, err := flags.Parse([]string{
+			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
+			"--warden-url=http://keycloak-warden.keycloak.svc.cluster.local:8080",
+			"--warden-admin-token=private-token",
+			"--allow-insecure-warden-http",
+		}, "test")
+		require.NoError(t, err)
+
+		infrastructure, err := NewInfrastructure(t.Context(), cfg)
+
+		require.NoError(t, err)
+		require.NotNil(t, infrastructure)
+		t.Cleanup(func() { require.NoError(t, infrastructure.Close()) })
+	})
+
+	t.Run("still rejects unsupported URL schemes with opt-in", func(t *testing.T) {
+		t.Parallel()
+
+		cfg, err := flags.Parse([]string{
+			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
+			"--warden-url=ftp://keycloak-warden.keycloak.svc.cluster.local:8080",
+			"--warden-admin-token=private-token",
+			"--allow-insecure-warden-http",
+		}, "test")
+		require.NoError(t, err)
+
+		infrastructure, err := NewInfrastructure(t.Context(), cfg)
+
+		require.ErrorContains(t, err, "requires HTTPS")
+		assert.Nil(t, infrastructure)
+	})
+
+	t.Run("accepts loopback HTTP without opt-in", func(t *testing.T) {
+		t.Parallel()
+
+		cfg, err := flags.Parse([]string{
+			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
+			"--warden-url=http://127.0.0.1:8080",
+			"--warden-admin-token=private-token",
+		}, "test")
+		require.NoError(t, err)
+
+		infrastructure, err := NewInfrastructure(t.Context(), cfg)
+
+		require.NoError(t, err)
+		require.NotNil(t, infrastructure)
+		t.Cleanup(func() { require.NoError(t, infrastructure.Close()) })
+	})
+}

@@ -42,6 +42,33 @@ func TestParse(t *testing.T) {
 		assert.Equal(t, "/data/test.db", cfg.Database)
 	})
 
+	t.Run("disallows non-loopback HTTP by default", func(t *testing.T) {
+		t.Parallel()
+
+		cfg, err := Parse(nil, "dev")
+
+		require.NoError(t, err)
+		assert.False(t, cfg.AllowInsecureWardenHTTP)
+	})
+
+	t.Run("enables non-loopback HTTP explicitly", func(t *testing.T) {
+		t.Parallel()
+
+		cfg, err := Parse([]string{"--allow-insecure-warden-http"}, "dev")
+
+		require.NoError(t, err)
+		assert.True(t, cfg.AllowInsecureWardenHTTP)
+	})
+
+	t.Run("allows explicitly disabling non-loopback HTTP", func(t *testing.T) {
+		t.Parallel()
+
+		cfg, err := Parse([]string{"--allow-insecure-warden-http=false"}, "dev")
+
+		require.NoError(t, err)
+		assert.False(t, cfg.AllowInsecureWardenHTTP)
+	})
+
 	t.Run("no subcommands", func(t *testing.T) {
 		t.Parallel()
 		_, err := Parse([]string{"serve", "--warden-admin-token=secret"}, "dev")
@@ -60,8 +87,10 @@ func TestParseEnvironment(t *testing.T) {
 	// Environment changes cannot share parallel execution with other tests.
 	t.Setenv("WARDEN_WEBUI__WARDEN_ADMIN_TOKEN", "env-secret")
 	t.Setenv("WARDEN_WEBUI__SETUP_TOKEN", "abcdefghijklmnopqrstuvwxyz012345")
+	t.Setenv("WARDEN_WEBUI__ALLOW_INSECURE_WARDEN_HTTP", "true")
 
 	cfg, err := Parse(nil, "dev")
 	require.NoError(t, err)
 	assert.Equal(t, "env-secret", cfg.WardenToken)
+	assert.True(t, cfg.AllowInsecureWardenHTTP)
 }

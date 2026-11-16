@@ -25,7 +25,12 @@ func NewInfrastructure(ctx context.Context, cfg flags.Config) (*Infrastructure, 
 		return nil, fmt.Errorf("open Web UI database: %w", err)
 	}
 
-	warden, err := client.New(cfg.WardenURL, cfg.WardenToken)
+	// Use Warden's shared API client for both secure and explicitly allowed HTTP.
+	options := []client.Option{}
+	if cfg.AllowInsecureWardenHTTP {
+		options = append(options, client.WithAllowInsecureHTTP())
+	}
+	warden, err := client.New(cfg.WardenURL, cfg.WardenToken, options...)
 	if err != nil {
 		_ = store.Close()
 		return nil, fmt.Errorf("configure Warden API client: %w", err)

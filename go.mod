@@ -6,7 +6,7 @@ require (
 	github.com/containeroo/appkit v0.8.1
 	github.com/containeroo/httpkit v0.2.0
 	github.com/containeroo/tinyflags v0.12.0
-	github.com/gi8lino/keycloak-warden v0.13.0
+	github.com/gi8lino/keycloak-warden v0.25.0
 	github.com/pelletier/go-toml/v2 v2.4.3
 	github.com/stretchr/testify v1.12.1
 	modernc.org/sqlite v1.62.0

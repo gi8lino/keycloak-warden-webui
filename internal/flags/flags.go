@@ -32,6 +32,8 @@ type Config struct {
 	WardenURL string
 	// WardenToken is the server-only Warden administrator bearer token.
 	WardenToken string
+	// AllowInsecureWardenHTTP permits non-loopback HTTP for trusted upstream connections.
+	AllowInsecureWardenHTTP bool
 	// Database is the private SQLite database for Web UI accounts and sessions.
 	Database string
 	// ThemeDirectory overlays embedded palettes with deployment-specific TOML files.
@@ -113,6 +115,11 @@ func registerWardenFlags(tf *tinyflags.FlagSet, cfg *Config) {
 	tf.StringVar(&cfg.WardenToken, "warden-admin-token", "", "Bearer token for Warden administration").
 		Section(sectionWarden).
 		OverriddenValueMaskFn(tinyflags.MaskFirstLastLimit(5)).
+		Value()
+	// Allow HTTP to a remote Warden Service only when explicitly requested.
+	tf.BoolVar(&cfg.AllowInsecureWardenHTTP, "allow-insecure-warden-http", false,
+		"Allow unencrypted HTTP to a non-loopback Warden URL (admin token is sent in cleartext)").
+		Section(sectionWarden).
 		Value()
 }
 

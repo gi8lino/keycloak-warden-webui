@@ -25,13 +25,13 @@ spec:
           type: RuntimeDefault
       containers:
         - name: keycloak-warden
-          image: ghcr.io/gi8lino/keycloak-warden:v0.13.0
+          image: ghcr.io/gi8lino/keycloak-warden:v0.25.0
           imagePullPolicy: IfNotPresent
           args:
             - serve
             - --config=/config/warden.yaml
             - --database=/data/warden.db
-            - --listen-address=:8082
+            - --listen-address=:8080
             - --management-listen-address=:8081
             - --metrics
             - --access-log
@@ -46,10 +46,10 @@ spec:
                 name: keycloak-warden
           ports:
             - name: http
-              containerPort: 8082
+              containerPort: 8080
               protocol: TCP
             - name: management
-              containerPort: 8083
+              containerPort: 8081
               protocol: TCP
           startupProbe:
             httpGet:
@@ -102,7 +102,7 @@ spec:
                 name: keycloak-warden-webui-config
           env:
             - name: WARDEN_WEBUI__WARDEN_URL
-              value: http://127.0.0.1:8082
+              value: http://127.0.0.1:8080
             # Reuse the exact admin token Warden validates.
             - name: WARDEN_WEBUI__WARDEN_ADMIN_TOKEN
               valueFrom:

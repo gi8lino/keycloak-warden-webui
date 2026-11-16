@@ -6,10 +6,10 @@ Deploy the Web UI as **one replica with its own SQLite database**. Keep its appl
 
 The repository includes [Kustomize manifests](https://github.com/gi8lino/warden-webui/tree/main/deploy/kubernetes) with two **alternative** variants:
 
-| Variant    | Scope                                                                    | Warden connection                       |
-| ---------- | ------------------------------------------------------------------------ | --------------------------------------- |
-| Sidecar    | One `keycloak-warden` Deployment containing Warden and Web UI containers | `http://127.0.0.1:8080`                 |
-| Standalone | An independent `keycloak-warden-webui` Deployment                        | HTTPS URL of an existing Warden service |
+| Variant    | Scope                                                                    | Warden connection                                                     |
+| ---------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Sidecar    | One `keycloak-warden` Deployment containing Warden and Web UI containers | `http://127.0.0.1:8080`                                               |
+| Standalone | An independent `keycloak-warden-webui` Deployment                        | HTTPS by default, or HTTP to a ClusterIP Service with explicit opt-in |
 
 Use **only one** variant in a namespace. Both generate a nonsecret Web UI ConfigMap, create a Web UI PVC, and expose a `ClusterIP` Service on application port `8092`. The management port (`8093`) is internal to the Pod.
 
@@ -31,7 +31,7 @@ kubectl kustomize deploy/kubernetes/standalone
 kubectl apply -k deploy/kubernetes/standalone
 ```
 
-In `deploy/kubernetes/standalone/deployment.yaml`, change `WARDEN_WEBUI__WARDEN_URL` to the actual **HTTPS** Warden application URL (including an upstream route prefix, if one exists). HTTP to an ordinary Kubernetes Service hostname is not supported. Provide the same administrative token that Warden verifies, using a Web UI Secret.
+The standalone manifest connects to `http://keycloak-warden.keycloak.svc.cluster.local:8080` and sets `WARDEN_WEBUI__ALLOW_INSECURE_WARDEN_HTTP=true` explicitly. Change `WARDEN_WEBUI__WARDEN_URL` if your Service name, namespace, port, or route prefix differs. Alternatively, use an internal HTTPS URL and omit the opt-in. The administrative token must match Warden's token and be supplied through a WebUI Secret. Restrict plain HTTP connectivity with Cilium because the bearer token is unencrypted.
 
 ### Common settings
 

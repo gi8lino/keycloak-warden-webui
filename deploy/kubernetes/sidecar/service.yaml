@@ -5,10 +5,10 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/name: keycloak-warden-webui
-    app.kubernetes.io/component: keycloak-warden-webui
+    app.kubernetes.io/name: keycloak-warden
+    app.kubernetes.io/component: keycloak-warden
   ports:
     - name: http
-      port: 8082
+      port: 8080
       targetPort: http
       protocol: TCP

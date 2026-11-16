@@ -33,7 +33,7 @@ make e2e-down  # Stop the demo
 
 ## Run locally
 
-With Warden v0.13.0 or newer running, configure its admin token and a one-time setup token:
+With Warden running, configure its admin token and a one-time setup token. WebUI uses Warden's v0.25.0 Go client:
 
 ```sh
 export WARDEN_WEBUI__WARDEN_ADMIN_TOKEN='YOUR_WARDEN_ADMIN_TOKEN'
@@ -45,12 +45,12 @@ The Web UI URL is printed on startup. Set `WARDEN_WEBUI__WARDEN_URL` if Warden i
 
 ## Documentation
 
-Full documentation is available at **[gi8lino.github.io/warden-webui](https://gi8lino.github.io/warden-webui/)**.
+Full documentation is available at **[gi8lino.github.io/keycloak-warden-webui](https://gi8lino.github.io/keycloak-warden-webui/)**.
 
-- [Getting started](https://gi8lino.github.io/warden-webui/getting-started/)
-- [Configuration](https://gi8lino.github.io/warden-webui/configuration/)
-- [Authentication](https://gi8lino.github.io/warden-webui/authentication/)
-- [Deployment](https://gi8lino.github.io/warden-webui/deployment/)
+- [Getting started](https://gi8lino.github.io/keycloak-warden-webui/getting-started/)
+- [Configuration](https://gi8lino.github.io/keycloak-warden-webui/configuration/)
+- [Authentication](https://gi8lino.github.io/keycloak-warden-webui/authentication/)
+- [Deployment](https://gi8lino.github.io/keycloak-warden-webui/deployment/)
 
 ## Deployment
 

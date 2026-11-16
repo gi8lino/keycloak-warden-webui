@@ -21,6 +21,6 @@ Web UI is a server-rendered Go application with embedded assets and minimal prog
 
 ## Listener and deployment models
 
-The application listener serves the UI and static files; the management listener serves health and readiness. Web UI can run beside Warden in a single Kubernetes Pod (loopback upstream) or independently (HTTPS upstream). Both use **separate** SQLite storage.
+The application listener serves the UI and static files; the management listener serves health and readiness. Web UI can run beside Warden in a single Kubernetes Pod (loopback upstream) or independently (HTTPS by default, with explicit non-loopback HTTP opt-in for restricted Kubernetes Services). Both use **separate** SQLite storage.
 
 For setup and security configuration, see [Authentication](authentication.md) and [Deployment](deployment.md).
