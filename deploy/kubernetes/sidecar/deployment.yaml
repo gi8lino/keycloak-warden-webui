@@ -31,7 +31,7 @@ spec:
             - serve
             - --config=/config/warden.yaml
             - --database=/data/warden.db
-            - --listen-address=:8080
+            - --listen-address=:8082
             - --management-listen-address=:8081
             - --metrics
             - --access-log
@@ -46,10 +46,10 @@ spec:
                 name: keycloak-warden
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 8082
               protocol: TCP
             - name: management
-              containerPort: 8081
+              containerPort: 8083
               protocol: TCP
           startupProbe:
             httpGet:
