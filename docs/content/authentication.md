@@ -41,6 +41,10 @@ The default identity headers include `X-Forwarded-User` and `X-Forwarded-Groups`
 
 ## First-time setup with external authentication
 
+On a fresh installation, visiting the Web UI root (`/`) redirects to `/setup` **before** proxy or OIDC authentication is evaluated. The same redirect applies with an application route prefix (for example, `/ui/setup`). Setup still requires the private setup token; the redirect does not grant administrator access. The external ingress or identity proxy must also allow the browser to reach `/setup`.
+
+After the initial administrator is created, the normal authentication and approved-identity checks apply. The setup page is no longer available.
+
 Every deployment starts with a local administrator record, even if external sign-in is the primary mode. For initial OIDC or proxy setup, set `WARDEN_WEBUI__SETUP_SUBJECT` to the founder's exact OIDC `sub` or trusted proxy username. On first `/setup`, Web UI creates the administrator and links that subject. Sign in through your external provider afterward.
 
 Alternatively, temporarily enable `WARDEN_WEBUI__LOCAL_LOGIN=true`, create the initial account, sign in at `/auth/local`, and approve the verified external identity. Disable local recovery once the external sign-in works.
