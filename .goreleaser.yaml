@@ -2,6 +2,10 @@
 project_name: keycloak-warden-webui
 version: 2
 
+before:
+  hooks:
+    - go mod tidy
+
 builds:
   - id: keycloak-warden-webui
     main: ./cmd/warden-webui
