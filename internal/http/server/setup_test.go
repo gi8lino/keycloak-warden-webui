@@ -24,6 +24,7 @@ import (
 	"github.com/gi8lino/warden-webui/web"
 )
 
+// bootstrapSecret authorizes first-run setup in HTTP integration tests.
 const bootstrapSecret = "development-setup-token-0123456789abcdef"
 
 // localHandlers builds the real HTML authentication routes backed by an isolated SQLite database.
@@ -342,7 +343,7 @@ func TestAdministratorDirectory(t *testing.T) {
 }
 
 // freshExternalHandlers builds an uninitialized Web UI in proxy or OIDC mode.
-func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string) http.Handler {
+func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string, localLogin bool) http.Handler {
 	t.Helper()
 
 	store, err := db.Open(t.Context(), filepath.Join(t.TempDir(), "webui.db"))
@@ -355,8 +356,9 @@ func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string) ht
 			RoutePrefix: prefix,
 		},
 		Authentication: appkitconfig.Authentication{
-			ModeOverride: &mode,
-			LocalLogin:   mode == appkitauth.ModeOIDC,
+			ModeOverride:    &mode,
+			LocalLogin:      localLogin,
+			SessionLifetime: time.Hour,
 		},
 		AdminGroup:   "warden-admins",
 		SetupSubject: "operator",
@@ -399,7 +401,7 @@ func TestExternalFirstRunSetup(t *testing.T) {
 	t.Run("proxy redirects to setup before rejecting an unmapped administrator", func(t *testing.T) {
 		t.Parallel()
 
-		app := freshExternalHandlers(t, appkitauth.ModeProxy, "")
+		app := freshExternalHandlers(t, appkitauth.ModeProxy, "", false)
 		request := authenticatedRequest(http.MethodGet, "/", "")
 		request.Header.Set("X-Forwarded-Groups", "other-group")
 		response := httptest.NewRecorder()
@@ -418,7 +420,7 @@ func TestExternalFirstRunSetup(t *testing.T) {
 	t.Run("other protected routes still require proxy authorization", func(t *testing.T) {
 		t.Parallel()
 
-		app := freshExternalHandlers(t, appkitauth.ModeProxy, "")
+		app := freshExternalHandlers(t, appkitauth.ModeProxy, "", false)
 		request := authenticatedRequest(http.MethodGet, "/bans/one", "")
 		request.Header.Set("X-Forwarded-Groups", "other-group")
 		response := httptest.NewRecorder()
@@ -431,7 +433,7 @@ func TestExternalFirstRunSetup(t *testing.T) {
 	t.Run("proxy redirect respects the application prefix", func(t *testing.T) {
 		t.Parallel()
 
-		app := freshExternalHandlers(t, appkitauth.ModeProxy, "/ui")
+		app := freshExternalHandlers(t, appkitauth.ModeProxy, "/ui", false)
 		response := httptest.NewRecorder()
 
 		app.ServeHTTP(response, authenticatedRequest(http.MethodGet, "/ui/", ""))
@@ -443,7 +445,7 @@ func TestExternalFirstRunSetup(t *testing.T) {
 	t.Run("proxy requires an approved identity after setup", func(t *testing.T) {
 		t.Parallel()
 
-		app := freshExternalHandlers(t, appkitauth.ModeProxy, "")
+		app := freshExternalHandlers(t, appkitauth.ModeProxy, "", false)
 		setup := httptest.NewRecorder()
 		app.ServeHTTP(setup, localForm("/setup", url.Values{
 			"setupToken":      {bootstrapSecret},
@@ -472,7 +474,7 @@ func TestExternalFirstRunSetup(t *testing.T) {
 	t.Run("OIDC redirects to setup before starting the sign-in flow", func(t *testing.T) {
 		t.Parallel()
 
-		app := freshExternalHandlers(t, appkitauth.ModeOIDC, "")
+		app := freshExternalHandlers(t, appkitauth.ModeOIDC, "", true)
 		response := httptest.NewRecorder()
 
 		app.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/", nil))
@@ -484,7 +486,7 @@ func TestExternalFirstRunSetup(t *testing.T) {
 	t.Run("OIDC keeps authentication after initial setup", func(t *testing.T) {
 		t.Parallel()
 
-		app := freshExternalHandlers(t, appkitauth.ModeOIDC, "")
+		app := freshExternalHandlers(t, appkitauth.ModeOIDC, "", true)
 		setup := httptest.NewRecorder()
 		app.ServeHTTP(setup, localForm("/setup", url.Values{
 			"setupToken":      {bootstrapSecret},
@@ -501,4 +503,48 @@ func TestExternalFirstRunSetup(t *testing.T) {
 		assert.Equal(t, http.StatusSeeOther, response.Code)
 		assert.Equal(t, "/login", response.Header().Get("Location"))
 	})
+}
+
+func TestRecoveryPasswordChange(t *testing.T) {
+	t.Parallel()
+	t.Run("proxy keeps recovery login", func(t *testing.T) {
+		t.Parallel()
+		assertRecoveryPasswordChange(t, appkitauth.ModeProxy)
+	})
+	t.Run("OIDC keeps recovery login", func(t *testing.T) {
+		t.Parallel()
+		assertRecoveryPasswordChange(t, appkitauth.ModeOIDC)
+	})
+}
+
+// assertRecoveryPasswordChange verifies password rotation keeps external-mode users on local recovery.
+func assertRecoveryPasswordChange(t *testing.T, mode appkitauth.Mode) {
+	t.Helper()
+	app := freshExternalHandlers(t, mode, "/ui", true)
+	setup := postAccountForm(t, app, "/ui/setup", url.Values{
+		"setupToken": {bootstrapSecret}, "username": {"owner"},
+		"password": {"correct-password"}, "confirmPassword": {"correct-password"},
+	}, nil)
+	require.Equal(t, http.StatusSeeOther, setup.Code)
+
+	login := postAccountForm(t, app, "/ui/login", url.Values{
+		"username": {"owner"}, "password": {"correct-password"},
+	}, nil)
+	require.Equal(t, http.StatusSeeOther, login.Code)
+	require.Len(t, login.Result().Cookies(), 1)
+	cookie := login.Result().Cookies()[0]
+	changed := postAccountForm(t, app, "/ui/account/password", url.Values{
+		"currentPassword": {"correct-password"}, "newPassword": {"new-password-2026"},
+		"confirmPassword": {"new-password-2026"},
+	}, cookie)
+	require.Equal(t, http.StatusSeeOther, changed.Code)
+	require.Equal(t, "/ui/auth/local?changed=1", changed.Header().Get("Location"))
+
+	page := httptest.NewRecorder()
+	app.ServeHTTP(page, httptest.NewRequest(http.MethodGet, changed.Header().Get("Location"), nil))
+	assert.Equal(t, http.StatusOK, page.Code)
+	login = postAccountForm(t, app, "/ui/login", url.Values{
+		"username": {"owner"}, "password": {"new-password-2026"},
+	}, nil)
+	assert.Equal(t, http.StatusSeeOther, login.Code)
 }

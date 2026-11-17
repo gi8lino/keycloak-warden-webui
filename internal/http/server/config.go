@@ -41,7 +41,10 @@ type ApplicationConfig struct {
 
 // Config composes the Web UI HTTP adapter's dependencies.
 type Config struct {
+	// InfrastructureConfig supplies routing, rendering, logging, and readiness.
 	InfrastructureConfig
+	// AuthenticationConfig supplies the administrator identity boundary.
 	AuthenticationConfig
+	// ApplicationConfig supplies upstream administrative operations.
 	ApplicationConfig
 }

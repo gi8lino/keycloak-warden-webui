@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// testTheme supplies a valid custom palette for catalog tests.
 const testTheme = `color_scheme = "dark"
 
 [colors]

@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -43,7 +44,16 @@ func Open(ctx context.Context, path string) (*Store, error) {
 		return nil, fmt.Errorf("close database file: %w", err)
 	}
 
-	conn, err := sql.Open("sqlite", path)
+	absolute, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("resolve database path: %w", err)
+	}
+	// Escape filenames and reapply connection-local settings after reconnection.
+	location := url.URL{Scheme: "file", Path: absolute}
+	location.RawQuery = url.Values{
+		"_pragma": {"busy_timeout(5000)", "foreign_keys(1)"},
+	}.Encode()
+	conn, err := sql.Open("sqlite", location.String())
 	if err != nil {
 		return nil, fmt.Errorf("connect database: %w", err)
 	}
@@ -70,12 +80,6 @@ func (s *Store) Ping(ctx context.Context) error {
 // initialize creates the initial schema and configures safe transactional behavior.
 func (s *Store) initialize(ctx context.Context) error {
 	for _, statement := range []string{
-		`
-			PRAGMA busy_timeout = 5000
-		`,
-		`
-			PRAGMA foreign_keys = ON
-		`,
 		`
 			PRAGMA journal_mode = WAL
 		`,

@@ -62,7 +62,7 @@ func (s *Service) PendingIdentities(ctx context.Context) ([]string, error) {
 
 // UpdateIdentity assigns or removes an external login from a local administrator.
 func (s *Service) UpdateIdentity(ctx context.Context, actor User, name, subject string, add bool) error {
-	if actor.Name == "" || s.issuer == "" || strings.TrimSpace(subject) == "" {
+	if !s.canUpdateIdentity(actor, subject) {
 		return ErrInvalidLocalInput
 	}
 	link := db.IdentityLink{Username: name, Issuer: s.issuer, Subject: subject}
@@ -73,4 +73,9 @@ func (s *Service) UpdateIdentity(ctx context.Context, actor User, name, subject 
 		return db.ErrNotFound
 	}
 	return s.repository.UnlinkIdentity(ctx, link)
+}
+
+// canUpdateIdentity requires an authenticated account and a provider-scoped subject.
+func (s *Service) canUpdateIdentity(actor User, subject string) bool {
+	return actor.Name != "" && s.issuer != "" && strings.TrimSpace(subject) != ""
 }

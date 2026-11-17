@@ -27,8 +27,11 @@ import (
 
 // fakeAPI supplies Warden records and tracks successful mutations.
 type fakeAPI struct {
-	banCalls         atomic.Int32
-	banDuration      atomic.Int64
+	// banCalls counts successful manual ban requests.
+	banCalls atomic.Int32
+	// banDuration captures the requested ban lifetime in nanoseconds.
+	banDuration atomic.Int64
+	// maintenanceCalls counts requested maintenance operations.
 	maintenanceCalls atomic.Int32
 }
 

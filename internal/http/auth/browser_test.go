@@ -14,8 +14,10 @@ import (
 	"github.com/gi8lino/warden-webui/internal/flags"
 )
 
+// testSetupToken authorizes bootstrap requests in authentication tests.
 const testSetupToken = "long-test-setup-token-0123456789abcdef"
 
+// authStore creates an isolated administrator store for authentication tests.
 func authStore(t *testing.T) *db.Store {
 	t.Helper()
 	store, err := db.Open(t.Context(), filepath.Join(t.TempDir(), "warden-webui.db"))
@@ -24,6 +26,7 @@ func authStore(t *testing.T) *db.Store {
 	return store
 }
 
+// localConfig supplies the deployment settings for password authentication tests.
 func localConfig() flags.Config {
 	return flags.Config{
 		Server:         appkitconfig.Server{PublicURL: "http://127.0.0.1:8092"},

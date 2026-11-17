@@ -91,4 +91,5 @@ func (s *Service) Logout(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// Verify that sessionStore implements Appkit session persistence.
 var _ session.Store[User] = sessionStore{}

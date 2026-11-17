@@ -10,6 +10,7 @@ import (
 	"github.com/containeroo/tinyflags"
 )
 
+// proxyIssuer namespaces trusted-proxy subjects in the local account directory.
 const proxyIssuer = "warden-webui-proxy"
 
 // newTrustedProxy validates trusted peers and resolves externally verified administrators.

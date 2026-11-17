@@ -89,4 +89,5 @@ func (s *Service) SetupRequired(ctx context.Context) (bool, error) {
 	return s.repository.SetupRequired(ctx)
 }
 
+// Verify that Service implements Appkit request authentication.
 var _ appkitauth.Authenticator[User] = (*Service)(nil)

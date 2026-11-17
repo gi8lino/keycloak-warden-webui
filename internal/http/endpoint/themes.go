@@ -26,16 +26,16 @@ func (p *Pages) accountTheme(ctx context.Context, name string) themes.Theme {
 // SaveTheme records a catalog selection for the authenticated local account.
 func (p *Pages) SaveTheme(w http.ResponseWriter, r *http.Request) {
 	if err := parseForm(w, r); err != nil {
-		http.Error(w, "Invalid theme form.", 400)
+		http.Error(w, "Invalid theme form.", http.StatusBadRequest)
 		return
 	}
 	theme, ok := themes.Find(p.catalog, r.PostForm.Get("theme"))
 	if !ok {
-		http.Error(w, "Unknown theme.", 400)
+		http.Error(w, "Unknown theme.", http.StatusBadRequest)
 		return
 	}
 	if err := p.store.SaveTheme(r.Context(), currentUser(r).Name, theme.Title); err != nil {
-		http.Error(w, "Unable to save theme.", 500)
+		http.Error(w, "Unable to save theme.", http.StatusInternalServerError)
 		return
 	}
 	p.redirect(w, r, "/preferences")
@@ -54,6 +54,7 @@ func (p *Pages) ThemeStylesheet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// palette renders validated theme colors as a same-origin stylesheet.
 var palette = template.Must(template.New("palette").Parse(`
 :root {
  color-scheme: {{.ColorScheme}};

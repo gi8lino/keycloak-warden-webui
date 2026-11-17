@@ -12,6 +12,7 @@ import (
 // Version is injected by the release build.
 var Version = "dev"
 
+// main starts the Web UI and exits with the reported application status.
 func main() {
 	if err := app.Run(context.Background(), os.Args[1:], web.Assets, Version, os.Stdout, os.Stderr); err != nil {
 		os.Exit(1)

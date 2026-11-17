@@ -67,7 +67,11 @@ func ChangePassword(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			return
 		}
 
-		pages.redirect(w, r, "/login?changed=1")
+		destination := "/login?changed=1"
+		if identity.Mode() != appkitauth.ModeLocal {
+			destination = "/auth/local?changed=1"
+		}
+		pages.redirect(w, r, destination)
 	}
 }
 

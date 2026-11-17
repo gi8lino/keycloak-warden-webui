@@ -11,8 +11,11 @@ import (
 )
 
 const (
-	sectionWarden     = "Warden API"
-	sectionSetup      = "Initial setup"
+	// sectionWarden groups upstream Warden API connection settings.
+	sectionWarden = "Warden API"
+	// sectionSetup groups first-administrator bootstrap settings.
+	sectionSetup = "Initial setup"
+	// sectionAppearance groups theme catalog configuration.
 	sectionAppearance = "Appearance"
 )
 

@@ -15,6 +15,8 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
+// Files contains the built-in TOML palettes.
+//
 //go:embed *.toml
 var Files embed.FS
 

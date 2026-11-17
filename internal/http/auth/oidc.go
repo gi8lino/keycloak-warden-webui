@@ -9,6 +9,7 @@ import (
 	appkitconfig "github.com/containeroo/appkit/config"
 )
 
+// oidcStateCookieName isolates the signed OIDC authorization state cookie.
 const oidcStateCookieName = "warden_webui_oidc_state"
 
 // newOIDC configures the verified authorization-code flow with Appkit's state and PKCE handling.

@@ -107,7 +107,7 @@ func (s *Service) SignInLocal(w http.ResponseWriter, r *http.Request, username, 
 	return nil
 }
 
-// CanChangeLocalPassword allows password management only for locally authenticated users in local mode.
+// CanChangeLocalPassword allows password management for locally authenticated users while password sign-in is enabled.
 func (s *Service) CanChangeLocalPassword(user User) bool {
 	return s.LocalLoginEnabled() && user.Local
 }
@@ -141,7 +141,7 @@ func (s *Service) ChangeLocalPassword(ctx context.Context, user User, oldPasswor
 	return err
 }
 
-// LocalUsers returns the directory for a locally authenticated administrator.
+// LocalUsers returns the directory for an authenticated administrator.
 func (s *Service) LocalUsers(ctx context.Context, actor User) ([]db.LocalUser, error) {
 	if actor.Name == "" {
 		return nil, appkitauth.ErrForbidden

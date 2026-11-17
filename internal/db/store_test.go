@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// testStore opens an isolated SQLite store and registers cleanup.
 func testStore(t *testing.T) *Store {
 	t.Helper()
 	store, err := Open(t.Context(), filepath.Join(t.TempDir(), "warden-webui.db"))
@@ -188,4 +189,25 @@ func TestIdentityOwnership(t *testing.T) {
 	require.NoError(t, store.LinkIdentity(t.Context(), link))
 	_, err = store.LookupSession(t.Context(), "token")
 	require.ErrorIs(t, err, ErrNotFound)
+}
+
+func TestConnectionReplacementPreservesPragmas(t *testing.T) {
+	t.Parallel()
+	store := testStore(t)
+	store.db.SetMaxIdleConns(0)
+
+	var foreignKeys, busyTimeout int
+	require.NoError(t, store.db.QueryRow("PRAGMA foreign_keys").Scan(&foreignKeys))
+	require.Equal(t, 1, foreignKeys)
+	require.NoError(t, store.db.QueryRow("PRAGMA busy_timeout").Scan(&busyTimeout))
+	require.Equal(t, 5000, busyTimeout)
+}
+
+func TestDatabaseFilenameEscapesQueryCharacters(t *testing.T) {
+	t.Parallel()
+	filename := filepath.Join(t.TempDir(), "webui?mode=ro.db")
+	store, err := Open(t.Context(), filename)
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, store.Close()) })
+	require.NoError(t, store.CreateInitialAdministrator(t.Context(), "admin", "hash"))
 }

@@ -47,12 +47,12 @@ func Users(identity *auth.Service, pages *Pages) http.HandlerFunc {
 		}
 		links, err := identity.IdentityLinks(r.Context())
 		if err != nil {
-			http.Error(w, "Unable to list mappings.", 500)
+			http.Error(w, "Unable to list mappings.", http.StatusInternalServerError)
 			return
 		}
 		pending, err := identity.PendingIdentities(r.Context())
 		if err != nil {
-			http.Error(w, "Unable to list pending identities.", 500)
+			http.Error(w, "Unable to list pending identities.", http.StatusInternalServerError)
 			return
 		}
 		pages.render(r, w, http.StatusOK, pageData{Title: "User administration", Page: "users", User: actor.Name, Users: users, Links: links, Pending: pending})

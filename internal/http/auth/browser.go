@@ -21,7 +21,9 @@ func New(ctx context.Context, cfg flags.Config, repository *db.Store) (*Service,
 
 	manager, cookies := newSessions(repository, cfg.Authentication.SessionLifetime, cfg.Server.PublicURL, cfg.Server.RoutePrefix)
 	service := &Service{
-		mode: cfg.Mode(), recovery: cfg.Authentication.LocalLogin, local: newLocal(repository, manager),
+		mode:         cfg.Mode(),
+		recovery:     cfg.Authentication.LocalLogin,
+		local:        newLocal(repository, manager),
 		routePrefix:  cfg.Server.RoutePrefix,
 		adminGroup:   cfg.AdminGroup,
 		repository:   repository,
@@ -68,8 +70,13 @@ func New(ctx context.Context, cfg flags.Config, repository *db.Store) (*Service,
 		return nil, errors.New("setup-token must be at least 32 characters until the initial administrator is created")
 	}
 
-	if required && service.mode != appkitauth.ModeLocal && cfg.SetupSubject == "" && !service.recovery {
+	if required && service.needsSetupIdentity() {
 		return nil, errors.New("initial external setup requires --setup-subject or --local-login")
 	}
 	return service, nil
+}
+
+// needsSetupIdentity identifies external-only deployments without a founder mapping.
+func (s *Service) needsSetupIdentity() bool {
+	return s.mode != appkitauth.ModeLocal && s.setupSubject == "" && !s.recovery
 }
