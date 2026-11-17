@@ -21,9 +21,13 @@ func registerAdminRoutes(mux *http.ServeMux, config Config) {
 	mux.Handle("POST /account/password", protected(endpoint.ChangePassword(config.Identity, config.Pages)))
 	mux.Handle("POST /logout", protected(endpoint.Logout(config.Identity, config.Pages)))
 
-	// First-run setup must take precedence over proxy and OIDC authentication.
+	// Only fresh installations need a dashboard setup gate. Initialized
+	// installations use the protected route without an extra state check.
 	dashboard := protected(endpoint.Dashboard(config.Warden, config.Pages))
-	mux.Handle("GET /{$}", middleware.RedirectToSetup(config.Identity, config.Logger)(dashboard))
+	if config.Identity.SetupRequired() {
+		dashboard = middleware.RedirectToSetup(config.Identity)(dashboard)
+	}
+	mux.Handle("GET /{$}", dashboard)
 
 	mux.Handle("GET /bans/{id}", protected(endpoint.BanDetails(config.Warden, config.Pages)))
 	mux.Handle("POST /bans", protected(endpoint.CreateBan(config.Warden, config.Pages)))

@@ -53,7 +53,7 @@ A random setup token is required until the first local administrator has been cr
 export WARDEN_WEBUI__SETUP_TOKEN="$(openssl rand -hex 32)"
 ```
 
-Open `/setup`, enter the token, create a username and a password of 12–72 bytes. Setup becomes unavailable after successful initialization; you can then remove the setup token from the deployment. If bootstrapping directly into an external authentication mode, see [Authentication](authentication.md#first-time-setup-with-external-authentication).
+Open `/setup`, enter the token, create a username and a password of 12–72 bytes. Web UI reads setup state once on startup, and registers setup routes only while the first administrator is missing. After the successful database commit, both setup handlers immediately return 404 without database polling; following restarts never register them again. The database still prevents concurrent bootstrap submissions from creating more than one administrator. You can remove the setup token from the deployment after initialization. If bootstrapping directly into an external authentication mode, see [Authentication](authentication.md#first-time-setup-with-external-authentication).
 
 ## Logging and appearance
 

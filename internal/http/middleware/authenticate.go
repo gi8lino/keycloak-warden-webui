@@ -23,13 +23,7 @@ func Authenticate(identity *auth.Service, logger *slog.Logger) func(http.Handler
 			case errors.Is(err, appkitauth.ErrForbidden):
 				http.Error(w, "Administrator access required.", http.StatusForbidden)
 			case errors.Is(err, appkitauth.ErrUnauthenticated), errors.Is(err, appkitauth.ErrInvalidCredentials):
-				required, setupErr := identity.SetupRequired(r.Context())
-				if setupErr != nil {
-					logger.Error("check setup state failed", "error", setupErr)
-					http.Error(w, "Authentication unavailable.", http.StatusInternalServerError)
-					return
-				}
-				if required {
+				if identity.SetupRequired() {
 					http.Redirect(w, r, "/setup", http.StatusSeeOther)
 					return
 				}

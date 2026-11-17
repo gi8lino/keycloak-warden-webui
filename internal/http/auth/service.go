@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"sync"
+	"sync/atomic"
 
 	appkitauth "github.com/containeroo/appkit/auth"
 	"github.com/containeroo/appkit/auth/browser"
@@ -25,6 +26,8 @@ type Service struct {
 	adminGroup string
 	// repository owns persisted administrator credentials and session hashes.
 	repository *db.Store
+	// setupRequired caches the persisted bootstrap state until first setup commits.
+	setupRequired atomic.Bool
 	// setupDigest authenticates first-run setup without retaining the plain-text token.
 	setupDigest [32]byte
 	// setupSubject is the deployment-configured initial external identity.
@@ -56,7 +59,10 @@ func (s *Service) Mode() appkitauth.Mode {
 
 // Authenticate validates the trusted proxy or an Appkit server-side browser session.
 func (s *Service) Authenticate(r *http.Request) (User, error) {
-	provider := browser.Authenticator[User]{Policy: s.policy(), Session: s.sessionOrigin}
+	provider := browser.Authenticator[User]{
+		Policy:  s.policy(),
+		Session: s.sessionOrigin,
+	}
 	if s.proxy != nil {
 		provider.Primary = s.proxy
 	}
@@ -65,28 +71,39 @@ func (s *Service) Authenticate(r *http.Request) (User, error) {
 
 // policy returns the effective deployment authentication settings.
 func (s *Service) policy() browser.Policy {
-	return browser.Policy{Mode: s.mode, Issuer: s.issuer, Recovery: s.recovery}
+	return browser.Policy{
+		Mode:     s.mode,
+		Issuer:   s.issuer,
+		Recovery: s.recovery,
+	}
 }
 
 // sessionOrigin reads the account and sign-in method persisted with its session.
 func (s *Service) sessionOrigin(r *http.Request) (User, browser.Origin, error) {
-	user, err := (session.Authenticator[User]{Manager: s.sessions, CookieName: cookieName}).Authenticate(r)
+	auth := session.Authenticator[User]{
+		Manager:    s.sessions,
+		CookieName: cookieName,
+	}
+
+	user, err := auth.Authenticate(r)
 	origin := browser.Origin{
 		Mode:   appkitauth.ModeOIDC,
 		Issuer: user.Issuer,
 	}
+
 	if user.Local {
 		origin = browser.Origin{Mode: appkitauth.ModeLocal}
 	}
+
 	return user, origin, err
 }
 
 // LocalLoginEnabled reports whether password authentication is available.
 func (s *Service) LocalLoginEnabled() bool { return s.policy().LocalEnabled() }
 
-// SetupRequired reports whether the local directory needs its first administrator.
-func (s *Service) SetupRequired(ctx context.Context) (bool, error) {
-	return s.repository.SetupRequired(ctx)
+// SetupRequired reports the startup-loaded setup state without accessing SQLite.
+func (s *Service) SetupRequired() bool {
+	return s.setupRequired.Load()
 }
 
 // Verify that Service implements Appkit request authentication.

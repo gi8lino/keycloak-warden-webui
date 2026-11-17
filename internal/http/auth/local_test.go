@@ -49,9 +49,7 @@ func TestLocalAuthentication(t *testing.T) {
 		require.NoError(t, err)
 		err = service.SetupLocal(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/setup", nil), "wrong", "admin", "correct-password")
 		require.ErrorIs(t, err, appkitauth.ErrForbidden)
-		required, err := service.SetupRequired(t.Context())
-		require.NoError(t, err)
-		assert.True(t, required)
+		assert.True(t, service.SetupRequired())
 	})
 
 	t.Run("setup cannot be repeated", func(t *testing.T) {

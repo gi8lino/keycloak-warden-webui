@@ -60,6 +60,10 @@ func validLocalPassword(password string) bool {
 
 // SetupLocal atomically provisions the initial administrator and signs them in.
 func (s *Service) SetupLocal(w http.ResponseWriter, r *http.Request, token, username, password string) error {
+	if !s.SetupRequired() {
+		return db.ErrSetupComplete
+	}
+
 	username = strings.TrimSpace(username)
 	var link *db.IdentityLink
 	if s.mode != appkitauth.ModeLocal && s.setupSubject != "" {
@@ -79,9 +83,17 @@ func (s *Service) SetupLocal(w http.ResponseWriter, r *http.Request, token, user
 		},
 	}
 	user, err := setup.Bootstrap(r.Context(), token, username, password)
+	if errors.Is(err, db.ErrSetupComplete) {
+		// Another concurrent setup already committed the initial administrator.
+		s.setupRequired.Store(false)
+	}
 	if err != nil {
 		return err
 	}
+
+	// Disable setup as soon as the database commit succeeds, even if the
+	// subsequent session creation fails.
+	s.setupRequired.Store(false)
 	if link != nil {
 		return nil
 	}

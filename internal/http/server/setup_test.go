@@ -34,6 +34,20 @@ func localHandlers(t *testing.T, prefix string) http.Handler {
 	store, err := db.Open(t.Context(), filepath.Join(t.TempDir(), "webui.db"))
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, store.Close()) })
+	return newLocalApplication(t, prefix, store)
+}
+
+// newLocalApplication composes the HTTP adapter against an existing database.
+func newLocalApplication(t *testing.T, prefix string, store *db.Store) http.Handler {
+	t.Helper()
+
+	return New(newLocalServerConfig(t, prefix, store)).Application
+}
+
+// newLocalServerConfig builds a complete route configuration from the current persisted state.
+func newLocalServerConfig(t *testing.T, prefix string, store *db.Store) Config {
+	t.Helper()
+
 	cfg := flags.Config{
 		Server: appkitconfig.Server{
 			PublicURL:   "http://127.0.0.1:8092" + prefix,
@@ -44,13 +58,15 @@ func localHandlers(t *testing.T, prefix string) http.Handler {
 	}
 	identity, err := auth.New(t.Context(), cfg, store)
 	require.NoError(t, err)
+
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	pages, err := endpoint.NewPages(web.Assets, prefix, identity.Mode(), logger, store, "")
 	require.NoError(t, err)
+
 	static, err := fs.Sub(web.Assets, "static")
 	require.NoError(t, err)
 
-	handlers := New(Config{
+	return Config{
 		InfrastructureConfig: InfrastructureConfig{
 			RoutePrefix: prefix,
 			PublicURL:   cfg.Server.PublicURL,
@@ -61,8 +77,7 @@ func localHandlers(t *testing.T, prefix string) http.Handler {
 		},
 		AuthenticationConfig: AuthenticationConfig{Identity: identity},
 		ApplicationConfig:    ApplicationConfig{Warden: &fakeAPI{}},
-	})
-	return handlers.Application
+	}
 }
 
 // localForm sends the exact origin required for browser write protection.
@@ -88,6 +103,70 @@ func TestBrowserSetup(t *testing.T) {
 		app.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/setup", nil))
 		assert.Equal(t, http.StatusOK, recorder.Code)
 		assert.Contains(t, recorder.Body.String(), "Create administrator")
+	})
+
+	t.Run("fresh proxy installation redirects before authorization and disables setup after commit", func(t *testing.T) {
+		t.Parallel()
+
+		store, err := db.Open(t.Context(), filepath.Join(t.TempDir(), "webui-proxy.db"))
+		require.NoError(t, err)
+		t.Cleanup(func() { require.NoError(t, store.Close()) })
+
+		mode := appkitauth.ModeProxy
+		cfg := flags.Config{
+			Server: appkitconfig.Server{PublicURL: "http://127.0.0.1:8092"},
+			Authentication: appkitconfig.Authentication{
+				ModeOverride:    &mode,
+				SessionLifetime: time.Hour,
+			},
+			Proxy:        appkitconfig.Proxy{TrustedCIDRs: []string{"127.0.0.1/32"}},
+			AdminGroup:   "warden-admins",
+			SetupToken:   bootstrapSecret,
+			SetupSubject: "operator",
+		}
+		identity, err := auth.New(t.Context(), cfg, store)
+		require.NoError(t, err)
+
+		logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+		pages, err := endpoint.NewPages(web.Assets, "", identity.Mode(), logger, store, "")
+		require.NoError(t, err)
+		static, err := fs.Sub(web.Assets, "static")
+		require.NoError(t, err)
+
+		app := New(Config{
+			InfrastructureConfig: InfrastructureConfig{
+				PublicURL: cfg.Server.PublicURL,
+				Static:    static,
+				Pages:     pages,
+				Logger:    logger,
+			},
+			AuthenticationConfig: AuthenticationConfig{Identity: identity},
+			ApplicationConfig:    ApplicationConfig{Warden: &fakeAPI{}},
+		}).Application
+
+		before := httptest.NewRecorder()
+		app.ServeHTTP(before, httptest.NewRequest(http.MethodGet, "/", nil))
+		assert.Equal(t, http.StatusSeeOther, before.Code)
+		assert.Equal(t, "/setup", before.Header().Get("Location"))
+
+		setup := httptest.NewRecorder()
+		app.ServeHTTP(setup, localForm("/setup", url.Values{
+			"setupToken":      {bootstrapSecret},
+			"username":        {"owner"},
+			"password":        {"correct-password"},
+			"confirmPassword": {"correct-password"},
+		}))
+		require.Equal(t, http.StatusSeeOther, setup.Code)
+		assert.False(t, identity.SetupRequired())
+
+		after := httptest.NewRecorder()
+		app.ServeHTTP(after, httptest.NewRequest(http.MethodGet, "/setup", nil))
+		assert.Equal(t, http.StatusNotFound, after.Code)
+
+		unauthorized := httptest.NewRecorder()
+		app.ServeHTTP(unauthorized, httptest.NewRequest(http.MethodGet, "/", nil))
+		assert.Equal(t, http.StatusSeeOther, unauthorized.Code)
+		assert.Equal(t, "/login", unauthorized.Header().Get("Location"))
 	})
 
 	t.Run("invalid token cannot provision administrator", func(t *testing.T) {
@@ -131,6 +210,38 @@ func TestBrowserSetup(t *testing.T) {
 		app.ServeHTTP(recorder, request)
 		assert.Equal(t, http.StatusOK, recorder.Code)
 		assert.Contains(t, recorder.Body.String(), "Change password")
+	})
+
+	t.Run("completing setup disables both setup methods immediately", func(t *testing.T) {
+		t.Parallel()
+
+		app := localHandlers(t, "")
+		setup := httptest.NewRecorder()
+		app.ServeHTTP(setup, localForm("/setup", url.Values{
+			"setupToken":      {bootstrapSecret},
+			"username":        {"admin"},
+			"password":        {"correct-password"},
+			"confirmPassword": {"correct-password"},
+		}))
+		require.Equal(t, http.StatusSeeOther, setup.Code)
+
+		get := httptest.NewRecorder()
+		app.ServeHTTP(get, httptest.NewRequest(http.MethodGet, "/setup", nil))
+		assert.Equal(t, http.StatusNotFound, get.Code)
+
+		post := httptest.NewRecorder()
+		app.ServeHTTP(post, localForm("/setup", url.Values{
+			"setupToken":      {bootstrapSecret},
+			"username":        {"other"},
+			"password":        {"other-password"},
+			"confirmPassword": {"other-password"},
+		}))
+		assert.Equal(t, http.StatusNotFound, post.Code)
+
+		root := httptest.NewRecorder()
+		app.ServeHTTP(root, httptest.NewRequest(http.MethodGet, "/", nil))
+		assert.Equal(t, http.StatusSeeOther, root.Code)
+		assert.Equal(t, "/login", root.Header().Get("Location"))
 	})
 
 	t.Run("password rotation revokes session and requires new credentials", func(t *testing.T) {
@@ -547,4 +658,98 @@ func assertRecoveryPasswordChange(t *testing.T, mode appkitauth.Mode) {
 		"username": {"owner"}, "password": {"new-password-2026"},
 	}, nil)
 	assert.Equal(t, http.StatusSeeOther, login.Code)
+}
+
+// TestSetupRouteRegistration checks initial registration and restart behavior.
+func TestSetupRouteRegistration(t *testing.T) {
+	t.Parallel()
+
+	t.Run("fresh installation registers both setup routes", func(t *testing.T) {
+		t.Parallel()
+
+		store, err := db.Open(t.Context(), filepath.Join(t.TempDir(), "fresh.db"))
+		require.NoError(t, err)
+		t.Cleanup(func() { require.NoError(t, store.Close()) })
+
+		config := newLocalServerConfig(t, "", store)
+		mux := http.NewServeMux()
+		registerPublicRoutes(mux, config)
+
+		_, getPattern := mux.Handler(httptest.NewRequest(http.MethodGet, "/setup", nil))
+		assert.Equal(t, "GET /setup", getPattern)
+
+		_, postPattern := mux.Handler(httptest.NewRequest(http.MethodPost, "/setup", nil))
+		assert.Equal(t, "POST /setup", postPattern)
+	})
+
+	t.Run("existing administrator prevents setup route registration", func(t *testing.T) {
+		t.Parallel()
+
+		store, err := db.Open(t.Context(), filepath.Join(t.TempDir(), "initialized.db"))
+		require.NoError(t, err)
+		t.Cleanup(func() { require.NoError(t, store.Close()) })
+		require.NoError(t, store.CreateInitialAdministrator(t.Context(), "admin", "hash"))
+
+		config := newLocalServerConfig(t, "", store)
+		mux := http.NewServeMux()
+		registerPublicRoutes(mux, config)
+
+		_, getPattern := mux.Handler(httptest.NewRequest(http.MethodGet, "/setup", nil))
+		assert.Empty(t, getPattern)
+
+		_, postPattern := mux.Handler(httptest.NewRequest(http.MethodPost, "/setup", nil))
+		assert.Empty(t, postPattern)
+
+		app := New(config).Application
+		get := httptest.NewRecorder()
+		app.ServeHTTP(get, httptest.NewRequest(http.MethodGet, "/setup", nil))
+		assert.Equal(t, http.StatusNotFound, get.Code)
+
+		post := httptest.NewRecorder()
+		app.ServeHTTP(post, localForm("/setup", url.Values{}))
+		assert.Equal(t, http.StatusNotFound, post.Code)
+	})
+
+	t.Run("restart loads completed setup from persisted database", func(t *testing.T) {
+		t.Parallel()
+
+		database := filepath.Join(t.TempDir(), "restarted.db")
+		first, err := db.Open(t.Context(), database)
+		require.NoError(t, err)
+
+		app := newLocalApplication(t, "", first)
+		setup := httptest.NewRecorder()
+		app.ServeHTTP(setup, localForm("/setup", url.Values{
+			"setupToken":      {bootstrapSecret},
+			"username":        {"admin"},
+			"password":        {"correct-password"},
+			"confirmPassword": {"correct-password"},
+		}))
+		require.Equal(t, http.StatusSeeOther, setup.Code)
+		require.NoError(t, first.Close())
+
+		reopened, err := db.Open(t.Context(), database)
+		require.NoError(t, err)
+		t.Cleanup(func() { require.NoError(t, reopened.Close()) })
+
+		config := newLocalServerConfig(t, "", reopened)
+		require.False(t, config.Identity.SetupRequired())
+		mux := http.NewServeMux()
+		registerPublicRoutes(mux, config)
+
+		_, getPattern := mux.Handler(httptest.NewRequest(http.MethodGet, "/setup", nil))
+		assert.Empty(t, getPattern)
+		_, postPattern := mux.Handler(httptest.NewRequest(http.MethodPost, "/setup", nil))
+		assert.Empty(t, postPattern)
+
+		restarted := New(config).Application
+		get := httptest.NewRecorder()
+		restarted.ServeHTTP(get, httptest.NewRequest(http.MethodGet, "/setup", nil))
+		assert.Equal(t, http.StatusNotFound, get.Code)
+
+		root := httptest.NewRecorder()
+		restarted.ServeHTTP(root, httptest.NewRequest(http.MethodGet, "/", nil))
+		assert.Equal(t, http.StatusSeeOther, root.Code)
+		assert.Equal(t, "/login", root.Header().Get("Location"))
+	})
 }

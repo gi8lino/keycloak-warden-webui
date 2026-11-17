@@ -41,9 +41,9 @@ The default identity headers include `X-Forwarded-User` and `X-Forwarded-Groups`
 
 ## First-time setup with external authentication
 
-On a fresh installation, visiting the Web UI root (`/`) redirects to `/setup` **before** proxy or OIDC authentication is evaluated. The same redirect applies with an application route prefix (for example, `/ui/setup`). Setup still requires the private setup token; the redirect does not grant administrator access. The external ingress or identity proxy must also allow the browser to reach `/setup`.
+On a fresh installation, Web UI reads the initial administrator state **once at startup**. Only when initialization is needed does it register `GET /setup` and `POST /setup`. Visiting the Web UI root (`/`) redirects to `/setup` before proxy or OIDC authentication is evaluated, including with a route prefix (for example, `/ui/setup`). Setup still requires the private setup token; the redirect does not grant administrator access. The external ingress or identity proxy must also allow the browser to reach `/setup`.
 
-After the initial administrator is created, the normal authentication and approved-identity checks apply. The setup page is no longer available.
+After the first administrator is committed to SQLite, an atomic in-memory flag immediately disables both setup handlers: subsequent `GET` and `POST` requests return HTTP 404, and normal authentication applies. On subsequent restarts Web UI reads the persisted state again and never registers the setup routes for an initialized database. Normal HTTP requests do not query the database to determine whether setup is required; the one-time database insertion remains atomic against concurrent setup attempts.
 
 Every deployment starts with a local administrator record, even if external sign-in is the primary mode. For initial OIDC or proxy setup, set `WARDEN_WEBUI__SETUP_SUBJECT` to the founder's exact OIDC `sub` or trusted proxy username. On first `/setup`, Web UI creates the administrator and links that subject. Sign in through your external provider afterward.
 

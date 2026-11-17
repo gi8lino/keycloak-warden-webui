@@ -11,12 +11,7 @@ import (
 // LoginPage serves the local sign-in form or begins an Appkit OIDC login.
 func LoginPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		required, err := identity.SetupRequired(r.Context())
-		if err != nil {
-			http.Error(w, "Authentication unavailable.", http.StatusInternalServerError)
-			return
-		}
-		if required {
+		if identity.SetupRequired() {
 			pages.redirect(w, r, "/setup")
 			return
 		}
@@ -24,7 +19,10 @@ func LoginPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 		switch identity.Mode() {
 		case appkitauth.ModeOIDC:
 			if r.URL.Query().Get("continue") == "1" {
-				pages.render(r, w, http.StatusOK, pageData{Title: "Continue to Warden", Page: "continue"})
+				pages.render(r, w, http.StatusOK, pageData{
+					Title: "Continue to Warden",
+					Page:  "continue",
+				})
 				return
 			}
 			if err := identity.BeginOIDC(w, r); err != nil {
@@ -49,19 +47,18 @@ func LocalLoginPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			http.NotFound(w, r)
 			return
 		}
-		pages.render(r, w, http.StatusOK, pageData{Title: "Local sign in", Page: "login", Notice: loginNotice(r)})
+		pages.render(r, w, http.StatusOK, pageData{
+			Title:  "Local sign in",
+			Page:   "login",
+			Notice: loginNotice(r),
+		})
 	}
 }
 
 // LoginLocal authenticates a bounded browser form and creates an Appkit session.
 func LoginLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		required, err := identity.SetupRequired(r.Context())
-		if err != nil {
-			http.Error(w, "Authentication unavailable.", http.StatusInternalServerError)
-			return
-		}
-		if required {
+		if identity.SetupRequired() {
 			http.NotFound(w, r)
 			return
 		}
@@ -74,7 +71,9 @@ func LoginLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			return
 		}
 
-		if err := identity.SignInLocal(w, r, r.FormValue("username"), r.FormValue("password")); err != nil {
+		u := r.FormValue("username")
+		pw := r.FormValue("password")
+		if err := identity.SignInLocal(w, r, u, pw); err != nil {
 			if !isRejectedLocalLogin(err) {
 				http.Error(w, "Authentication unavailable.", http.StatusInternalServerError)
 				return

@@ -65,12 +65,7 @@ func SetupLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 // whileSetupRequired exposes a setup handler only until the first administrator exists.
 func whileSetupRequired(identity *auth.Service, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		required, err := identity.SetupRequired(r.Context())
-		if err != nil {
-			http.Error(w, "Setup unavailable.", http.StatusInternalServerError)
-			return
-		}
-		if !required {
+		if !identity.SetupRequired() {
 			http.NotFound(w, r)
 			return
 		}

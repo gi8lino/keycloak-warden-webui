@@ -62,10 +62,11 @@ func New(ctx context.Context, cfg flags.Config, repository *db.Store) (*Service,
 	default:
 		return nil, fmt.Errorf("unsupported authentication mode: %s", service.mode)
 	}
-	required, err := service.SetupRequired(ctx)
+	required, err := repository.SetupRequired(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("check initial administrator: %w", err)
 	}
+	service.setupRequired.Store(required)
 	if required && len(cfg.SetupToken) < 32 {
 		return nil, errors.New("setup-token must be at least 32 characters until the initial administrator is created")
 	}
