@@ -133,28 +133,42 @@
     action="{{.Prefix}}/bans"
     class="grid gap-6 sm:grid-cols-2"
   >
-    <label class="grid gap-2 text-sm font-medium text-zinc-300" for="ban-ip"
+    <label
+      class="grid self-start gap-2 text-sm font-medium text-zinc-300"
+      for="ban-ip"
       >IP address<input
         id="ban-ip"
+        aria-describedby="ban-ip-error"
         name="ip"
         required
         placeholder="203.0.113.42"
         autocomplete="off"
         maxlength="64"
-        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
-    /></label>
+        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus:border-red-400 aria-[invalid=true]:focus:ring-red-400" /><span
+        id="ban-ip-error"
+        hidden
+        class="text-xs font-normal text-red-200"
+        aria-live="polite"
+      ></span
+    ></label>
     <label
-      class="grid gap-2 text-sm font-medium text-zinc-300"
+      class="grid self-start gap-2 text-sm font-medium text-zinc-300"
       for="ban-duration"
       >Duration<input
         id="ban-duration"
+        aria-describedby="ban-duration-error"
         name="duration"
         required
         value="1h"
         maxlength="32"
         placeholder="1h"
-        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
-    /></label>
+        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus:border-red-400 aria-[invalid=true]:focus:ring-red-400" /><span
+        id="ban-duration-error"
+        hidden
+        class="text-xs font-normal text-red-200"
+        aria-live="polite"
+      ></span
+    ></label>
     <label
       class="grid gap-2 text-sm font-medium text-zinc-300 sm:col-span-2"
       for="ban-reason"

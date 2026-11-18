@@ -520,6 +520,9 @@
     border-color: var(--color-zinc-800);
   }
 }
+.self-start {
+  align-self: flex-start;
+}
 .overflow-hidden {
   overflow: hidden;
 }
@@ -1137,6 +1140,25 @@
 .aria-\[current\=page\]\:text-zinc-100 {
   &[aria-current="page"] {
     color: var(--color-zinc-100);
+  }
+}
+.aria-\[invalid\=true\]\:border-red-400 {
+  &[aria-invalid="true"] {
+    border-color: var(--color-red-400);
+  }
+}
+.aria-\[invalid\=true\]\:focus\:border-red-400 {
+  &[aria-invalid="true"] {
+    &:focus {
+      border-color: var(--color-red-400);
+    }
+  }
+}
+.aria-\[invalid\=true\]\:focus\:ring-red-400 {
+  &[aria-invalid="true"] {
+    &:focus {
+      --tw-ring-color: var(--color-red-400);
+    }
   }
 }
 .sm\:col-span-2 {
