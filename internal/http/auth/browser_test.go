@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -8,6 +10,7 @@ import (
 	"time"
 
 	appkitauth "github.com/containeroo/appkit/auth"
+	"github.com/containeroo/appkit/auth/session"
 	appkitconfig "github.com/containeroo/appkit/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -128,7 +131,7 @@ func TestSetupState(t *testing.T) {
 		require.ErrorIs(t, service.SetupLocal(httptest.NewRecorder(), request, testSetupToken, "other", "other-password"), db.ErrSetupComplete)
 	})
 
-	t.Run("concurrent service with stale state synchronizes after losing database insert", func(t *testing.T) {
+	t.Run("stale service synchronizes after another service completes setup", func(t *testing.T) {
 		t.Parallel()
 
 		store := authStore(t)
@@ -147,6 +150,77 @@ func TestSetupState(t *testing.T) {
 		assert.False(t, second.SetupRequired())
 	})
 
+	t.Run("simultaneous submissions create exactly one administrator", func(t *testing.T) {
+		t.Parallel()
+
+		store := authStore(t)
+		service, err := New(t.Context(), localConfig(), store)
+		require.NoError(t, err)
+
+		start := make(chan struct{})
+		results := make(chan error, 2)
+		for _, name := range []string{"first", "second"} {
+			go func() {
+				<-start
+				request := httptest.NewRequest(http.MethodPost, "/setup", nil).WithContext(t.Context())
+				results <- service.SetupLocal(httptest.NewRecorder(), request, testSetupToken, name, "correct-password")
+			}()
+		}
+		close(start)
+
+		successes, conflicts := 0, 0
+		for range 2 {
+			err := <-results
+			switch {
+			case err == nil:
+				successes++
+			case errors.Is(err, db.ErrSetupComplete):
+				conflicts++
+			default:
+				assert.NoError(t, err)
+			}
+		}
+		assert.Equal(t, 1, successes)
+		assert.Equal(t, 1, conflicts)
+		assert.False(t, service.SetupRequired())
+
+		users, err := store.LocalUsers(t.Context())
+		require.NoError(t, err)
+		require.Len(t, users, 1)
+	})
+
+	t.Run("session failure after commit leaves setup disabled and login available", func(t *testing.T) {
+		t.Parallel()
+
+		store := authStore(t)
+		service, err := New(t.Context(), localConfig(), store)
+		require.NoError(t, err)
+		failure := errors.New("session persistence unavailable")
+		service.sessions.Store = failingSessionStore{Store: service.sessions.Store, err: failure}
+
+		response := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodPost, "/setup", nil).WithContext(t.Context())
+		err = service.SetupLocal(response, request, testSetupToken, "admin", "correct-password")
+		require.ErrorIs(t, err, failure)
+		assert.Empty(t, response.Result().Cookies())
+		assert.False(t, service.SetupRequired())
+
+		required, err := store.SetupRequired(t.Context())
+		require.NoError(t, err)
+		assert.False(t, required)
+		require.ErrorIs(t, service.SetupLocal(httptest.NewRecorder(), request, testSetupToken, "other", "correct-password"), db.ErrSetupComplete)
+
+		// The regular login manager still uses the healthy session store.
+		login := httptest.NewRecorder()
+		require.NoError(t, service.SignInLocal(login, request, "admin", "correct-password"))
+		require.Len(t, login.Result().Cookies(), 1)
+		authenticated := httptest.NewRequest(http.MethodGet, "/", nil).WithContext(t.Context())
+		authenticated.AddCookie(login.Result().Cookies()[0])
+		user, err := service.Authenticate(authenticated)
+		require.NoError(t, err)
+		assert.Equal(t, "admin", user.Name)
+	})
+
 	t.Run("initialized installation starts disabled without a setup token", func(t *testing.T) {
 		t.Parallel()
 
@@ -159,4 +233,17 @@ func TestSetupState(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, service.SetupRequired())
 	})
+}
+
+// failingSessionStore injects a session-write failure while preserving reads and revocation.
+type failingSessionStore struct {
+	// Store delegates session lookup and revocation to the real persistence adapter.
+	session.Store[User]
+	// err is the failure returned when setup tries to persist its first session.
+	err error
+}
+
+// Create simulates unavailable session persistence after the administrator has committed.
+func (s failingSessionStore) Create(context.Context, string, User, time.Time) error {
+	return s.err
 }
