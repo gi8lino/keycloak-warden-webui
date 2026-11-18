@@ -21,6 +21,8 @@ import (
 
 // Pages renders server-controlled data into escaped administrator HTML pages.
 type Pages struct {
+	// version is the immutable build version displayed in the footer.
+	version string
 	// catalog lists validated palettes available to all accounts.
 	catalog []themes.Theme
 	// store persists account appearance preferences.
@@ -37,6 +39,8 @@ type Pages struct {
 
 // pageData supplies metadata and view data for one rendered HTML page.
 type pageData struct {
+	// Version identifies the running Web UI build.
+	Version string
 	// Theme identifies the palette applied to this page.
 	Theme themes.Theme
 	// Themes lists choices for the preferences form.
@@ -79,6 +83,7 @@ func NewPages(
 	logger *slog.Logger,
 	store *db.Store,
 	themesDir string,
+	version string,
 ) (*Pages, error) {
 	templates, err := template.New("base.html").
 		Funcs(template.FuncMap{
@@ -95,6 +100,7 @@ func NewPages(
 	}
 
 	return &Pages{
+		version:   version,
 		catalog:   catalog,
 		store:     store,
 		templates: templates,
@@ -109,6 +115,7 @@ func (p *Pages) render(r *http.Request, w http.ResponseWriter, status int, data 
 	data.Theme = p.accountTheme(r.Context(), data.User)
 	data.Themes = p.catalog
 	w.Header().Set("Cache-Control", "private, no-store")
+	data.Version = p.version
 	data.Prefix = p.prefix
 	data.Mode = p.mode
 	user, _ := auth.CurrentUser(r)

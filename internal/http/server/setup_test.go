@@ -60,7 +60,7 @@ func newLocalServerConfig(t *testing.T, prefix string, store *db.Store) Config {
 	require.NoError(t, err)
 
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	pages, err := endpoint.NewPages(web.Assets, prefix, identity.Mode(), logger, store, "")
+	pages, err := endpoint.NewPages(web.Assets, prefix, identity.Mode(), logger, store, "", "test")
 	require.NoError(t, err)
 
 	static, err := fs.Sub(web.Assets, "static")
@@ -128,7 +128,7 @@ func TestBrowserSetup(t *testing.T) {
 		require.NoError(t, err)
 
 		logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-		pages, err := endpoint.NewPages(web.Assets, "", identity.Mode(), logger, store, "")
+		pages, err := endpoint.NewPages(web.Assets, "", identity.Mode(), logger, store, "", "test")
 		require.NoError(t, err)
 		static, err := fs.Sub(web.Assets, "static")
 		require.NoError(t, err)
@@ -487,7 +487,7 @@ func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string, lo
 	require.NoError(t, err)
 
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	pages, err := endpoint.NewPages(web.Assets, prefix, identity.Mode(), logger, store, "")
+	pages, err := endpoint.NewPages(web.Assets, prefix, identity.Mode(), logger, store, "", "test")
 	require.NoError(t, err)
 	static, err := fs.Sub(web.Assets, "static")
 	require.NoError(t, err)
@@ -752,4 +752,18 @@ func TestSetupRouteRegistration(t *testing.T) {
 		assert.Equal(t, http.StatusSeeOther, root.Code)
 		assert.Equal(t, "/login", root.Header().Get("Location"))
 	})
+}
+
+func TestCustomNotFound(t *testing.T) {
+	t.Parallel()
+
+	app := localHandlers(t, "/ui")
+	response := httptest.NewRecorder()
+	app.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/ui/missing", nil))
+
+	assert.Equal(t, http.StatusNotFound, response.Code)
+	assert.Contains(t, response.Header().Get("Content-Type"), "text/html")
+	assert.Contains(t, response.Body.String(), "Page not found")
+	assert.Contains(t, response.Body.String(), `href="/ui/"`)
+	assert.Contains(t, response.Body.String(), "Version test")
 }

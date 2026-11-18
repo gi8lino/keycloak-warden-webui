@@ -69,7 +69,7 @@ func Run(ctx context.Context, args []string, assets fs.FS, version string, stdou
 		return err
 	}
 
-	serverConfig, err := bootstrap.NewHTTPConfig(assets, cfg, infrastructure, application, logger)
+	serverConfig, err := bootstrap.NewHTTPConfig(assets, cfg, infrastructure, application, logger, version)
 	if err != nil {
 		setupLogger.Error(
 			"configure HTTP adapter",

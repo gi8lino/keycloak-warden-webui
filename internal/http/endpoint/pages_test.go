@@ -24,7 +24,7 @@ func TestPagesFail(t *testing.T) {
 	t.Run("upstream details are not disclosed", func(t *testing.T) {
 		t.Parallel()
 		logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-		pages, err := NewPages(web.Assets, "", appkitauth.ModeProxy, logger, nil, "")
+		pages, err := NewPages(web.Assets, "", appkitauth.ModeProxy, logger, nil, "", "test")
 		require.NoError(t, err)
 
 		recorder := httptest.NewRecorder()
@@ -36,7 +36,7 @@ func TestPagesFail(t *testing.T) {
 	t.Run("not found remains not found", func(t *testing.T) {
 		t.Parallel()
 		logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-		pages, err := NewPages(web.Assets, "", appkitauth.ModeProxy, logger, nil, "")
+		pages, err := NewPages(web.Assets, "", appkitauth.ModeProxy, logger, nil, "", "test")
 		require.NoError(t, err)
 
 		recorder := httptest.NewRecorder()
@@ -73,7 +73,7 @@ func TestPagesFailUpstreamStatusBounds(t *testing.T) {
 		t.Parallel()
 
 		logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-		pages, err := NewPages(web.Assets, "", appkitauth.ModeLocal, logger, nil, "")
+		pages, err := NewPages(web.Assets, "", appkitauth.ModeLocal, logger, nil, "", "test")
 		require.NoError(t, err)
 
 		failure := fmt.Errorf("wrapped: %w", &client.Error{Code: 399, Message: "private details"})
@@ -90,7 +90,7 @@ func TestPagesFailUpstreamStatusBounds(t *testing.T) {
 		t.Parallel()
 
 		logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-		pages, err := NewPages(web.Assets, "", appkitauth.ModeLocal, logger, nil, "")
+		pages, err := NewPages(web.Assets, "", appkitauth.ModeLocal, logger, nil, "", "test")
 		require.NoError(t, err)
 
 		failure := fmt.Errorf("wrapped: %w", &client.Error{Code: http.StatusBadRequest, Message: "private details"})
@@ -107,7 +107,7 @@ func TestPagesFailUpstreamStatusBounds(t *testing.T) {
 		t.Parallel()
 
 		logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-		pages, err := NewPages(web.Assets, "", appkitauth.ModeLocal, logger, nil, "")
+		pages, err := NewPages(web.Assets, "", appkitauth.ModeLocal, logger, nil, "", "test")
 		require.NoError(t, err)
 
 		failure := fmt.Errorf("wrapped: %w", &client.Error{Code: 599, Message: "private details"})
@@ -124,7 +124,7 @@ func TestPagesFailUpstreamStatusBounds(t *testing.T) {
 		t.Parallel()
 
 		logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-		pages, err := NewPages(web.Assets, "", appkitauth.ModeLocal, logger, nil, "")
+		pages, err := NewPages(web.Assets, "", appkitauth.ModeLocal, logger, nil, "", "test")
 		require.NoError(t, err)
 
 		failure := fmt.Errorf("wrapped: %w", &client.Error{Code: 600, Message: "private details"})

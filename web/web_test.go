@@ -20,7 +20,7 @@ func TestEmbeddedAssets(t *testing.T) {
 		if err != nil {
 			t.Fatalf("parse embedded templates: %v", err)
 		}
-		for _, name := range []string{"account-menu", "users", "password", "dashboard", "base.html", "maintenance", "login", "setup", "error", "detail"} {
+		for _, name := range []string{"account-menu", "users", "password", "dashboard", "base.html", "maintenance", "login", "setup", "error", "not-found", "detail"} {
 			if templates.Lookup(name) == nil {
 				t.Errorf("missing embedded template %q", name)
 			}

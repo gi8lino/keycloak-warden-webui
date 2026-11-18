@@ -11,7 +11,7 @@ import (
 
 // SetupPage presents first-run administrator provisioning only while setup is incomplete.
 func SetupPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
-	return whileSetupRequired(identity, func(w http.ResponseWriter, r *http.Request) {
+	return whileSetupRequired(identity, pages, func(w http.ResponseWriter, r *http.Request) {
 		pages.render(r, w, http.StatusOK, pageData{
 			Title: "Create administrator",
 			Page:  "setup",
@@ -21,7 +21,7 @@ func SetupPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 
 // SetupLocal verifies the bootstrap token and atomically provisions the local administrator.
 func SetupLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
-	return whileSetupRequired(identity, func(w http.ResponseWriter, r *http.Request) {
+	return whileSetupRequired(identity, pages, func(w http.ResponseWriter, r *http.Request) {
 		if err := parseForm(w, r); err != nil {
 			http.Error(w, "Invalid setup form.", http.StatusBadRequest)
 			return
@@ -42,7 +42,7 @@ func SetupLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			return
 		}
 		if errors.Is(err, db.ErrSetupComplete) {
-			http.NotFound(w, r)
+			NotFound(pages)(w, r)
 			return
 		}
 		if errors.Is(err, appkitauth.ErrForbidden) {
@@ -63,10 +63,10 @@ func SetupLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 }
 
 // whileSetupRequired exposes a setup handler only until the first administrator exists.
-func whileSetupRequired(identity *auth.Service, next http.HandlerFunc) http.HandlerFunc {
+func whileSetupRequired(identity *auth.Service, pages *Pages, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !identity.SetupRequired() {
-			http.NotFound(w, r)
+			NotFound(pages)(w, r)
 			return
 		}
 		next(w, r)

@@ -40,7 +40,7 @@ func TestBootstrapComposesRuntime(t *testing.T) {
 	application, err := NewApplication(t.Context(), cfg, infrastructure)
 	require.NoError(t, err)
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	httpConfig, err := NewHTTPConfig(web.Assets, cfg, infrastructure, application, logger)
+	httpConfig, err := NewHTTPConfig(web.Assets, cfg, infrastructure, application, logger, "test")
 	require.NoError(t, err)
 
 	// The configured upstream client keeps administrative credentials on the server.

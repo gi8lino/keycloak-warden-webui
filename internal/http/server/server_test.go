@@ -94,7 +94,7 @@ func testHandlers(t *testing.T, prefix string) (http.Handler, http.Handler, *fak
 	require.NoError(t, repository.CreateFounder(t.Context(), "operator", "hash", &db.IdentityLink{Issuer: "warden-webui-proxy", Subject: "operator"}))
 	identity, err := auth.New(t.Context(), cfg, repository)
 	require.NoError(t, err)
-	pages, err := endpoint.NewPages(web.Assets, prefix, identity.Mode(), logger, repository, "")
+	pages, err := endpoint.NewPages(web.Assets, prefix, identity.Mode(), logger, repository, "", "test")
 	require.NoError(t, err)
 	static, err := fs.Sub(web.Assets, "static")
 	require.NoError(t, err)

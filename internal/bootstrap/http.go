@@ -17,6 +17,7 @@ func NewHTTPConfig(
 	infrastructure *Infrastructure,
 	application *Application,
 	logger *slog.Logger,
+	version string,
 ) (server.Config, error) {
 	pages, err := endpoint.NewPages(
 		assets,
@@ -25,6 +26,7 @@ func NewHTTPConfig(
 		logger.With("component", "pages"),
 		infrastructure.store,
 		cfg.ThemeDirectory,
+		version,
 	)
 	if err != nil {
 		return server.Config{}, fmt.Errorf("parse UI templates: %w", err)

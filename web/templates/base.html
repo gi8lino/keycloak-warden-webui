@@ -13,9 +13,9 @@
   <link rel="stylesheet" href="{{.Prefix}}/theme.css?name={{.Theme.Title}}">
   <script src="{{.Prefix}}/static/js/ui.js" defer></script>
 </head>
-<body class="min-h-screen bg-zinc-950 font-sans text-zinc-100 antialiased">
-<div class="min-h-screen md:grid md:grid-cols-[250px_minmax(0,1fr)]">
-  <aside class="hidden border-r border-zinc-800 bg-zinc-900/50 md:flex md:min-h-screen md:flex-col md:px-4 md:py-8">
+<body class="h-dvh overflow-hidden bg-zinc-950 font-sans text-zinc-100 antialiased">
+<div class="h-full md:grid md:grid-cols-[250px_minmax(0,1fr)]">
+  <aside class="hidden border-r border-zinc-800 bg-zinc-900/50 md:flex min-h-0 md:flex-col md:px-4 md:py-8">
     <a href="{{.Prefix}}/" class="mb-10 flex items-center gap-3 rounded-lg px-3 text-zinc-100 outline-offset-4 transition-all duration-150 hover:text-white focus-visible:outline-2 focus-visible:outline-cyan-400">
       <img class="size-10 shrink-0" src="{{.Prefix}}/static/assets/warden-webui.svg" alt="">
       <span class="min-w-0"><span class="block text-lg font-semibold tracking-tight">Warden</span><span class="block text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Web UI</span></span>
@@ -31,8 +31,8 @@
       {{if .User}}{{template "account-menu" .}}{{end}}
     </div>
   </aside>
-  <div class="min-w-0">
-    <header class="border-b border-zinc-800 bg-zinc-900/50 md:hidden">
+  <div class="flex h-full min-h-0 min-w-0 flex-col">
+    <header class="shrink-0 border-b border-zinc-800 bg-zinc-900/50 md:hidden">
       <div class="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <a href="{{.Prefix}}/" class="inline-flex items-center gap-3 text-base font-semibold tracking-tight text-zinc-100"><img class="size-9 shrink-0" src="{{.Prefix}}/static/assets/warden-webui.svg" alt="">Warden WebUI</a>
         {{if .User}}<details class="group relative"><summary aria-label="Toggle navigation" class="flex size-10 cursor-pointer list-none items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition-all duration-150 hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-cyan-400">{{template "icon-menu"}}</summary>
@@ -45,9 +45,12 @@
         </details>{{template "account-menu" .}}{{end}}
       </div>
     </header>
-    <main id="main-content" class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-      <div class="mb-7 flex flex-wrap items-center justify-between gap-3"><p class="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">Keycloak Warden / Operations</p><span class="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs font-medium capitalize text-zinc-400">{{.Mode}} authentication</span></div>
-      <header class="mb-8"><h1 class="text-3xl font-semibold tracking-tight text-zinc-100 sm:text-4xl">{{.Title}}</h1>{{if .User}}<p class="mt-2 text-sm leading-6 text-zinc-400">Manage security decisions through Warden's authenticated API.</p>{{end}}</header>
+    <div id="page-heading" class="mx-auto w-full max-w-7xl shrink-0 px-4 pt-4 sm:px-6 sm:pt-6 lg:px-8">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-3"><p class="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">Keycloak Warden / Operations</p><span class="rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs font-medium capitalize text-zinc-400">{{.Mode}} authentication</span></div>
+      <header class="mb-4"><h1 class="text-3xl font-semibold tracking-tight text-zinc-100 sm:text-4xl">{{.Title}}</h1>{{if .User}}<p class="mt-2 text-sm leading-6 text-zinc-400">Manage security decisions through Warden's authenticated API.</p>{{end}}</header>
+    </div>
+    <main id="main-content" tabindex="0" aria-label="Page content" class="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div class="mx-auto w-full max-w-7xl px-4 pb-6 sm:px-6 lg:px-8">
       {{if .Notice}}<div role="status" class="mb-6 flex items-start gap-3 rounded-xl border border-emerald-900/60 bg-emerald-950/30 p-4 text-sm text-emerald-200">{{template "icon-check"}}<span>{{.Notice}}</span></div>{{end}}
       <div id="page-content" class="space-y-6" aria-live="off">
         {{if eq .Page "dashboard"}}{{template "dashboard" .}}{{end}}
@@ -58,14 +61,18 @@
         {{if eq .Page "setup"}}{{template "setup" .}}{{end}}
         {{if eq .Page "password"}}{{template "password" .}}{{end}}
         {{if eq .Page "users"}}{{template "users" .}}{{end}}
+        {{if eq .Page "not-found"}}{{template "not-found" .}}{{end}}
         {{if eq .Page "error"}}{{template "error" .}}{{end}}
       </div>
       <div id="page-loading" hidden aria-live="polite" aria-busy="true" class="space-y-6">
         <div class="animate-pulse rounded-xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8"><div class="h-5 w-40 rounded bg-zinc-800"></div><div class="mt-5 h-4 w-2/3 rounded bg-zinc-800"></div><div class="mt-6 h-28 rounded bg-zinc-800/60"></div></div>
         <div class="animate-pulse rounded-xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8"><div class="h-5 w-32 rounded bg-zinc-800"></div><div class="mt-5 h-20 rounded bg-zinc-800/60"></div></div>
       </div>
-      <footer class="mt-12 border-t border-zinc-800 pt-6 text-xs leading-6 text-zinc-500">Warden retains enforcement and database ownership. This UI only uses the authenticated API.</footer>
+      </div>
     </main>
+    <footer class="shrink-0 border-t border-zinc-800 bg-zinc-900/50 px-4 py-3 text-xs leading-6 text-zinc-500 sm:px-6 lg:px-8">
+      <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-3"><span>Warden Web UI</span><span>Version {{.Version}}</span></div>
+    </footer>
   </div>
 </div>
 </body>

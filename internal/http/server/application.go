@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	httpkitmiddleware "github.com/containeroo/httpkit/middleware"
+	"github.com/gi8lino/warden-webui/internal/http/endpoint"
 	"github.com/gi8lino/warden-webui/internal/http/middleware"
 	"github.com/gi8lino/warden-webui/internal/http/response"
 )
@@ -13,6 +14,7 @@ func newApplication(config Config) http.Handler {
 	applicationMux := http.NewServeMux()
 	registerPublicRoutes(applicationMux, config)
 	registerAdminRoutes(applicationMux, config)
+	applicationMux.HandleFunc("/", endpoint.NotFound(config.Pages))
 
 	middlewares := []httpkitmiddleware.Middleware{
 		middleware.SecurityHeaders(),
