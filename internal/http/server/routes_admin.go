@@ -9,7 +9,7 @@ import (
 
 // registerAdminRoutes protects every Warden administration page and form.
 func registerAdminRoutes(mux *http.ServeMux, config Config) {
-	protected := middleware.Authenticate(config.Identity, config.Logger)
+	protected := middleware.Authenticate(config.Identity, config.Logger, config.Pages.Problem)
 
 	mux.Handle("GET /admin/users", protected(endpoint.Users(config.Identity, config.Pages)))
 	mux.Handle("POST /admin/users", protected(endpoint.Users(config.Identity, config.Pages)))

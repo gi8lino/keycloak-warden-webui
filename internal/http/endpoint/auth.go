@@ -26,7 +26,7 @@ func LoginPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 				return
 			}
 			if err := identity.BeginOIDC(w, r); err != nil {
-				http.Error(w, "OIDC login unavailable.", http.StatusServiceUnavailable)
+				pages.Problem(r, w, http.StatusServiceUnavailable, "OIDC login unavailable.")
 			}
 		case appkitauth.ModeLocal:
 			pages.render(r, w, http.StatusOK, pageData{
@@ -35,7 +35,7 @@ func LoginPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 				Notice: loginNotice(r),
 			})
 		default:
-			http.Error(w, "Sign in through the trusted identity proxy.", http.StatusForbidden)
+			pages.Problem(r, w, http.StatusForbidden, "Sign in through the trusted identity proxy.")
 		}
 	}
 }
@@ -44,7 +44,7 @@ func LoginPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 func LocalLoginPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !identity.LocalLoginEnabled() {
-			http.NotFound(w, r)
+			NotFound(pages)(w, r)
 			return
 		}
 		pages.render(r, w, http.StatusOK, pageData{
@@ -59,15 +59,15 @@ func LocalLoginPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 func LoginLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if identity.SetupRequired() {
-			http.NotFound(w, r)
+			NotFound(pages)(w, r)
 			return
 		}
 		if !identity.LocalLoginEnabled() {
-			http.NotFound(w, r)
+			NotFound(pages)(w, r)
 			return
 		}
 		if err := parseForm(w, r); err != nil {
-			http.Error(w, "Invalid login form.", http.StatusBadRequest)
+			pages.Problem(r, w, http.StatusBadRequest, "Invalid login form.")
 			return
 		}
 
@@ -75,7 +75,7 @@ func LoginLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 		pw := r.FormValue("password")
 		if err := identity.SignInLocal(w, r, u, pw); err != nil {
 			if !isRejectedLocalLogin(err) {
-				http.Error(w, "Authentication unavailable.", http.StatusInternalServerError)
+				pages.failure(r, w, err, "Authentication unavailable.")
 				return
 			}
 			pages.render(r, w, http.StatusUnauthorized, pageData{
@@ -94,7 +94,7 @@ func LoginLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 func OIDCCallback(identity *auth.Service, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := identity.CompleteOIDC(w, r); err != nil {
-			http.Error(w, "OIDC authentication failed or administrator group missing.", http.StatusForbidden)
+			pages.Problem(r, w, http.StatusForbidden, "OIDC authentication failed or administrator group missing.")
 			return
 		}
 		pages.redirect(w, r, "/")
@@ -105,11 +105,11 @@ func OIDCCallback(identity *auth.Service, pages *Pages) http.HandlerFunc {
 func Logout(identity *auth.Service, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if identity.Mode() == appkitauth.ModeProxy && !currentUser(r).Local {
-			http.Error(w, "Sign out through your identity provider.", http.StatusBadRequest)
+			pages.Problem(r, w, http.StatusBadRequest, "Sign out through your identity provider.")
 			return
 		}
 		if err := identity.Logout(w, r); err != nil {
-			http.Error(w, "Sign out through your identity provider.", http.StatusBadRequest)
+			pages.Problem(r, w, http.StatusBadRequest, "Sign out through your identity provider.")
 			return
 		}
 		redirectAfterAuthForm(w, r, identity, pages, "/login")

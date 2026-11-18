@@ -26,16 +26,16 @@ func (p *Pages) accountTheme(ctx context.Context, name string) themes.Theme {
 // SaveTheme records a catalog selection for the authenticated local account.
 func (p *Pages) SaveTheme(w http.ResponseWriter, r *http.Request) {
 	if err := parseForm(w, r); err != nil {
-		http.Error(w, "Invalid theme form.", http.StatusBadRequest)
+		p.Problem(r, w, http.StatusBadRequest, "Invalid theme form.")
 		return
 	}
 	theme, ok := themes.Find(p.catalog, r.PostForm.Get("theme"))
 	if !ok {
-		http.Error(w, "Unknown theme.", http.StatusBadRequest)
+		p.Problem(r, w, http.StatusBadRequest, "Unknown theme.")
 		return
 	}
 	if err := p.store.SaveTheme(r.Context(), currentUser(r).Name, theme.Title); err != nil {
-		http.Error(w, "Unable to save theme.", http.StatusInternalServerError)
+		p.failure(r, w, err, "Unable to save theme.")
 		return
 	}
 	p.redirect(w, r, "/preferences")

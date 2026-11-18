@@ -1,6 +1,7 @@
 package endpoint
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -137,4 +138,49 @@ func TestPagesFailUpstreamStatusBounds(t *testing.T) {
 		assert.NotContains(t, recorder.Body.String(), "private details")
 	})
 
+}
+
+func TestBackendErrorPresentation(t *testing.T) {
+	t.Parallel()
+	t.Run("unavailable backend keeps shell and hides backend details", func(t *testing.T) {
+		t.Parallel()
+		assertBackendErrorPage(t, &client.Error{Code: http.StatusServiceUnavailable, Message: "secret backend response"}, http.StatusServiceUnavailable, "currently unavailable")
+	})
+	t.Run("timeout warns against duplicate actions", func(t *testing.T) {
+		t.Parallel()
+		assertBackendErrorPage(t, context.DeadlineExceeded, http.StatusGatewayTimeout, "may already have completed")
+	})
+	t.Run("backend authorization failure explains server configuration", func(t *testing.T) {
+		t.Parallel()
+		assertBackendErrorPage(t, &client.Error{Code: http.StatusForbidden, Message: "secret backend response"}, http.StatusForbidden, "configured Warden API credentials")
+	})
+	t.Run("conflict asks to review current state", func(t *testing.T) {
+		t.Parallel()
+		assertBackendErrorPage(t, &client.Error{Code: http.StatusConflict, Message: "secret backend response"}, http.StatusConflict, "Review the latest data")
+	})
+	t.Run("validation error gives safe input guidance", func(t *testing.T) {
+		t.Parallel()
+		assertBackendErrorPage(t, &client.Error{Code: http.StatusBadRequest, Message: "secret backend response"}, http.StatusBadRequest, "Check your input")
+	})
+	t.Run("connection failure is a bad gateway", func(t *testing.T) {
+		t.Parallel()
+		assertBackendErrorPage(t, errors.New("secret backend response"), http.StatusBadGateway, "currently unavailable")
+	})
+}
+
+// assertBackendErrorPage verifies status, safe guidance, and prefix-aware navigation together.
+func assertBackendErrorPage(t *testing.T, failure error, status int, message string) {
+	t.Helper()
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	pages, err := NewPages(web.Assets, "/ui", appkitauth.ModeLocal, logger, nil, "", "test")
+	require.NoError(t, err)
+	response := httptest.NewRecorder()
+	pages.fail(httptest.NewRequest(http.MethodGet, "/ui/", nil), response, auth.User{Name: "operator"}, failure)
+	assert.Equal(t, status, response.Code)
+	assert.Contains(t, response.Header().Get("Content-Type"), "text/html")
+	assert.Contains(t, response.Body.String(), message)
+	assert.Contains(t, response.Body.String(), `href="/ui/"`)
+	assert.Contains(t, response.Body.String(), "Version test")
+	assert.Contains(t, response.Body.String(), `role="alert"`)
+	assert.NotContains(t, response.Body.String(), "secret backend response")
 }

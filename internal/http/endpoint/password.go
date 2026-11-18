@@ -13,7 +13,7 @@ func PasswordPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := currentUser(r)
 		if !identity.CanChangeLocalPassword(user) {
-			http.NotFound(w, r)
+			NotFound(pages)(w, r)
 			return
 		}
 
@@ -32,12 +32,12 @@ func ChangePassword(identity *auth.Service, pages *Pages) http.HandlerFunc {
 		user := currentUser(r)
 
 		if !identity.CanChangeLocalPassword(user) {
-			http.NotFound(w, r)
+			NotFound(pages)(w, r)
 			return
 		}
 
 		if err := parseForm(w, r); err != nil {
-			http.Error(w, "Invalid password form.", http.StatusBadRequest)
+			pages.Problem(r, w, http.StatusBadRequest, "Invalid password form.")
 			return
 		}
 
@@ -57,13 +57,13 @@ func ChangePassword(identity *auth.Service, pages *Pages) http.HandlerFunc {
 				passwordError(r, w, pages, user, "New password must contain 12–72 bytes.")
 				return
 			}
-			http.Error(w, "Unable to update the password.", http.StatusInternalServerError)
+			pages.failure(r, w, err, "Unable to update the password.")
 			return
 		}
 
 		// The transaction has revoked this user's sessions; clear the current browser cookie.
 		if err := identity.Logout(w, r); err != nil {
-			http.Error(w, "Unable to clear browser session.", http.StatusInternalServerError)
+			pages.failure(r, w, err, "Unable to clear browser session.")
 			return
 		}
 

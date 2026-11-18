@@ -13,12 +13,12 @@ func Users(identity *auth.Service, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		actor := currentUser(r)
 		if actor.Name == "" {
-			http.NotFound(w, r)
+			NotFound(pages)(w, r)
 			return
 		}
 		if r.Method == http.MethodPost {
 			if err := parseForm(w, r); err != nil {
-				http.Error(w, "Invalid user form.", http.StatusBadRequest)
+				pages.Problem(r, w, http.StatusBadRequest, "Invalid user form.")
 				return
 			}
 			err := updateUser(identity, r, actor)
@@ -28,31 +28,31 @@ func Users(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			}
 			switch {
 			case errors.Is(err, db.ErrIdentityLinked):
-				http.Error(w, "Identity already linked or account unavailable.", http.StatusConflict)
+				pages.Problem(r, w, http.StatusConflict, "Identity already linked or account unavailable.")
 			case errors.Is(err, db.ErrUsernameTaken):
-				http.Error(w, "Username already exists.", http.StatusConflict)
+				pages.Problem(r, w, http.StatusConflict, "Username already exists.")
 			case errors.Is(err, db.ErrNotFound):
-				http.Error(w, "This account cannot be changed.", http.StatusConflict)
+				pages.Problem(r, w, http.StatusConflict, "This account cannot be changed.")
 			case errors.Is(err, auth.ErrInvalidLocalInput):
-				http.Error(w, "Check the username and password requirements.", http.StatusBadRequest)
+				pages.Problem(r, w, http.StatusBadRequest, "Check the username and password requirements.")
 			default:
-				http.Error(w, "Unable to update user.", http.StatusInternalServerError)
+				pages.failure(r, w, err, "Unable to update user.")
 			}
 			return
 		}
 		users, err := identity.LocalUsers(r.Context(), actor)
 		if err != nil {
-			http.Error(w, "Unable to list users.", http.StatusInternalServerError)
+			pages.failure(r, w, err, "Unable to list users.")
 			return
 		}
 		links, err := identity.IdentityLinks(r.Context())
 		if err != nil {
-			http.Error(w, "Unable to list mappings.", http.StatusInternalServerError)
+			pages.failure(r, w, err, "Unable to list mappings.")
 			return
 		}
 		pending, err := identity.PendingIdentities(r.Context())
 		if err != nil {
-			http.Error(w, "Unable to list pending identities.", http.StatusInternalServerError)
+			pages.failure(r, w, err, "Unable to list pending identities.")
 			return
 		}
 		pages.render(r, w, http.StatusOK, pageData{Title: "User administration", Page: "users", User: actor.Name, Users: users, Links: links, Pending: pending})

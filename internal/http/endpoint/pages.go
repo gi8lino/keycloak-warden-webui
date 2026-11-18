@@ -2,7 +2,6 @@
 package endpoint
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -132,41 +131,6 @@ func (p *Pages) render(r *http.Request, w http.ResponseWriter, status int, data 
 			"error", err,
 		)
 	}
-}
-
-// fail presents a safe browser error, preserving an upstream HTTP status where possible.
-func (p *Pages) fail(r *http.Request, w http.ResponseWriter, user auth.User, err error) {
-	p.logger.Error(
-		"Warden API request failed",
-		"event", "warden_api_failed",
-		"error", err,
-	)
-
-	status := upstreamErrorStatus(err)
-
-	message := "The Warden API request could not be completed."
-	if status == http.StatusNotFound {
-		message = "The requested decision was not found."
-	}
-
-	p.render(r, w, status, pageData{
-		Title: "Request failed",
-		Page:  "error",
-		User:  user.Name,
-		Error: message,
-	})
-}
-
-// upstreamErrorStatus preserves Warden's HTTP errors and maps other failures to a bad gateway.
-func upstreamErrorStatus(err error) int {
-	var upstream *client.Error
-	if !errors.As(err, &upstream) {
-		return http.StatusBadGateway
-	}
-	if upstream.Code < http.StatusBadRequest || upstream.Code > 599 {
-		return http.StatusBadGateway
-	}
-	return upstream.Code
 }
 
 // redirect sends a prefix-free application path; the Appkit mount rewrites Location.

@@ -33,7 +33,7 @@ func RunMaintenance(api API, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		operation := r.PathValue("operation")
 		if operation != "prune" && operation != "optimize" {
-			http.NotFound(w, r)
+			NotFound(pages)(w, r)
 			return
 		}
 

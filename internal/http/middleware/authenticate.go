@@ -10,7 +10,7 @@ import (
 )
 
 // Authenticate verifies the administrator before passing the Appkit principal to an endpoint.
-func Authenticate(identity *auth.Service, logger *slog.Logger) func(http.Handler) http.Handler {
+func Authenticate(identity *auth.Service, logger *slog.Logger, problem func(*http.Request, http.ResponseWriter, int, string)) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			user, err := identity.Authenticate(r)
@@ -21,7 +21,7 @@ func Authenticate(identity *auth.Service, logger *slog.Logger) func(http.Handler
 
 			switch {
 			case errors.Is(err, appkitauth.ErrForbidden):
-				http.Error(w, "Administrator access required.", http.StatusForbidden)
+				problem(r, w, http.StatusForbidden, "Administrator access required.")
 			case errors.Is(err, appkitauth.ErrUnauthenticated), errors.Is(err, appkitauth.ErrInvalidCredentials):
 				if identity.SetupRequired() {
 					http.Redirect(w, r, "/setup", http.StatusSeeOther)
@@ -30,7 +30,7 @@ func Authenticate(identity *auth.Service, logger *slog.Logger) func(http.Handler
 				http.Redirect(w, r, "/login", http.StatusSeeOther)
 			default:
 				logger.Error("authenticate administrator failed", "event", "authentication_failed", "error", err)
-				http.Error(w, "Authentication unavailable.", http.StatusInternalServerError)
+				problem(r, w, http.StatusInternalServerError, "Authentication unavailable.")
 			}
 		})
 	}

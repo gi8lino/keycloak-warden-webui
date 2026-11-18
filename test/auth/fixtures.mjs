@@ -16,10 +16,13 @@ async function listen(handler, cleanup) {
   const server = http.createServer(handler);
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
-  cleanup.push(() => new Promise(resolve => {
-    server.close(resolve);
-    server.closeAllConnections();
-  }));
+  cleanup.push(
+    () =>
+      new Promise((resolve) => {
+        server.close(resolve);
+        server.closeAllConnections();
+      }),
+  );
   return `http://127.0.0.1:${server.address().port}`;
 }
 
@@ -32,26 +35,51 @@ async function address() {
 }
 
 function docker(...args) {
-  return execFileSync("docker", args, { encoding: "utf8", timeout: 120_000 }).trim();
+  return execFileSync("docker", args, {
+    encoding: "utf8",
+    timeout: 120_000,
+  }).trim();
 }
 
 // Import a disposable realm with one confidential PKCE client and two real accounts.
 async function startKeycloak(directory, callback, cleanup) {
-  const realm = JSON.parse(await readFile(new URL("../../deploy/keycloak-webui-dev.json", import.meta.url), "utf8"));
+  const realm = JSON.parse(
+    await readFile(
+      new URL("../../deploy/keycloak-webui-dev.json", import.meta.url),
+      "utf8",
+    ),
+  );
   realm.clients[0].redirectUris = [callback];
   const imports = path.join(directory, "import");
   await mkdir(imports);
   const file = path.join(imports, "realm.json");
   await writeFile(file, JSON.stringify(realm), { mode: 0o644 });
-  const id = docker("create", "-p", "127.0.0.1::8080", "quay.io/keycloak/keycloak:26.8.1", "start-dev", "--import-realm");
+  const id = docker(
+    "create",
+    "-p",
+    "127.0.0.1::8080",
+    "quay.io/keycloak/keycloak:26.8.1",
+    "start-dev",
+    "--import-realm",
+  );
   cleanup.push(() => docker("rm", "-f", id));
   docker("cp", imports, id + ":/opt/keycloak/data/");
   docker("start", id);
-  const issuer = "http://" + docker("port", id, "8080/tcp") + "/realms/warden-test";
-  await expect.poll(async () => {
-    try { return (await fetch(issuer + "/.well-known/openid-configuration")).status; }
-    catch { return 0; }
-  }, { timeout: 90_000 }).toBe(200);
+  const issuer =
+    "http://" + docker("port", id, "8080/tcp") + "/realms/warden-test";
+  await expect
+    .poll(
+      async () => {
+        try {
+          return (await fetch(issuer + "/.well-known/openid-configuration"))
+            .status;
+        } catch {
+          return 0;
+        }
+      },
+      { timeout: 90_000 },
+    )
+    .toBe(200);
   return issuer;
 }
 
@@ -62,7 +90,14 @@ export const test = base.extend({
     try {
       const url = await address();
       const management = await address();
+      let backendFailure;
       const warden = await listen((req, res) => {
+        if (backendFailure) {
+          res
+            .writeHead(backendFailure, { "Content-Type": "application/json" })
+            .end(JSON.stringify({ error: "secret backend response" }));
+          return;
+        }
         if (req.method !== "GET" || req.url !== "/bans") {
           res.writeHead(404).end();
           return;
@@ -72,39 +107,76 @@ export const test = base.extend({
 
       await use({
         url: url.origin,
-        keycloak: () => startKeycloak(directory, url.origin + "/auth/callback", cleanup),
+        failBackend: (status) => {
+          backendFailure = status;
+        },
+        keycloak: () =>
+          startKeycloak(directory, url.origin + "/auth/callback", cleanup),
         // Simulate a trusted ingress that overwrites browser-supplied identity headers.
-        proxy: (name, groups) => listen((req, res) => {
-          const upstream = http.request(new URL(req.url, url), {
-            method: req.method, headers: { "x-forwarded-user": name, "x-forwarded-groups": groups },
-          }, reply => {
-            res.writeHead(reply.statusCode, reply.headers);
-            reply.pipe(res);
-          });
-          upstream.on("error", () => res.writeHead(502).end());
-          req.pipe(upstream);
-        }, cleanup),
+        proxy: (name, groups) =>
+          listen((req, res) => {
+            const upstream = http.request(
+              new URL(req.url, url),
+              {
+                method: req.method,
+                headers: {
+                  "x-forwarded-user": name,
+                  "x-forwarded-groups": groups,
+                },
+              },
+              (reply) => {
+                res.writeHead(reply.statusCode, reply.headers);
+                reply.pipe(res);
+              },
+            );
+            upstream.on("error", () => res.writeHead(502).end());
+            req.pipe(upstream);
+          }, cleanup),
         start: async (mode, flags = []) => {
-          const child = spawn(process.env.E2E_WEBUI_BINARY || "build/warden-webui", [
-            "--listen-address=" + url.host, "--management-listen-address=" + management.host,
-            "--public-url=" + url.origin, "--database=" + path.join(directory, "admin.db"),
-            "--warden-url=" + warden, "--warden-admin-token=e2e-only", "--setup-token=" + setupToken,
-            "--auth-mode=" + mode, ...flags,
-          ], { stdio: ["ignore", "pipe", "pipe"], env: Object.fromEntries(
-            Object.entries(process.env).filter(([key]) => !key.startsWith("WARDEN_WEBUI__"))
-          ) });
+          const child = spawn(
+            process.env.E2E_WEBUI_BINARY || "build/warden-webui",
+            [
+              "--listen-address=" + url.host,
+              "--management-listen-address=" + management.host,
+              "--public-url=" + url.origin,
+              "--database=" + path.join(directory, "admin.db"),
+              "--warden-url=" + warden,
+              "--warden-admin-token=e2e-only",
+              "--setup-token=" + setupToken,
+              "--auth-mode=" + mode,
+              ...flags,
+            ],
+            {
+              stdio: ["ignore", "pipe", "pipe"],
+              env: Object.fromEntries(
+                Object.entries(process.env).filter(
+                  ([key]) => !key.startsWith("WARDEN_WEBUI__"),
+                ),
+              ),
+            },
+          );
           let logs = "";
-          for (const stream of [child.stdout, child.stderr]) stream.on("data", chunk => { logs += chunk; });
+          for (const stream of [child.stdout, child.stderr])
+            stream.on("data", (chunk) => {
+              logs += chunk;
+            });
           const stopped = once(child, "exit");
           cleanup.push(async () => {
-            if (child.exitCode === null && child.signalCode === null) child.kill();
+            if (child.exitCode === null && child.signalCode === null)
+              child.kill();
             await stopped;
           });
-          await expect.poll(async () => {
-            if (child.exitCode !== null) throw new Error("Web UI exited: " + logs);
-            try { return (await fetch(management.origin + "/readyz")).status; }
-            catch { return 0; }
-          }).toBe(204);
+          await expect
+            .poll(async () => {
+              if (child.exitCode !== null)
+                throw new Error("Web UI exited: " + logs);
+              try {
+                return (await fetch(management.origin + "/readyz")).status;
+              } catch {
+                return 0;
+              }
+            })
+            .toBe(204);
         },
       });
     } finally {

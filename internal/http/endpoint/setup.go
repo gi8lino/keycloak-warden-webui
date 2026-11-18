@@ -23,7 +23,7 @@ func SetupPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 func SetupLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 	return whileSetupRequired(identity, pages, func(w http.ResponseWriter, r *http.Request) {
 		if err := parseForm(w, r); err != nil {
-			http.Error(w, "Invalid setup form.", http.StatusBadRequest)
+			pages.Problem(r, w, http.StatusBadRequest, "Invalid setup form.")
 			return
 		}
 
@@ -46,7 +46,7 @@ func SetupLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			return
 		}
 		if errors.Is(err, appkitauth.ErrForbidden) {
-			http.Error(w, "Invalid setup authorization.", http.StatusForbidden)
+			pages.Problem(r, w, http.StatusForbidden, "Invalid setup authorization.")
 			return
 		}
 		if errors.Is(err, auth.ErrInvalidLocalInput) {
@@ -58,7 +58,7 @@ func SetupLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			return
 		}
 
-		http.Error(w, "Setup unavailable.", http.StatusInternalServerError)
+		pages.failure(r, w, err, "Setup unavailable.")
 	})
 }
 

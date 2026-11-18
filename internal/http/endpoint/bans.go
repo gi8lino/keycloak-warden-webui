@@ -39,7 +39,7 @@ func BanDetails(api API, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		if !validID(id) {
-			http.NotFound(w, r)
+			NotFound(pages)(w, r)
 			return
 		}
 
@@ -64,7 +64,7 @@ func BanDetails(api API, pages *Pages) http.HandlerFunc {
 func CreateBan(api API, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := parseForm(w, r); err != nil {
-			http.Error(w, "Invalid ban form.", http.StatusBadRequest)
+			pages.Problem(r, w, http.StatusBadRequest, "Invalid ban form.")
 			return
 		}
 
@@ -72,13 +72,13 @@ func CreateBan(api API, pages *Pages) http.HandlerFunc {
 		duration := strings.TrimSpace(r.FormValue("duration"))
 		reason := strings.TrimSpace(r.FormValue("reason"))
 		if !validBanFields(ip, duration, reason) {
-			http.Error(w, "IP, duration, and reason are required.", http.StatusBadRequest)
+			pages.Problem(r, w, http.StatusBadRequest, "IP, duration, and reason are required.")
 			return
 		}
 
 		parsedDuration, err := time.ParseDuration(duration)
 		if err != nil || parsedDuration <= 0 {
-			http.Error(w, "Invalid ban duration.", http.StatusBadRequest)
+			pages.Problem(r, w, http.StatusBadRequest, "Invalid ban duration.")
 			return
 		}
 
@@ -99,7 +99,7 @@ func ReleaseBan(api API, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		if !validID(id) {
-			http.NotFound(w, r)
+			NotFound(pages)(w, r)
 			return
 		}
 
