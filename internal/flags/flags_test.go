@@ -1,7 +1,10 @@
 package flags
 
 import (
+	"math"
+	"strconv"
 	"testing"
+	"time"
 
 	appkitauth "github.com/containeroo/appkit/auth"
 	"github.com/containeroo/tinyflags"
@@ -19,6 +22,9 @@ func TestParse(t *testing.T) {
 		assert.True(t, tinyflags.IsHelpRequested(err))
 		assert.Contains(t, err.Error(), "Usage: warden-webui [flags]")
 		assert.Contains(t, err.Error(), "--management-listen-address")
+		assert.Contains(t, err.Error(), "--warden-request-timeout")
+		assert.Contains(t, err.Error(), "--warden-maintenance-timeout")
+		assert.Contains(t, err.Error(), "--warden-max-response-bytes")
 	})
 
 	t.Run("flags configure listeners and route prefix", func(t *testing.T) {
@@ -77,6 +83,76 @@ func TestParse(t *testing.T) {
 		require.ErrorContains(t, err, "missing value")
 	})
 
+	t.Run("uses the Warden HTTP client defaults", func(t *testing.T) {
+		t.Parallel()
+
+		cfg, err := Parse(nil, "dev")
+
+		require.NoError(t, err)
+		assert.Equal(t, 10*time.Second, cfg.WardenRequestTimeout)
+		assert.Equal(t, 35*time.Second, cfg.WardenMaintenanceTimeout)
+		assert.Equal(t, 1<<20, cfg.WardenMaxResponseBytes)
+	})
+
+	t.Run("accepts custom Warden HTTP client limits", func(t *testing.T) {
+		t.Parallel()
+
+		cfg, err := Parse([]string{
+			"--warden-request-timeout=20s",
+			"--warden-maintenance-timeout=60s",
+			"--warden-max-response-bytes=4194304",
+		}, "dev")
+
+		require.NoError(t, err)
+		assert.Equal(t, 20*time.Second, cfg.WardenRequestTimeout)
+		assert.Equal(t, time.Minute, cfg.WardenMaintenanceTimeout)
+		assert.Equal(t, 4194304, cfg.WardenMaxResponseBytes)
+	})
+
+	t.Run("rejects a zero Warden request timeout", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := Parse([]string{"--warden-request-timeout=0s"}, "dev")
+
+		require.Error(t, err)
+	})
+
+	t.Run("rejects a negative Warden maintenance timeout", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := Parse([]string{"--warden-maintenance-timeout=-1s"}, "dev")
+
+		require.Error(t, err)
+	})
+
+	t.Run("rejects a zero Warden response limit", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := Parse([]string{"--warden-max-response-bytes=0"}, "dev")
+
+		require.ErrorContains(t, err, "maximum response bytes")
+	})
+
+	t.Run("rejects a negative Warden response limit", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := Parse([]string{"--warden-max-response-bytes=-1"}, "dev")
+
+		require.ErrorContains(t, err, "maximum response bytes")
+	})
+
+	t.Run("rejects a response limit that overflows the client's sentinel", func(t *testing.T) {
+		t.Parallel()
+
+		if strconv.IntSize != 64 {
+			t.Skip("MaxInt cannot overflow int64 on a 32-bit platform")
+		}
+
+		_, err := Parse([]string{"--warden-max-response-bytes=" + strconv.Itoa(math.MaxInt)}, "dev")
+
+		require.ErrorContains(t, err, "maximum response bytes")
+	})
+
 	t.Run("no subcommands", func(t *testing.T) {
 		t.Parallel()
 		_, err := Parse([]string{"serve", "--warden-admin-token=secret"}, "dev")
@@ -96,9 +172,15 @@ func TestParseEnvironment(t *testing.T) {
 	t.Setenv("WARDEN_WEBUI__WARDEN_ADMIN_TOKEN", "env-secret")
 	t.Setenv("WARDEN_WEBUI__SETUP_TOKEN", "abcdefghijklmnopqrstuvwxyz012345")
 	t.Setenv("WARDEN_WEBUI__ALLOW_INSECURE_WARDEN_HTTP", "true")
+	t.Setenv("WARDEN_WEBUI__WARDEN_REQUEST_TIMEOUT", "20s")
+	t.Setenv("WARDEN_WEBUI__WARDEN_MAINTENANCE_TIMEOUT", "1m")
+	t.Setenv("WARDEN_WEBUI__WARDEN_MAX_RESPONSE_BYTES", "4194304")
 
 	cfg, err := Parse(nil, "dev")
 	require.NoError(t, err)
 	assert.Equal(t, "env-secret", cfg.WardenToken)
 	assert.True(t, cfg.AllowInsecureWardenHTTP)
+	assert.Equal(t, 20*time.Second, cfg.WardenRequestTimeout)
+	assert.Equal(t, time.Minute, cfg.WardenMaintenanceTimeout)
+	assert.Equal(t, 4194304, cfg.WardenMaxResponseBytes)
 }

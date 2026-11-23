@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"context"
 	"io"
 	"log/slog"
 	"net/http"
@@ -135,5 +136,87 @@ func TestNewInfrastructureHTTPPolicy(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, infrastructure)
 		t.Cleanup(func() { require.NoError(t, infrastructure.Close()) })
+	})
+}
+
+// TestNewInfrastructureClientLimits verifies the parsed flags affect actual Warden API calls.
+func TestNewInfrastructureClientLimits(t *testing.T) {
+	t.Parallel()
+
+	t.Run("enforces the configured maximum response size", func(t *testing.T) {
+		t.Parallel()
+
+		upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, `[]`)
+		}))
+		t.Cleanup(upstream.Close)
+
+		cfg, err := flags.Parse([]string{
+			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
+			"--warden-url=" + upstream.URL,
+			"--warden-admin-token=private-token",
+			"--warden-max-response-bytes=1",
+		}, "test")
+		require.NoError(t, err)
+
+		infrastructure, err := NewInfrastructure(t.Context(), cfg)
+		require.NoError(t, err)
+		t.Cleanup(func() { require.NoError(t, infrastructure.Close()) })
+
+		_, err = infrastructure.warden.List(t.Context())
+
+		require.ErrorContains(t, err, "application response exceeds 1 bytes")
+	})
+
+	t.Run("enforces the ordinary request timeout", func(t *testing.T) {
+		t.Parallel()
+
+		upstream := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+			<-r.Context().Done()
+		}))
+		t.Cleanup(upstream.Close)
+
+		cfg, err := flags.Parse([]string{
+			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
+			"--warden-url=" + upstream.URL,
+			"--warden-admin-token=private-token",
+			"--warden-request-timeout=2ms",
+		}, "test")
+		require.NoError(t, err)
+
+		infrastructure, err := NewInfrastructure(t.Context(), cfg)
+		require.NoError(t, err)
+		t.Cleanup(func() { require.NoError(t, infrastructure.Close()) })
+
+		_, err = infrastructure.warden.List(t.Context())
+
+		require.ErrorIs(t, err, context.DeadlineExceeded)
+	})
+
+	t.Run("enforces the separate maintenance timeout", func(t *testing.T) {
+		t.Parallel()
+
+		upstream := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+			<-r.Context().Done()
+		}))
+		t.Cleanup(upstream.Close)
+
+		cfg, err := flags.Parse([]string{
+			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
+			"--warden-url=" + upstream.URL,
+			"--warden-admin-token=private-token",
+			"--warden-request-timeout=5s",
+			"--warden-maintenance-timeout=2ms",
+		}, "test")
+		require.NoError(t, err)
+
+		infrastructure, err := NewInfrastructure(t.Context(), cfg)
+		require.NoError(t, err)
+		t.Cleanup(func() { require.NoError(t, infrastructure.Close()) })
+
+		_, err = infrastructure.warden.MaintenanceStatus(t.Context())
+
+		require.ErrorIs(t, err, context.DeadlineExceeded)
 	})
 }

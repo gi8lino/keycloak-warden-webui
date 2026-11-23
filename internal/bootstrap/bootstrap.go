@@ -25,8 +25,12 @@ func NewInfrastructure(ctx context.Context, cfg flags.Config) (*Infrastructure, 
 		return nil, fmt.Errorf("open Web UI database: %w", err)
 	}
 
-	// Use Warden's shared API client for both secure and explicitly allowed HTTP.
-	options := []client.Option{}
+	// Keep outbound Warden API limits separate from Web UI's HTTP server settings.
+	options := []client.Option{
+		client.WithRequestTimeout(cfg.WardenRequestTimeout),
+		client.WithMaintenanceTimeout(cfg.WardenMaintenanceTimeout),
+		client.WithMaxResponseBytes(cfg.WardenMaxResponseBytes),
+	}
 	if cfg.AllowInsecureWardenHTTP {
 		options = append(options, client.WithAllowInsecureHTTP())
 	}

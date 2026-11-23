@@ -2,6 +2,8 @@
 package flags
 
 import (
+	"errors"
+	"math"
 	"net"
 	"time"
 
@@ -17,6 +19,11 @@ const (
 	sectionSetup = "Initial setup"
 	// sectionAppearance groups theme catalog configuration.
 	sectionAppearance = "Appearance"
+
+	// Defaults mirror Warden's administrative HTTP client limits.
+	defaultWardenRequestTimeout     = 10 * time.Second
+	defaultWardenMaintenanceTimeout = 35 * time.Second
+	defaultWardenMaxResponseBytes   = 1 << 20
 )
 
 // Config holds the deployment configuration for both listeners and browser authentication.
@@ -37,6 +44,12 @@ type Config struct {
 	WardenToken string
 	// AllowInsecureWardenHTTP permits non-loopback HTTP for trusted upstream connections.
 	AllowInsecureWardenHTTP bool
+	// WardenRequestTimeout bounds ordinary administrative HTTP requests.
+	WardenRequestTimeout time.Duration
+	// WardenMaintenanceTimeout bounds maintenance requests independently.
+	WardenMaintenanceTimeout time.Duration
+	// WardenMaxResponseBytes limits successful administrative response bodies.
+	WardenMaxResponseBytes int
 	// Database is the private SQLite database for Web UI accounts and sessions.
 	Database string
 	// ThemeDirectory overlays embedded palettes with deployment-specific TOML files.
@@ -124,6 +137,29 @@ func registerWardenFlags(tf *tinyflags.FlagSet, cfg *Config) {
 		Section(sectionWarden).
 		Strict().
 		Value()
+	tf.DurationVar(&cfg.WardenRequestTimeout, "warden-request-timeout", defaultWardenRequestTimeout,
+		"Timeout for ordinary Warden administrative requests").
+		Section(sectionWarden).
+		Validate(tinyflags.Positive[time.Duration]()).
+		Value()
+	tf.DurationVar(&cfg.WardenMaintenanceTimeout, "warden-maintenance-timeout", defaultWardenMaintenanceTimeout,
+		"Timeout for Warden maintenance requests").
+		Section(sectionWarden).
+		Validate(tinyflags.Positive[time.Duration]()).
+		Value()
+	tf.IntVar(&cfg.WardenMaxResponseBytes, "warden-max-response-bytes", defaultWardenMaxResponseBytes,
+		"Maximum successful Warden administrative response size in bytes").
+		Section(sectionWarden).
+		Validate(validateWardenMaxResponseBytes).
+		Value()
+}
+
+// validateWardenMaxResponseBytes preserves the client's one-byte overflow sentinel.
+func validateWardenMaxResponseBytes(limit int) error {
+	if limit <= 0 || int64(limit) == math.MaxInt64 {
+		return errors.New("maximum response bytes must be positive and less than MaxInt64")
+	}
+	return nil
 }
 
 // registerLocalFlags configures the private credential database and first-run bootstrap secret.

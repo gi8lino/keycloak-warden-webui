@@ -9,6 +9,9 @@ Web UI has **one CLI flag set** (no subcommands). All options are available as f
 | `WARDEN_WEBUI__WARDEN_URL`                 | Warden application API URL, default `http://127.0.0.1:8080`                   |
 | `WARDEN_WEBUI__WARDEN_ADMIN_TOKEN`         | Private bearer token for Warden administration                                |
 | `WARDEN_WEBUI__ALLOW_INSECURE_WARDEN_HTTP` | Allow non-loopback HTTP to Warden (default `false`; sends token in cleartext) |
+| `WARDEN_WEBUI__WARDEN_REQUEST_TIMEOUT`     | Timeout for ordinary Warden API requests (default `10s`)                      |
+| `WARDEN_WEBUI__WARDEN_MAINTENANCE_TIMEOUT` | Timeout for Warden maintenance requests (default `35s`)                       |
+| `WARDEN_WEBUI__WARDEN_MAX_RESPONSE_BYTES`  | Maximum successful Warden API response size (default `1048576` bytes / 1 MiB) |
 | `WARDEN_WEBUI__SETUP_TOKEN`                | One-time bootstrap token (at least 32 characters on first startup)            |
 | `WARDEN_WEBUI__DATABASE`                   | Web UI's **own** SQLite store, default `warden-webui.db`                      |
 | `WARDEN_WEBUI__LISTEN_ADDRESS`             | Browser-facing application listener, default `127.0.0.1:8092`                 |
@@ -35,6 +38,19 @@ WARDEN_WEBUI__ALLOW_INSECURE_WARDEN_HTTP=true
 ```
 
 The equivalent CLI flag is `--allow-insecure-warden-http=true` (or `=false` to disable it). Its default is `false`, and the CLI requires an explicit boolean value. Enable it only when necessary: the Warden administrator bearer token travels unencrypted over the connection. Apply a restrictive Cilium network policy between WebUI and Warden; the option does not disable TLS verification for HTTPS URLs.
+
+### Administrative HTTP client limits
+
+Web UI connects to Warden server-side. The following settings apply to **outbound Warden API requests**, not the browser listener or Warden's server limits:
+
+```sh
+warden-webui \
+  --warden-request-timeout=20s \
+  --warden-maintenance-timeout=60s \
+  --warden-max-response-bytes=4194304
+```
+
+The defaults are `10s`, `35s`, and `1048576` bytes (1 MiB). All three values must be positive. The maximum response size must also be less than `MaxInt64`. The longer maintenance deadline accommodates Warden's 30-second server-side maintenance limit; changing the Web UI timeout does not extend that server deadline. The same values are available through `WARDEN_WEBUI__WARDEN_REQUEST_TIMEOUT`, `WARDEN_WEBUI__WARDEN_MAINTENANCE_TIMEOUT`, and `WARDEN_WEBUI__WARDEN_MAX_RESPONSE_BYTES`.
 
 Warden's `--route-prefix` may be part of the upstream URL. The Web UI's application prefix is separate:
 
