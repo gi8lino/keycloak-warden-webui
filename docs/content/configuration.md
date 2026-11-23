@@ -50,7 +50,7 @@ warden-webui \
   --warden-max-response-bytes=4194304
 ```
 
-The defaults are `10s`, `35s`, and `1048576` bytes (1 MiB). All three values must be positive. The maximum response size must also be less than `MaxInt64`. The longer maintenance deadline accommodates Warden's 30-second server-side maintenance limit; changing the Web UI timeout does not extend that server deadline. The same values are available through `WARDEN_WEBUI__WARDEN_REQUEST_TIMEOUT`, `WARDEN_WEBUI__WARDEN_MAINTENANCE_TIMEOUT`, and `WARDEN_WEBUI__WARDEN_MAX_RESPONSE_BYTES`.
+The defaults come directly from Warden’s `pkg/client` (`10s`, `35s`, and `1048576` bytes / 1 MiB at the time of writing). All three values must be positive. The maximum response size is validated by `client.ValidateMaxResponseBytes`, using the same rule as the Warden client. The longer maintenance deadline accommodates Warden's 30-second server-side maintenance limit; changing the Web UI timeout does not extend that server deadline. The same values are available through `WARDEN_WEBUI__WARDEN_REQUEST_TIMEOUT`, `WARDEN_WEBUI__WARDEN_MAINTENANCE_TIMEOUT`, and `WARDEN_WEBUI__WARDEN_MAX_RESPONSE_BYTES`.
 
 Warden's `--route-prefix` may be part of the upstream URL. The Web UI's application prefix is separate:
 

@@ -2,14 +2,13 @@
 package flags
 
 import (
-	"errors"
-	"math"
 	"net"
 	"time"
 
 	appkitauth "github.com/containeroo/appkit/auth"
 	appkitconfig "github.com/containeroo/appkit/config"
 	"github.com/containeroo/tinyflags"
+	"github.com/gi8lino/keycloak-warden/pkg/client"
 )
 
 const (
@@ -19,11 +18,6 @@ const (
 	sectionSetup = "Initial setup"
 	// sectionAppearance groups theme catalog configuration.
 	sectionAppearance = "Appearance"
-
-	// Defaults mirror Warden's administrative HTTP client limits.
-	defaultWardenRequestTimeout     = 10 * time.Second
-	defaultWardenMaintenanceTimeout = 35 * time.Second
-	defaultWardenMaxResponseBytes   = 1 << 20
 )
 
 // Config holds the deployment configuration for both listeners and browser authentication.
@@ -137,29 +131,21 @@ func registerWardenFlags(tf *tinyflags.FlagSet, cfg *Config) {
 		Section(sectionWarden).
 		Strict().
 		Value()
-	tf.DurationVar(&cfg.WardenRequestTimeout, "warden-request-timeout", defaultWardenRequestTimeout,
+	tf.DurationVar(&cfg.WardenRequestTimeout, "warden-request-timeout", client.DefaultRequestTimeout,
 		"Timeout for ordinary Warden administrative requests").
 		Section(sectionWarden).
 		Validate(tinyflags.Positive[time.Duration]()).
 		Value()
-	tf.DurationVar(&cfg.WardenMaintenanceTimeout, "warden-maintenance-timeout", defaultWardenMaintenanceTimeout,
+	tf.DurationVar(&cfg.WardenMaintenanceTimeout, "warden-maintenance-timeout", client.DefaultMaintenanceTimeout,
 		"Timeout for Warden maintenance requests").
 		Section(sectionWarden).
 		Validate(tinyflags.Positive[time.Duration]()).
 		Value()
-	tf.IntVar(&cfg.WardenMaxResponseBytes, "warden-max-response-bytes", defaultWardenMaxResponseBytes,
+	tf.IntVar(&cfg.WardenMaxResponseBytes, "warden-max-response-bytes", client.DefaultMaxResponseBytes,
 		"Maximum successful Warden administrative response size in bytes").
 		Section(sectionWarden).
-		Validate(validateWardenMaxResponseBytes).
+		Validate(client.ValidateMaxResponseBytes).
 		Value()
-}
-
-// validateWardenMaxResponseBytes preserves the client's one-byte overflow sentinel.
-func validateWardenMaxResponseBytes(limit int) error {
-	if limit <= 0 || int64(limit) == math.MaxInt64 {
-		return errors.New("maximum response bytes must be positive and less than MaxInt64")
-	}
-	return nil
 }
 
 // registerLocalFlags configures the private credential database and first-run bootstrap secret.

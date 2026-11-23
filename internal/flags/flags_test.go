@@ -8,6 +8,7 @@ import (
 
 	appkitauth "github.com/containeroo/appkit/auth"
 	"github.com/containeroo/tinyflags"
+	"github.com/gi8lino/keycloak-warden/pkg/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -89,9 +90,9 @@ func TestParse(t *testing.T) {
 		cfg, err := Parse(nil, "dev")
 
 		require.NoError(t, err)
-		assert.Equal(t, 10*time.Second, cfg.WardenRequestTimeout)
-		assert.Equal(t, 35*time.Second, cfg.WardenMaintenanceTimeout)
-		assert.Equal(t, 1<<20, cfg.WardenMaxResponseBytes)
+		assert.Equal(t, client.DefaultRequestTimeout, cfg.WardenRequestTimeout)
+		assert.Equal(t, client.DefaultMaintenanceTimeout, cfg.WardenMaintenanceTimeout)
+		assert.Equal(t, client.DefaultMaxResponseBytes, cfg.WardenMaxResponseBytes)
 	})
 
 	t.Run("accepts custom Warden HTTP client limits", func(t *testing.T) {
