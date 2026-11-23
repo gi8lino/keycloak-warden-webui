@@ -31,10 +31,12 @@ func (s *Store) LinkIdentity(ctx context.Context, link IdentityLink) error {
 	if err != nil {
 		return err
 	}
+
 	n, err := result.RowsAffected()
 	if err == nil && n == 0 {
 		return ErrIdentityLinked
 	}
+
 	return err
 }
 
@@ -49,10 +51,12 @@ func (s *Store) UnlinkIdentity(ctx context.Context, link IdentityLink) error {
 	if err != nil {
 		return err
 	}
+
 	n, err := result.RowsAffected()
 	if err == nil && n == 0 {
 		return ErrNotFound
 	}
+
 	return err
 }
 
@@ -70,6 +74,7 @@ func (s *Store) ResolveIdentity(ctx context.Context, issuer, subject string) (st
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", ErrNotFound
 	}
+
 	return name, err
 }
 
@@ -85,6 +90,7 @@ func (s *Store) IdentityLinks(ctx context.Context, issuer string) ([]IdentityLin
 		return nil, err
 	}
 	defer rows.Close() //nolint:errcheck
+
 	var links []IdentityLink
 	for rows.Next() {
 		var link IdentityLink
@@ -93,6 +99,7 @@ func (s *Store) IdentityLinks(ctx context.Context, issuer string) ([]IdentityLin
 		}
 		links = append(links, link)
 	}
+
 	return links, rows.Err()
 }
 
@@ -109,6 +116,7 @@ func (s *Store) RecordPendingIdentity(ctx context.Context, issuer, subject strin
 		)
 		ON CONFLICT DO NOTHING
 	`, issuer, subject, issuer, subject)
+
 	return err
 }
 
@@ -124,6 +132,7 @@ func (s *Store) PendingIdentities(ctx context.Context, issuer string) ([]string,
 		return nil, err
 	}
 	defer rows.Close() // nolint:errcheck
+
 	var subjects []string
 	for rows.Next() {
 		var subject string
@@ -132,6 +141,7 @@ func (s *Store) PendingIdentities(ctx context.Context, issuer string) ([]string,
 		}
 		subjects = append(subjects, subject)
 	}
+
 	return subjects, rows.Err()
 }
 
@@ -150,9 +160,11 @@ func (s *Store) ApproveIdentity(ctx context.Context, link IdentityLink) error {
 	if err != nil {
 		return err
 	}
+
 	count, err := result.RowsAffected()
 	if err == nil && count == 0 {
 		return ErrNotFound
 	}
+
 	return err
 }

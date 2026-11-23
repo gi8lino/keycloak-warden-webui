@@ -32,11 +32,11 @@ func Open(ctx context.Context, path string) (*Store, error) {
 		return nil, errors.New("database path is required")
 	}
 
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return nil, fmt.Errorf("create database directory: %w", err)
 	}
 
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0600)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600)
 	if err != nil {
 		return nil, fmt.Errorf("open database file: %w", err)
 	}
@@ -48,11 +48,13 @@ func Open(ctx context.Context, path string) (*Store, error) {
 	if err != nil {
 		return nil, fmt.Errorf("resolve database path: %w", err)
 	}
+
 	// Escape filenames and reapply connection-local settings after reconnection.
 	location := url.URL{Scheme: "file", Path: absolute}
 	location.RawQuery = url.Values{
 		"_pragma": {"busy_timeout(5000)", "foreign_keys(1)"},
 	}.Encode()
+
 	conn, err := sql.Open("sqlite", location.String())
 	if err != nil {
 		return nil, fmt.Errorf("connect database: %w", err)

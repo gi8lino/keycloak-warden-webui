@@ -25,7 +25,7 @@ func (s *Store) initializeUsers(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback() }()
+	defer tx.Rollback() // nolint:errcheck
 	if _, err = tx.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS local_users (
 		    id INTEGER PRIMARY KEY,
@@ -47,6 +47,7 @@ func (s *Store) initializeUsers(ctx context.Context) error {
 	`).Scan(&legacy); err != nil {
 		return err
 	}
+
 	if legacy {
 		if _, err = tx.ExecContext(ctx, `
 			INSERT INTO local_users (id, username, password_hash)
@@ -61,6 +62,7 @@ func (s *Store) initializeUsers(ctx context.Context) error {
 			return err
 		}
 	}
+
 	if _, err := tx.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS user_themes (
 		    username TEXT PRIMARY KEY REFERENCES local_users(username) ON DELETE CASCADE,
@@ -111,6 +113,7 @@ func (s *Store) LocalUsers(ctx context.Context) ([]LocalUser, error) {
 		return nil, err
 	}
 	defer rows.Close() //nolint:errcheck
+
 	var users []LocalUser
 	for rows.Next() {
 		var u LocalUser
@@ -119,6 +122,7 @@ func (s *Store) LocalUsers(ctx context.Context) ([]LocalUser, error) {
 		}
 		users = append(users, u)
 	}
+
 	return users, rows.Err()
 }
 
@@ -137,10 +141,12 @@ func (s *Store) CreateLocalUser(ctx context.Context, name, hash string) error {
 	if err != nil {
 		return err
 	}
+
 	count, err := result.RowsAffected()
 	if err == nil && count == 0 {
 		return ErrUsernameTaken
 	}
+
 	return err
 }
 
@@ -150,7 +156,8 @@ func (s *Store) SetLocalAccess(ctx context.Context, actor, name string, enabled 
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback() }()
+	defer tx.Rollback() // nolint:errcheck
+
 	result, err := tx.ExecContext(ctx, `
 		UPDATE local_users
 		SET enabled = ?
@@ -161,6 +168,7 @@ func (s *Store) SetLocalAccess(ctx context.Context, actor, name string, enabled 
 	if err != nil {
 		return err
 	}
+
 	count, err := result.RowsAffected()
 	if err != nil {
 		return err
@@ -168,6 +176,7 @@ func (s *Store) SetLocalAccess(ctx context.Context, actor, name string, enabled 
 	if count == 0 {
 		return ErrNotFound
 	}
+
 	if !enabled {
 		if _, err := tx.ExecContext(ctx, `
 			DELETE FROM sessions
@@ -176,6 +185,7 @@ func (s *Store) SetLocalAccess(ctx context.Context, actor, name string, enabled 
 			return err
 		}
 	}
+
 	return tx.Commit()
 }
 

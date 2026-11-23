@@ -47,6 +47,4 @@ func NewInfrastructure(ctx context.Context, cfg flags.Config) (*Infrastructure, 
 }
 
 // Close releases the private store after HTTP listeners have stopped.
-func (i *Infrastructure) Close() error {
-	return i.store.Close()
-}
+func (i *Infrastructure) Close() error { return i.store.Close() }

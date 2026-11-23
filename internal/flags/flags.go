@@ -90,16 +90,13 @@ func Parse(args []string, version string) (Config, error) {
 		ManagementListenAddress: &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8093},
 		PublicURL:               "http://127.0.0.1:8092",
 	})
-	finalizeAuthentication := appkitconfig.RegisterAuthentication(tf, &cfg.Authentication, appkitconfig.AuthenticationOptions{
-		RegisterSessionLifetime: true,
-		DefaultSessionLifetime:  12 * time.Hour,
-	})
-	appkitconfig.RegisterProxy(tf, &cfg.Proxy)
-	appkitconfig.RegisterOIDC(tf, &cfg.OIDC)
+
+	finalizeAuthentication := RegisterAuthentication(tf, &cfg)
 	finalizeLogging := appkitconfig.RegisterLogging(tf, &cfg.Logging)
 
 	registerWardenFlags(tf, &cfg)
 	registerLocalFlags(tf, &cfg)
+
 	tf.StringVar(&cfg.ThemeDirectory, "theme-directory", "", "Directory containing custom theme TOML files").
 		Section(sectionAppearance).
 		Value()
@@ -113,6 +110,19 @@ func Parse(args []string, version string) (Config, error) {
 	cfg.Overrides = tf.Overrides()
 
 	return cfg, nil
+}
+
+// RegisterAuthentication configures
+func RegisterAuthentication(tf *tinyflags.FlagSet, cfg *Config) func() {
+	finalizeAuthentication := appkitconfig.RegisterAuthentication(tf, &cfg.Authentication, appkitconfig.AuthenticationOptions{
+		RegisterSessionLifetime: true,
+		DefaultSessionLifetime:  12 * time.Hour,
+	})
+
+	appkitconfig.RegisterProxy(tf, &cfg.Proxy)
+	appkitconfig.RegisterOIDC(tf, &cfg.OIDC)
+
+	return finalizeAuthentication
 }
 
 // registerWardenFlags configures access to the Warden administration API.

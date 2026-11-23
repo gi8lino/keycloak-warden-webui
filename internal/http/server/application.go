@@ -28,6 +28,7 @@ func newApplication(config Config) http.Handler {
 	)
 
 	application := httpkitmiddleware.Chain(applicationMux, middlewares...)
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		application.ServeHTTP(response.NewRequestWriter(w, r), r)
 	})

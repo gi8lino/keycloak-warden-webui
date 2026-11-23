@@ -37,16 +37,14 @@ func NewHTTPConfig(
 	}
 
 	return server.Config{
-		InfrastructureConfig: server.InfrastructureConfig{
-			RoutePrefix: cfg.Server.RoutePrefix,
-			PublicURL:   cfg.Server.PublicURL,
-			Static:      static,
-			Pages:       pages,
-			Logger:      logger.With("component", "http"),
-			AccessLog:   cfg.Logging.AccessLog,
-			Ready:       infrastructure.store.Ping,
-		},
-		AuthenticationConfig: server.AuthenticationConfig{Identity: application.identity},
-		ApplicationConfig:    server.ApplicationConfig{Warden: infrastructure.warden},
+		RoutePrefix: cfg.Server.RoutePrefix,
+		PublicURL:   cfg.Server.PublicURL,
+		Static:      static,
+		Pages:       pages,
+		Logger:      logger.With("component", "http"),
+		AccessLog:   cfg.Logging.AccessLog,
+		Ready:       infrastructure.store.Ping,
+		Identity:    application.identity,
+		Warden:      infrastructure.warden,
 	}, nil
 }

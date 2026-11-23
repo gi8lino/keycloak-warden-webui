@@ -31,7 +31,7 @@ func (s *Store) CreateFounder(ctx context.Context, username, passwordHash string
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback() }()
+	defer tx.Rollback() // nolint:errcheck
 	result, err := tx.ExecContext(ctx, `
 		INSERT INTO local_users (id, username, password_hash)
 		VALUES (1, ?, ?)
@@ -80,7 +80,7 @@ func (s *Store) ChangePassword(ctx context.Context, username, previousHash, pass
 	if err != nil {
 		return fmt.Errorf("begin password update: %w", err)
 	}
-	defer func() { _ = tx.Rollback() }()
+	defer tx.Rollback() // nolint:errcheck
 
 	result, err := tx.ExecContext(ctx, `
 		UPDATE local_users

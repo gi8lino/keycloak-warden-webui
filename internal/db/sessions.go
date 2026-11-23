@@ -29,11 +29,13 @@ func (s *Store) CreateSession(ctx context.Context, hash string, user Session, ex
 	`, time.Now().UnixNano()); err != nil {
 		return fmt.Errorf("prune expired sessions: %w", err)
 	}
+
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback() }()
+	defer tx.Rollback() // nolint:errcheck
+
 	_, err = tx.ExecContext(ctx, `
 		INSERT INTO sessions (token_hash, username, is_local, expires_at)
 		VALUES (?, ?, ?, ?)
@@ -41,6 +43,7 @@ func (s *Store) CreateSession(ctx context.Context, hash string, user Session, ex
 	if err != nil {
 		return err
 	}
+
 	if !user.Local {
 		_, err = tx.ExecContext(ctx, `
 			INSERT INTO session_links (token_hash, issuer, subject)
@@ -50,6 +53,7 @@ func (s *Store) CreateSession(ctx context.Context, hash string, user Session, ex
 			return err
 		}
 	}
+
 	return tx.Commit()
 }
 
@@ -83,7 +87,9 @@ func (s *Store) LookupSession(ctx context.Context, hash string) (Session, error)
 	if err != nil {
 		return Session{}, fmt.Errorf("lookup session: %w", err)
 	}
+
 	user.Local = local == 1
+
 	return user, nil
 }
 
