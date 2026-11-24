@@ -143,7 +143,8 @@ func deliveryStatus(ack client.Acknowledgement, revision int64, history []client
 	return deliveryStatusView{}
 }
 
-// currentDeliveryViews merges acknowledgements with groups for the current revision.
+// currentDeliveryViews merges acknowledgements with the complete current-revision
+// status snapshot, independently of paginated delivery attempts.
 // Older history is never interpreted as evidence of current delivery progress.
 func currentDeliveryViews(record client.Record) []deliveryDestinationView {
 	views := make(map[string]deliveryDestinationView)
@@ -153,26 +154,36 @@ func currentDeliveryViews(record client.Record) []deliveryDestinationView {
 			Destination:          ack.Destination,
 			AcknowledgedRevision: ack.Revision,
 			HasAcknowledgement:   true,
-			Progress:             deliveryStatus(ack, record.Decision.Revision, record.DeliveryHistory),
+			Progress:             deliveryStatus(ack, record.Decision.Revision, record.CurrentDeliveries),
 		}
 	}
 
-	for _, entry := range record.DeliveryHistory {
+	for _, entry := range record.CurrentDeliveries {
 		if entry.Revision != record.Decision.Revision {
 			continue
 		}
-		if _, exists := views[entry.Destination]; exists {
-			continue
+		view, exists := views[entry.Destination]
+		if !exists {
+			view = deliveryDestinationView{
+				Destination: entry.Destination,
+				Progress: deliveryStatus(
+					client.Acknowledgement{Destination: entry.Destination},
+					record.Decision.Revision,
+					record.CurrentDeliveries,
+				),
+			}
 		}
-
-		views[entry.Destination] = deliveryDestinationView{
-			Destination: entry.Destination,
-			Progress: deliveryStatus(
-				client.Acknowledgement{Destination: entry.Destination},
-				record.Decision.Revision,
-				record.DeliveryHistory,
-			),
+		// Completed releases may have had their delivery queue rows removed.
+		// A delivered history status remains evidence of an accepted revision.
+		if entry.Status == deliverystate.StatusDelivered && view.AcknowledgedRevision < entry.Revision {
+			view.AcknowledgedRevision = entry.Revision
+			view.HasAcknowledgement = true
+			view.Progress = deliveryStatus(client.Acknowledgement{
+				Destination: entry.Destination,
+				Revision:    entry.Revision,
+			}, record.Decision.Revision, nil)
 		}
+		views[entry.Destination] = view
 	}
 
 	result := make([]deliveryDestinationView, 0, len(views))

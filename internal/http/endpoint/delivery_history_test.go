@@ -96,9 +96,10 @@ func TestHistoryNavigation(t *testing.T) {
 func TestDeliveryHistoryPage(t *testing.T) {
 	t.Parallel()
 	record := client.Record{
-		Decision:        client.Decision{ID: "one", Revision: 9},
-		Deliveries:      []client.Acknowledgement{{Destination: "webhook.receiver", Revision: 8}},
-		DeliveryHistory: []client.Delivery{{Destination: "webhook.receiver", Revision: 9, Status: deliverystate.StatusRetrying}},
+		Decision:          client.Decision{ID: "one", Revision: 9},
+		Deliveries:        []client.Acknowledgement{{Destination: "webhook.receiver", Revision: 8}},
+		CurrentDeliveries: []client.Delivery{{Destination: "webhook.receiver", Revision: 9, Status: deliverystate.StatusRetrying}},
+		DeliveryHistory:   []client.Delivery{{Destination: "webhook.receiver", Revision: 9, Status: deliverystate.StatusRetrying}},
 	}
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/bans/one", r.URL.Path)
@@ -159,7 +160,7 @@ func TestDeliveryHistorySnapshots(t *testing.T) {
 			Deliveries: []client.Acknowledgement{
 				{Destination: "webhook.receiver", Revision: 10},
 			},
-			DeliveryHistory: []client.Delivery{
+			CurrentDeliveries: []client.Delivery{
 				{Destination: "webhook.receiver", Revision: 11, Status: deliverystate.StatusRetrying},
 			},
 		}
@@ -281,7 +282,7 @@ func TestDeliveryHistoryWithoutAcknowledgements(t *testing.T) {
 			ID:       "one",
 			Revision: 3,
 		},
-		DeliveryHistory: []client.Delivery{
+		CurrentDeliveries: []client.Delivery{
 			{Destination: "webhook.retrying", Revision: 3, Status: deliverystate.StatusRetrying},
 			{Destination: "webhook.exhausted", Revision: 3, Status: deliverystate.StatusExhausted},
 		},
@@ -369,7 +370,7 @@ func TestCurrentDeliveryViews(t *testing.T) {
 
 		record := client.Record{
 			Decision: client.Decision{Revision: 3},
-			DeliveryHistory: []client.Delivery{
+			CurrentDeliveries: []client.Delivery{
 				{Destination: "webhook.retrying", Revision: 3, Status: deliverystate.StatusRetrying},
 				{Destination: "webhook.exhausted", Revision: 3, Status: deliverystate.StatusExhausted},
 			},
@@ -397,7 +398,7 @@ func TestCurrentDeliveryViews(t *testing.T) {
 				{Destination: "webhook.acknowledged", Revision: 3},
 				{Destination: "webhook.retrying", Revision: 2},
 			},
-			DeliveryHistory: []client.Delivery{
+			CurrentDeliveries: []client.Delivery{
 				{Destination: "webhook.retrying", Revision: 3, Status: deliverystate.StatusRetrying},
 				{Destination: "webhook.unacknowledged", Revision: 3, Status: deliverystate.StatusExhausted},
 			},
@@ -416,6 +417,24 @@ func TestCurrentDeliveryViews(t *testing.T) {
 		assert.False(t, views[2].HasAcknowledgement)
 	})
 
+	t.Run("delivered release retains acknowledged revision after its queue row is removed", func(t *testing.T) {
+		t.Parallel()
+
+		record := client.Record{
+			Decision: client.Decision{Revision: 4},
+			CurrentDeliveries: []client.Delivery{
+				{Destination: "webhook.released", Revision: 4, Status: deliverystate.StatusDelivered},
+			},
+		}
+
+		views := currentDeliveryViews(record)
+
+		require.Len(t, views, 1)
+		assert.True(t, views[0].HasAcknowledgement)
+		assert.Equal(t, int64(4), views[0].AcknowledgedRevision)
+		assert.Equal(t, deliverystate.StatusDelivered, views[0].Progress.Status)
+	})
+
 	t.Run("older history cannot introduce destinations into current progress", func(t *testing.T) {
 		t.Parallel()
 
@@ -424,7 +443,7 @@ func TestCurrentDeliveryViews(t *testing.T) {
 			Deliveries: []client.Acknowledgement{
 				{Destination: "webhook.known", Revision: 2},
 			},
-			DeliveryHistory: []client.Delivery{
+			CurrentDeliveries: []client.Delivery{
 				{Destination: "webhook.old", Revision: 2, Status: deliverystate.StatusDelivered},
 			},
 		}
@@ -464,4 +483,30 @@ func TestHistoryFailure(t *testing.T) {
 	assert.Equal(t, http.StatusServiceUnavailable, response.Code)
 	assert.Contains(t, response.Body.String(), "currently unavailable")
 	assert.NotContains(t, response.Body.String(), "private failure")
+}
+
+func TestCurrentDeliveryViewsIndependentOfHistoryPage(t *testing.T) {
+	t.Parallel()
+
+	t.Run("includes an unacknowledged destination outside the paginated timeline", func(t *testing.T) {
+		t.Parallel()
+
+		record := client.Record{
+			Decision: client.Decision{Revision: 3},
+			CurrentDeliveries: []client.Delivery{
+				{Destination: "webhook.first", Revision: 3, Status: deliverystate.StatusDelivered},
+				{Destination: "webhook.last", Revision: 3, Status: deliverystate.StatusExhausted},
+			},
+			DeliveryHistory: []client.Delivery{
+				{Destination: "webhook.first", Revision: 3, Status: deliverystate.StatusDelivered},
+			},
+		}
+
+		views := currentDeliveryViews(record)
+
+		require.Len(t, views, 2)
+		assert.Equal(t, "webhook.last", views[1].Destination)
+		assert.Equal(t, deliverystate.StatusExhausted, views[1].Progress.Status)
+		assert.False(t, views[1].HasAcknowledgement)
+	})
 }
