@@ -1,6 +1,7 @@
 package endpoint
 
 import (
+	"github.com/gi8lino/keycloak-warden/pkg/deliverystate"
 	"net/url"
 	"testing"
 
@@ -53,5 +54,17 @@ func TestOverviewLinks(t *testing.T) {
 		view := overviewLinks("", "/ban-history", 1, 0, url.Values{})
 		assert.Empty(t, view.Previous)
 		assert.Empty(t, view.Next)
+	})
+}
+
+func TestDeliveriesRejectsSuperseded(t *testing.T) {
+	t.Parallel()
+
+	t.Run("does not accept a historical state on the current overview", func(t *testing.T) {
+		t.Parallel()
+		values, _, err := parseOverviewQuery("status=superseded", overviewStatusParam, overviewDestinationParam)
+		require.NoError(t, err)
+		status := deliverystate.Status(values.Get(overviewStatusParam))
+		assert.False(t, status.Current())
 	})
 }

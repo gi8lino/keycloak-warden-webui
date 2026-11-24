@@ -40,7 +40,6 @@
         <option value="retrying" {{if eq .Overview.Status "retrying"}}selected{{end}}>Retrying</option>
         <option value="exhausted" {{if eq .Overview.Status "exhausted"}}selected{{end}}>Exhausted</option>
         <option value="delivered" {{if eq .Overview.Status "delivered"}}selected{{end}}>Delivered</option>
-        <option value="superseded" {{if eq .Overview.Status "superseded"}}selected{{end}}>Superseded</option>
       </select>
     </label>
     <label class="grid gap-2 text-sm font-medium text-zinc-300" for="deliveries-destination">

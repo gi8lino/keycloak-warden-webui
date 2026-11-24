@@ -166,7 +166,7 @@ func Deliveries(api API, pages *Pages) http.HandlerFunc {
 		}
 
 		status := deliverystate.Status(values.Get(overviewStatusParam))
-		if status != "" && !status.Valid() {
+		if status != "" && !status.Current() {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid delivery status.")
 			return
 		}
