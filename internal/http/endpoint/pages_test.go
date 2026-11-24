@@ -184,3 +184,31 @@ func assertBackendErrorPage(t *testing.T, failure error, status int, message str
 	assert.Contains(t, response.Body.String(), `role="alert"`)
 	assert.NotContains(t, response.Body.String(), "secret backend response")
 }
+
+// themeStoreStub verifies rendering requires only theme preference access.
+type themeStoreStub struct {
+	name string
+}
+
+func (s *themeStoreStub) Theme(_ context.Context, name string) (string, error) {
+	s.name = name
+	return "", nil
+}
+
+func (s *themeStoreStub) SaveTheme(context.Context, string, string) error {
+	return nil
+}
+
+func TestPagesThemeBoundary(t *testing.T) {
+	t.Parallel()
+
+	t.Run("accepts a narrow theme preference implementation", func(t *testing.T) {
+		t.Parallel()
+		store := &themeStoreStub{}
+		pages, err := NewPages(web.Assets, "", appkitauth.ModeLocal, slog.New(slog.NewTextHandler(io.Discard, nil)), store, "", "test")
+		require.NoError(t, err)
+		theme := pages.accountTheme(t.Context(), "operator")
+		assert.Equal(t, "operator", store.name)
+		assert.NotEmpty(t, theme.Title)
+	})
+}

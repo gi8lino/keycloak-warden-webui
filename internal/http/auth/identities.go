@@ -67,12 +67,12 @@ func (s *Service) UpdateIdentity(ctx context.Context, actor User, name, subject 
 	}
 	link := db.IdentityLink{Username: name, Issuer: s.issuer, Subject: subject}
 	if add {
-		return s.repository.ApproveIdentity(ctx, link)
+		return accountOperationError(s.repository.ApproveIdentity(ctx, link))
 	}
 	if actor.Issuer == s.issuer && actor.Subject == subject {
-		return db.ErrNotFound
+		return ErrAccountUnavailable
 	}
-	return s.repository.UnlinkIdentity(ctx, link)
+	return accountOperationError(s.repository.UnlinkIdentity(ctx, link))
 }
 
 // canUpdateIdentity requires an authenticated account and a provider-scoped subject.

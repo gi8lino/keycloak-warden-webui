@@ -127,7 +127,7 @@ func TestExternalSetup(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "owner", actor.Name)
 	require.NoError(t, service.CreateLocalUser(t.Context(), actor, "second", "correct-password"))
-	require.ErrorIs(t, service.UpdateIdentity(t.Context(), actor, "second", "external-second", true), db.ErrNotFound)
+	require.ErrorIs(t, service.UpdateIdentity(t.Context(), actor, "second", "external-second", true), ErrAccountUnavailable)
 	request.Header.Set("X-Forwarded-User", "external-second")
 	_, err = service.Authenticate(request)
 	require.ErrorIs(t, err, appkitauth.ErrForbidden)

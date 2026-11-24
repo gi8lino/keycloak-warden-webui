@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gi8lino/warden-webui/internal/db"
 	"github.com/gi8lino/warden-webui/internal/http/auth"
 )
 
@@ -27,11 +26,11 @@ func Users(identity *auth.Service, pages *Pages) http.HandlerFunc {
 				return
 			}
 			switch {
-			case errors.Is(err, db.ErrIdentityLinked):
+			case errors.Is(err, auth.ErrIdentityLinked):
 				pages.Problem(r, w, http.StatusConflict, "Identity already linked or account unavailable.")
-			case errors.Is(err, db.ErrUsernameTaken):
+			case errors.Is(err, auth.ErrUsernameTaken):
 				pages.Problem(r, w, http.StatusConflict, "Username already exists.")
-			case errors.Is(err, db.ErrNotFound):
+			case errors.Is(err, auth.ErrAccountUnavailable):
 				pages.Problem(r, w, http.StatusConflict, "This account cannot be changed.")
 			case errors.Is(err, auth.ErrInvalidLocalInput):
 				pages.Problem(r, w, http.StatusBadRequest, "Check the username and password requirements.")

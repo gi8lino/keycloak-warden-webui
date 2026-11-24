@@ -2,6 +2,7 @@
 package endpoint
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -18,6 +19,14 @@ import (
 	"github.com/gi8lino/warden-webui/internal/http/auth"
 )
 
+// ThemePreferences is the narrow persistence capability required by page rendering.
+type ThemePreferences interface {
+	// Theme reads one administrator's saved palette selection.
+	Theme(context.Context, string) (string, error)
+	// SaveTheme persists a validated palette selection.
+	SaveTheme(context.Context, string, string) error
+}
+
 // Pages renders server-controlled data into escaped administrator HTML pages.
 type Pages struct {
 	// version is the immutable build version displayed in the footer.
@@ -25,7 +34,7 @@ type Pages struct {
 	// catalog lists validated palettes available to all accounts.
 	catalog []themes.Theme
 	// store persists account appearance preferences.
-	store *db.Store
+	store ThemePreferences
 	// templates is the validated HTML template set.
 	templates *template.Template
 	// prefix is the optional application route prefix.
@@ -88,7 +97,7 @@ func NewPages(
 	prefix string,
 	mode appkitauth.Mode,
 	logger *slog.Logger,
-	store *db.Store,
+	store ThemePreferences,
 	themesDir string,
 	version string,
 ) (*Pages, error) {

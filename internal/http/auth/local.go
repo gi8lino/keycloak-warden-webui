@@ -174,7 +174,7 @@ func (s *Service) CreateLocalUser(ctx context.Context, actor User, name, passwor
 	if err != nil {
 		return err
 	}
-	return s.repository.CreateLocalUser(ctx, name, hash)
+	return accountOperationError(s.repository.CreateLocalUser(ctx, name, hash))
 }
 
 // SetLocalAccess enables or disables another local administrator.
@@ -182,7 +182,7 @@ func (s *Service) SetLocalAccess(ctx context.Context, actor User, name string, e
 	if actor.Name == "" {
 		return appkitauth.ErrForbidden
 	}
-	return s.repository.SetLocalAccess(ctx, actor.Name, name, enabled)
+	return accountOperationError(s.repository.SetLocalAccess(ctx, actor.Name, name, enabled))
 }
 
 // validLocalCredentials checks the username and password policy for new accounts.
