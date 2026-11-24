@@ -56,6 +56,20 @@
               {{template "icon-dashboard"}}Active bans
             </a>
             <a
+              href="{{.Prefix}}/ban-history"
+              {{if eq .Page "ban-history"}}aria-current="page"{{end}}
+              class="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-zinc-400 outline-offset-2 transition-all duration-150 hover:bg-zinc-800 hover:text-zinc-100 aria-[current=page]:bg-zinc-800 aria-[current=page]:text-zinc-100 focus-visible:outline-2 focus-visible:outline-cyan-400"
+            >
+              {{template "icon-clock"}}Ban history
+            </a>
+            <a
+              href="{{.Prefix}}/deliveries"
+              {{if eq .Page "deliveries"}}aria-current="page"{{end}}
+              class="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-zinc-400 outline-offset-2 transition-all duration-150 hover:bg-zinc-800 hover:text-zinc-100 aria-[current=page]:bg-zinc-800 aria-[current=page]:text-zinc-100 focus-visible:outline-2 focus-visible:outline-cyan-400"
+            >
+              {{template "icon-check"}}Deliveries
+            </a>
+            <a
               href="{{.Prefix}}/maintenance"
               {{if eq .Page "maintenance"}}aria-current="page"{{end}}
               class="
@@ -143,6 +157,12 @@
                   >
                     {{template "icon-dashboard"}}Active bans
                   </a>
+                  <a href="{{.Prefix}}/ban-history" class="flex items-center gap-2 rounded-lg px-3 py-3 text-sm text-zinc-200 hover:bg-zinc-800">
+                    {{template "icon-clock"}}Ban history
+                  </a>
+                  <a href="{{.Prefix}}/deliveries" class="flex items-center gap-2 rounded-lg px-3 py-3 text-sm text-zinc-200 hover:bg-zinc-800">
+                    {{template "icon-check"}}Deliveries
+                  </a>
                   <a
                     href="{{.Prefix}}/maintenance"
                     class="
@@ -193,7 +213,11 @@
             <h1 class="text-3xl font-semibold tracking-tight text-zinc-100 sm:text-4xl">{{.Title}}</h1>
             {{if .User}}
               <p class="mt-2 text-sm leading-6 text-zinc-400">
-                {{if eq .Page "detail"}}
+                {{if eq .Page "ban-history"}}
+                  Review recorded ban, release, and extension events.
+                {{else if eq .Page "deliveries"}}
+                  Monitor reconciliation and delivery failures across decisions.
+                {{else if eq .Page "detail"}}
                   Inspect the current decision, its sources, and delivery attempts.
                 {{else}}
                   Manage security decisions through Warden's authenticated API.
@@ -227,6 +251,12 @@
               {{end}}
               {{if eq .Page "detail"}}
                 {{template "detail" .}}
+              {{end}}
+              {{if eq .Page "ban-history"}}
+                {{template "ban-history" .}}
+              {{end}}
+              {{if eq .Page "deliveries"}}
+                {{template "deliveries" .}}
               {{end}}
               {{if eq .Page "maintenance"}}
                 {{template "maintenance" .}}

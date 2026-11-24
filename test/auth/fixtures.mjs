@@ -92,6 +92,8 @@ export const test = base.extend({
       const management = await address();
       let backendFailure;
       let historyPages;
+      let decisionRevisions;
+      let deliveryOverview;
       const historyRequests = [];
       const warden = await listen((req, res) => {
         if (backendFailure) {
@@ -113,6 +115,19 @@ export const test = base.extend({
             return;
           }
         }
+        if (req.method === "GET") {
+          const requested = new URL(req.url, "http://warden.test");
+          if (requested.pathname === "/decisions/history") {
+            res.writeHead(200, { "Content-Type": "application/json" })
+              .end(JSON.stringify(decisionRevisions || { items: [], page: 1 }));
+            return;
+          }
+          if (requested.pathname === "/deliveries") {
+            res.writeHead(200, { "Content-Type": "application/json" })
+              .end(JSON.stringify(deliveryOverview || { items: [], page: 1 }));
+            return;
+          }
+        }
         if (req.method !== "GET" || req.url !== "/bans") {
           res.writeHead(404).end();
           return;
@@ -122,6 +137,8 @@ export const test = base.extend({
 
       await use({
         url: url.origin,
+        setDecisionRevisions: (page) => { decisionRevisions = page; },
+        setDeliveryOverview: (page) => { deliveryOverview = page; },
         setHistoryPages: (pages) => {
           historyPages = pages;
         },

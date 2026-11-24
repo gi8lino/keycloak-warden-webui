@@ -40,6 +40,16 @@ func (*fakeAPI) List(context.Context) ([]client.Record, error) {
 	return []client.Record{{Decision: client.Decision{ID: "one", IP: "203.0.113.1", State: "banned"}}}, nil
 }
 
+// ListDecisionHistory supplies the audit view for routing tests.
+func (*fakeAPI) ListDecisionHistory(context.Context, client.RevisionFilter) (client.RevisionPage, error) {
+	return client.RevisionPage{Items: []client.Revision{}, Page: 1}, nil
+}
+
+// ListDeliveries supplies current progress for routing tests.
+func (*fakeAPI) ListDeliveries(context.Context, client.DeliveryFilter) (client.DeliveryOverviewPage, error) {
+	return client.DeliveryOverviewPage{Items: []client.DeliveryOverview{}, Page: 1}, nil
+}
+
 // Get returns an existing decision.
 func (*fakeAPI) Get(context.Context, string) (client.Record, error) {
 	return client.Record{Decision: client.Decision{ID: "one", IP: "203.0.113.1", State: "banned"}}, nil

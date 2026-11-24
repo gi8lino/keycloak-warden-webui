@@ -10,7 +10,8 @@ Warden Web UI manages bans through Warden's administrative API. It stores admini
 
 ## Features
 
-- View active bans, decision history, sources, and delivery acknowledgements.
+- View active bans, append-only ban/release revision history, sources, and delivery acknowledgements.
+- Inspect current delivery status across destinations, including failed unban notifications.
 - Create manual bans and release existing bans.
 - Inspect and trigger database maintenance operations.
 - Sign in with local accounts, Keycloak OIDC, or a trusted proxy.

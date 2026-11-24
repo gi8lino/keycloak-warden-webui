@@ -1,0 +1,80 @@
+{{define "deliveries"}}
+<section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h2 class="text-lg font-semibold tracking-tight text-zinc-100">Current reconciliation</h2>
+      <p class="mt-2 text-sm leading-6 text-zinc-400">Latest revision per decision and destination. Includes failed releases; destination acceptance is not proof of downstream enforcement.</p>
+    </div>
+    <a href="{{.Overview.Refresh}}" class="text-sm font-medium text-cyan-400 underline">Refresh latest</a>
+  </div>
+  <form method="get" action="{{.Prefix}}/deliveries" class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+    <label class="grid gap-2 text-sm font-medium text-zinc-300" for="deliveries-status">
+      Status
+      <select id="deliveries-status" name="status" class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 focus:border-cyan-500 focus:outline-none">
+        <option value="">All statuses</option>
+        <option value="pending" {{if eq .Overview.Status "pending"}}selected{{end}}>Pending</option>
+        <option value="retrying" {{if eq .Overview.Status "retrying"}}selected{{end}}>Retrying</option>
+        <option value="exhausted" {{if eq .Overview.Status "exhausted"}}selected{{end}}>Exhausted</option>
+        <option value="delivered" {{if eq .Overview.Status "delivered"}}selected{{end}}>Delivered</option>
+        <option value="superseded" {{if eq .Overview.Status "superseded"}}selected{{end}}>Superseded</option>
+      </select>
+    </label>
+    <label class="grid gap-2 text-sm font-medium text-zinc-300" for="deliveries-destination">
+      Destination
+      <input id="deliveries-destination" name="destination" type="text" value="{{.Overview.Destination}}" maxlength="128" placeholder="webhook.receiver" autocomplete="off" class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none">
+    </label>
+    <div class="flex items-center"><button type="submit" class="w-full rounded-lg bg-cyan-500 px-4 py-3 text-sm font-semibold text-zinc-950 hover:bg-cyan-400">Apply filters</button></div>
+  </form>
+</section>
+<section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
+  <header class="border-b border-zinc-800 px-6 py-5">
+    <h2 class="text-lg font-semibold tracking-tight text-zinc-100">Delivery status</h2>
+    <p class="mt-1 text-sm text-zinc-400">Pay special attention to exhausted unban deliveries: the external destination may still be blocking the address.</p>
+  </header>
+  {{if .DeliveryList.Items}}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-zinc-800/60 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <tr>
+            <th scope="col" class="px-6 py-4">IP address</th>
+            <th scope="col" class="px-6 py-4">Destination</th>
+            <th scope="col" class="px-6 py-4">Desired</th>
+            <th scope="col" class="px-6 py-4">Status</th>
+            <th scope="col" class="px-6 py-4">Revision</th>
+            <th scope="col" class="px-6 py-4">Attempts</th>
+            <th scope="col" class="px-6 py-4 text-right">Decision</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-800">
+          {{range .DeliveryList.Items}}
+            <tr class="hover:bg-zinc-800/60">
+              <td class="px-6 py-4 font-mono text-xs font-medium text-zinc-100">{{.IPAddress}}</td>
+              <td class="px-6 py-4 break-all font-medium text-zinc-200">{{.Destination}}</td>
+              <td class="px-6 py-4 capitalize text-zinc-300">{{.DesiredState}}</td>
+              <td class="px-6 py-4">{{template "delivery-status" .Status}}</td>
+              <td class="px-6 py-4 text-zinc-300"><span class="tabular-nums">{{.AcknowledgedRevision}}</span> / <span class="tabular-nums">{{.Revision}}</span></td>
+              <td class="px-6 py-4 tabular-nums text-zinc-300">{{.AttemptCount}}</td>
+              <td class="px-6 py-4 text-right"><a href="{{$.Prefix}}/bans/{{.DecisionID}}#delivery-history" class="font-medium text-cyan-400 underline">Inspect</a></td>
+            </tr>
+            {{if or .NextAttemptAt .LastError}}
+              <tr class="bg-zinc-800/60"><td colspan="7" class="px-6 py-3 text-xs text-zinc-400">
+                {{if .NextAttemptAt}}Next retry: {{fmtTime .NextAttemptAt}}{{end}}
+                {{if .LastError}}<details class="mt-2"><summary class="cursor-pointer text-red-200">Last provider error</summary><p class="mt-2 whitespace-pre-wrap break-words font-mono">{{.LastError}}</p></details>{{end}}
+              </td></tr>
+            {{end}}
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  {{else}}
+    <p class="px-6 py-4 text-center text-sm text-zinc-400">No current delivery entries match these filters.</p>
+  {{end}}
+  <nav aria-label="Delivery overview pages" class="flex flex-wrap items-center justify-between gap-4 border-t border-zinc-800 px-6 py-4 text-sm">
+    <span class="text-zinc-400">Page {{.Overview.Page}}</span>
+    <div class="flex gap-4">
+      {{if .Overview.Previous}}<a href="{{.Overview.Previous}}" class="font-medium text-cyan-400 underline">Newer</a>{{end}}
+      {{if .Overview.Next}}<a href="{{.Overview.Next}}" class="font-medium text-cyan-400 underline">Older</a>{{end}}
+    </div>
+  </nav>
+</section>
+{{end}}

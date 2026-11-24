@@ -64,6 +64,12 @@ type pageData struct {
 	Ban client.Record
 	// History provides navigation and current delivery progress for decision details.
 	History deliveryHistoryView
+	// Revisions contains one page of immutable ban and release changes.
+	Revisions client.RevisionPage
+	// DeliveryList contains one page of current destination reconciliation states.
+	DeliveryList client.DeliveryOverviewPage
+	// Overview supplies filtering and pagination for cross-decision pages.
+	Overview overviewNavigation
 	// LocalUser permits local account actions only for local sessions.
 	LocalUser bool
 	// Users lists local accounts on the administration page.

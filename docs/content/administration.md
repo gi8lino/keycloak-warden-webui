@@ -10,6 +10,23 @@ The **Delivery history** section groups completed attempts by revision and desti
 
 Use **Older history** and **Newer history** to browse pages. Navigation retains the starting revision; **Refresh latest** includes newer revisions and returns to the history section. Current acknowledgement summaries remain separate from historical attempts and include destinations with current progress even if none has ever acknowledged a revision; these show a dash for the acknowledged revision. If the latest bounded history page does not contain a destination's current status, it is shown as **not acknowledged**, rather than guessing whether it is retrying. Warden may omit older attempts within a group; the UI labels these omissions. Attempt durations are not available from the API.
 
+## Global ban history and delivery overview
+
+The **Ban history** navigation entry shows effective decision revisions recorded in
+Warden's append-only audit journal, including releases and extensions. Filter by exact IP
+address or desired state and page through the results. Each event includes its UTC commit
+time, cause, and the source reasons recorded at that revision. Older decisions created
+before Warden migration 0008 cannot be reconstructed.
+
+The separate **Deliveries** navigation entry displays the current revision of every
+decision/destination pair, not just active bans. Filter by delivery status or destination
+to find `retrying` and `exhausted` deliveries, including unban notifications that were not
+accepted. The **Inspect** link opens the existing decision detail and full attempt timeline.
+
+Both lists are queried through Warden's authenticated API; WebUI does not retain a second
+copy of Warden's audit data. Pagination is bounded and newer revisions can shift the
+results until the operator refreshes.
+
 ## Create and release bans
 
 Create a manual ban by entering an IP address, a positive duration (for example `15m` or `1h`), and a nonempty reason. The request is sent to Warden's administrator API; Web UI does not write enforcement records directly.

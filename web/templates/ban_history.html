@@ -1,0 +1,83 @@
+{{define "ban-history"}}
+<section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h2 class="text-lg font-semibold tracking-tight text-zinc-100">Decision revisions</h2>
+      <p class="mt-2 text-sm leading-6 text-zinc-400">Immutable changes recorded after the history feature was enabled. Repeated bans, releases and extensions appear separately.</p>
+    </div>
+    <a href="{{.Prefix}}/ban-history" class="text-sm font-medium text-cyan-400 underline">Clear filters</a>
+  </div>
+  <form method="get" action="{{.Prefix}}/ban-history" class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+    <label class="grid gap-2 text-sm font-medium text-zinc-300" for="history-ip">
+      IP address
+      <input id="history-ip" name="ip" type="text" value="{{.Overview.IP}}" maxlength="64" placeholder="203.0.113.42" autocomplete="off" class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none">
+    </label>
+    <label class="grid gap-2 text-sm font-medium text-zinc-300" for="history-state">
+      State
+      <select id="history-state" name="state" class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 focus:border-cyan-500 focus:outline-none">
+        <option value="">All states</option>
+        <option value="banned" {{if eq .Overview.State "banned"}}selected{{end}}>Banned</option>
+        <option value="unbanned" {{if eq .Overview.State "unbanned"}}selected{{end}}>Unbanned</option>
+      </select>
+    </label>
+    <div class="flex items-center">
+      <button type="submit" class="w-full rounded-lg bg-cyan-500 px-4 py-3 text-sm font-semibold text-zinc-950 hover:bg-cyan-400">Apply filters</button>
+    </div>
+  </form>
+</section>
+<section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
+  <header class="border-b border-zinc-800 px-6 py-5">
+    <h2 class="text-lg font-semibold tracking-tight text-zinc-100">Recorded changes</h2>
+    <p class="mt-1 text-sm text-zinc-400">The timestamp marks when Warden committed the revision; source details are captured at that point.</p>
+  </header>
+  {{if .Revisions.Items}}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-zinc-800/60 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <tr>
+            <th scope="col" class="px-6 py-4">Changed</th>
+            <th scope="col" class="px-6 py-4">IP address</th>
+            <th scope="col" class="px-6 py-4">State</th>
+            <th scope="col" class="px-6 py-4">Revision</th>
+            <th scope="col" class="px-6 py-4">Cause</th>
+            <th scope="col" class="px-6 py-4">Sources at revision</th>
+            <th scope="col" class="px-6 py-4 text-right">Decision</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-800">
+          {{range .Revisions.Items}}
+            <tr class="hover:bg-zinc-800/60">
+              <td class="break-words px-6 py-4 text-zinc-300">{{fmtTime .ChangedAt}}</td>
+              <td class="px-6 py-4 font-mono text-xs font-medium text-zinc-100">{{.IPAddress}}</td>
+              <td class="px-6 py-4">
+                <span class="rounded-full border border-zinc-700 bg-zinc-800 px-2.5 py-1 text-xs font-medium capitalize text-zinc-200">{{.State}}</span>
+              </td>
+              <td class="px-6 py-4 tabular-nums text-zinc-300">{{.Revision}}</td>
+              <td class="px-6 py-4 capitalize text-zinc-300">{{.Cause}}</td>
+              <td class="px-6 py-4 text-zinc-300">
+                {{if .Sources}}
+                  {{range .Sources}}
+                    <div class="break-words"><span class="capitalize">{{.Kind}}</span>{{if .Reason}}: {{.Reason}}{{end}}</div>
+                  {{end}}
+                {{else}}
+                  <span class="text-zinc-500">No active sources</span>
+                {{end}}
+              </td>
+              <td class="px-6 py-4 text-right"><a href="{{$.Prefix}}/bans/{{.DecisionID}}" class="font-medium text-cyan-400 underline">Inspect</a></td>
+            </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  {{else}}
+    <p class="px-6 py-4 text-center text-sm text-zinc-400">No recorded revisions match these filters. Decisions made before the history migration have no reconstructed timeline.</p>
+  {{end}}
+  <nav aria-label="Ban history pages" class="flex flex-wrap items-center justify-between gap-4 border-t border-zinc-800 px-6 py-4 text-sm">
+    <span class="text-zinc-400">Page {{.Overview.Page}}</span>
+    <div class="flex gap-4">
+      {{if .Overview.Previous}}<a href="{{.Overview.Previous}}" class="font-medium text-cyan-400 underline">Newer</a>{{end}}
+      {{if .Overview.Next}}<a href="{{.Overview.Next}}" class="font-medium text-cyan-400 underline">Older</a>{{end}}
+    </div>
+  </nav>
+</section>
+{{end}}

@@ -10,6 +10,8 @@ import (
 // The concrete client and bearer token remain server-side.
 type API interface {
 	List(context.Context) ([]client.Record, error)
+	ListDecisionHistory(context.Context, client.RevisionFilter) (client.RevisionPage, error)
+	ListDeliveries(context.Context, client.DeliveryFilter) (client.DeliveryOverviewPage, error)
 	Get(context.Context, string) (client.Record, error)
 	// GetPageThroughRevision retrieves a bounded delivery-history page.
 	GetPageThroughRevision(context.Context, string, int, int64) (client.Record, error)
