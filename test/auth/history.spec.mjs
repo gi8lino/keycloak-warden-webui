@@ -14,10 +14,26 @@ test("decision delivery history shows attempts and navigates pinned pages", asyn
   const deliveries = [
     { destination: "webhook.slack", acknowledgedRevision: 2 },
   ];
+  const currentDeliveries = [
+    {
+      destination: "webhook.slack",
+      revision: 3,
+      desiredState: "unbanned",
+      status: "retrying",
+      nextAttemptAt: "2026-11-24T12:15:00Z",
+    },
+    {
+      destination: "webhook.other",
+      revision: 3,
+      desiredState: "unbanned",
+      status: "exhausted",
+    },
+  ];
   lab.setHistoryPages([
     {
       decision,
       deliveries,
+      currentDeliveries,
       sources: [],
       historyPage: 1,
       historyNextPage: 2,
@@ -53,6 +69,7 @@ test("decision delivery history shows attempts and navigates pinned pages", asyn
       ],
     },
     {
+      // Current state must come from the separate latest response, not this page.
       decision,
       deliveries,
       sources: [],
@@ -106,6 +123,9 @@ test("decision delivery history shows attempts and navigates pinned pages", asyn
   expect(Math.abs(desktopSources.y - desktopCurrent.y)).toBeLessThan(5);
   await expect(unacknowledged).toContainText("exhausted");
   await expect(unacknowledged).toContainText("—");
+  await expect(
+    current.locator('[data-delivery-destination="webhook.slack"]'),
+  ).toContainText("retrying");
   const destinationFont = await unacknowledged
     .locator("h3")
     .evaluate((node) => getComputedStyle(node).fontFamily);
@@ -132,6 +152,8 @@ test("decision delivery history shows attempts and navigates pinned pages", asyn
   await history.getByRole("link", { name: "Older history" }).click();
   await expect(page).toHaveURL(/history-page=2&history-through-revision=3/);
   await expect(history).toContainText("Revision 2");
+  // Historical pagination must not replace the latest current delivery state.
+  await expect(unacknowledged).toContainText("exhausted");
   await expect(history).toContainText(
     "Older attempts in this group were omitted",
   );
@@ -150,7 +172,9 @@ test("decision delivery history shows attempts and navigates pinned pages", asyn
   expect(mobileCurrent.y).toBeGreaterThan(mobileSources.y);
   await history.getByRole("link", { name: "Newer history" }).click();
   await expect(history).toContainText("Revision 3");
-  await history.getByRole("link", { name: "Refresh latest" }).click();
+  await history
+    .getByRole("link", { name: "Refresh latest delivery history" })
+    .click();
   await expect(page).toHaveURL(/\/bans\/history-test#delivery-history$/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     390,

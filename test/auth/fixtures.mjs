@@ -118,12 +118,14 @@ export const test = base.extend({
         if (req.method === "GET") {
           const requested = new URL(req.url, "http://warden.test");
           if (requested.pathname === "/decisions/history") {
-            res.writeHead(200, { "Content-Type": "application/json" })
+            res
+              .writeHead(200, { "Content-Type": "application/json" })
               .end(JSON.stringify(decisionRevisions || { items: [], page: 1 }));
             return;
           }
           if (requested.pathname === "/deliveries") {
-            res.writeHead(200, { "Content-Type": "application/json" })
+            res
+              .writeHead(200, { "Content-Type": "application/json" })
               .end(JSON.stringify(deliveryOverview || { items: [], page: 1 }));
             return;
           }
@@ -137,8 +139,12 @@ export const test = base.extend({
 
       await use({
         url: url.origin,
-        setDecisionRevisions: (page) => { decisionRevisions = page; },
-        setDeliveryOverview: (page) => { deliveryOverview = page; },
+        setDecisionRevisions: (page) => {
+          decisionRevisions = page;
+        },
+        setDeliveryOverview: (page) => {
+          deliveryOverview = page;
+        },
         setHistoryPages: (pages) => {
           historyPages = pages;
         },
