@@ -58,14 +58,28 @@
             <a
               href="{{.Prefix}}/ban-history"
               {{if eq .Page "ban-history"}}aria-current="page"{{end}}
-              class="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-zinc-400 outline-offset-2 transition-all duration-150 hover:bg-zinc-800 hover:text-zinc-100 aria-[current=page]:bg-zinc-800 aria-[current=page]:text-zinc-100 focus-visible:outline-2 focus-visible:outline-cyan-400"
+              class="
+                flex items-center gap-3 rounded-lg px-3 py-3
+                text-sm font-medium text-zinc-400
+                outline-offset-2 transition-all duration-150
+                hover:bg-zinc-800 hover:text-zinc-100
+                aria-[current=page]:bg-zinc-800 aria-[current=page]:text-zinc-100
+                focus-visible:outline-2 focus-visible:outline-cyan-400
+              "
             >
               {{template "icon-clock"}}Ban history
             </a>
             <a
               href="{{.Prefix}}/deliveries"
               {{if eq .Page "deliveries"}}aria-current="page"{{end}}
-              class="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-zinc-400 outline-offset-2 transition-all duration-150 hover:bg-zinc-800 hover:text-zinc-100 aria-[current=page]:bg-zinc-800 aria-[current=page]:text-zinc-100 focus-visible:outline-2 focus-visible:outline-cyan-400"
+              class="
+                flex items-center gap-3 rounded-lg px-3 py-3
+                text-sm font-medium text-zinc-400
+                outline-offset-2 transition-all duration-150
+                hover:bg-zinc-800 hover:text-zinc-100
+                aria-[current=page]:bg-zinc-800 aria-[current=page]:text-zinc-100
+                focus-visible:outline-2 focus-visible:outline-cyan-400
+              "
             >
               {{template "icon-check"}}Deliveries
             </a>
@@ -157,10 +171,24 @@
                   >
                     {{template "icon-dashboard"}}Active bans
                   </a>
-                  <a href="{{.Prefix}}/ban-history" class="flex items-center gap-2 rounded-lg px-3 py-3 text-sm text-zinc-200 hover:bg-zinc-800">
+                  <a
+                    href="{{.Prefix}}/ban-history"
+                    class="
+                      flex items-center gap-2 rounded-lg px-3 py-3
+                      text-sm text-zinc-200
+                      hover:bg-zinc-800
+                    "
+                  >
                     {{template "icon-clock"}}Ban history
                   </a>
-                  <a href="{{.Prefix}}/deliveries" class="flex items-center gap-2 rounded-lg px-3 py-3 text-sm text-zinc-200 hover:bg-zinc-800">
+                  <a
+                    href="{{.Prefix}}/deliveries"
+                    class="
+                      flex items-center gap-2 rounded-lg px-3 py-3
+                      text-sm text-zinc-200
+                      hover:bg-zinc-800
+                    "
+                  >
                     {{template "icon-check"}}Deliveries
                   </a>
                   <a

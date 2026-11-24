@@ -11,34 +11,72 @@ async function signIn(lab, page) {
   await page.getByRole("button", { name: "Create administrator" }).click();
 }
 
-test("ban history shows recorded releases and source snapshots", async ({ lab, page }) => {
+test("ban history shows recorded releases and source snapshots", async ({
+  lab,
+  page,
+}) => {
   lab.setDecisionRevisions({
     page: 1,
-    items: [{
-      decisionId: "decision-test", ipAddress: "203.0.113.42", revision: 2,
-      state: "unbanned", changedAt: "2026-11-24T13:00:00Z", sources: [],
-    }, {
-      decisionId: "decision-test", ipAddress: "203.0.113.42", revision: 1,
-      state: "banned", changedAt: "2026-11-24T12:00:00Z",
-      sources: [{ kind: "manual", reason: "investigation", expiresAt: "2026-11-25T12:00:00Z" }],
-    }],
+    items: [
+      {
+        decisionId: "decision-test",
+        ipAddress: "203.0.113.42",
+        revision: 2,
+        state: "unbanned",
+        changedAt: "2026-11-24T13:00:00Z",
+        sources: [],
+      },
+      {
+        decisionId: "decision-test",
+        ipAddress: "203.0.113.42",
+        revision: 1,
+        state: "banned",
+        changedAt: "2026-11-24T12:00:00Z",
+        sources: [
+          {
+            kind: "manual",
+            reason: "investigation",
+            expiresAt: "2026-11-25T12:00:00Z",
+          },
+        ],
+      },
+    ],
   });
   await signIn(lab, page);
   await page.getByRole("link", { name: "Ban history" }).first().click();
-  await expect(page.getByRole("heading", { name: "Ban history" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Ban history" }),
+  ).toBeVisible();
   await expect(page.locator("#history-ip")).toBeVisible();
   await expect(page.locator("table")).toContainText("investigation");
   await expect(page.locator("table")).toContainText("unbanned");
+  const inspect = page.getByRole("link", { name: "Inspect decision" }).first();
+  await expect(inspect).toHaveAttribute("href", /\/bans\/decision-test$/);
+  await expect(inspect.locator("svg")).toHaveCount(1);
+  await expect(
+    page.getByRole("button", { name: "Apply filters" }),
+  ).toBeVisible();
 });
 
-test("deliveries highlights exhausted release with a safe provider error", async ({ lab, page }) => {
+test("deliveries highlights exhausted release with a safe provider error", async ({
+  lab,
+  page,
+}) => {
   lab.setDeliveryOverview({
     page: 1,
-    items: [{
-      decisionId: "decision-test", ipAddress: "203.0.113.43", revision: 4,
-      desiredState: "unbanned", destination: "cloudflare.edge", status: "exhausted",
-      acknowledgedRevision: 3, attemptCount: 3, lastError: "<script>alert(1)</script>",
-    }],
+    items: [
+      {
+        decisionId: "decision-test",
+        ipAddress: "203.0.113.43",
+        revision: 4,
+        desiredState: "unbanned",
+        destination: "cloudflare.edge",
+        status: "exhausted",
+        acknowledgedRevision: 3,
+        attemptCount: 3,
+        lastError: "<script>alert(1)</script>",
+      },
+    ],
   });
   await signIn(lab, page);
   await page.getByRole("link", { name: "Deliveries" }).first().click();
@@ -47,6 +85,17 @@ test("deliveries highlights exhausted release with a safe provider error", async
   await expect(page.locator("table")).toContainText("exhausted");
   await expect(page.locator("table")).toContainText("unbanned");
   await page.getByText("Last provider error").click();
-  await expect(page.locator("table")).toContainText("<script>alert(1)</script>");
+  await expect(page.locator("table")).toContainText(
+    "<script>alert(1)</script>",
+  );
   expect(await page.locator("table script").count()).toBe(0);
+  const refresh = page.getByRole("link", { name: "Refresh latest deliveries" });
+  await expect(refresh).toHaveAttribute("href", /\/deliveries\?page=1$/);
+  await expect(refresh.locator("svg")).toHaveCount(1);
+  const inspect = page.getByRole("link", { name: "Inspect decision" });
+  await expect(inspect).toHaveAttribute(
+    "href",
+    /\/bans\/decision-test#delivery-history$/,
+  );
+  await expect(inspect.locator("svg")).toHaveCount(1);
 });

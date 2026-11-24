@@ -16,15 +16,17 @@
         <p class="mt-2 text-sm leading-6 text-zinc-400">Revisions and delivery attempts, newest first. A delivery confirms destination acceptance only.</p>
       </div>
       <a
+        href="{{.History.Latest}}"
+        aria-label="Refresh latest delivery history"
+        title="Refresh latest delivery history"
         class="
-          inline-flex items-center rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5
-          text-sm font-medium text-zinc-200 transition-all duration-150
-          hover:bg-zinc-700
+          inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-zinc-700
+          text-cyan-400 transition-all duration-150
+          hover:bg-zinc-800 hover:text-zinc-100
           focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400
         "
-        href="{{.History.Latest}}"
       >
-        Refresh latest
+        {{template "icon-refresh"}}
       </a>
     </header>
     {{if .History.Entries}}

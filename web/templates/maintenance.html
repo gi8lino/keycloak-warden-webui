@@ -76,7 +76,7 @@
         type="submit"
         {{if .Maintenance.Prune.Running}}disabled{{end}}
         class="
-          inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-500 px-5 py-3
+          inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500 px-4 py-2.5
           text-sm font-semibold text-zinc-950
           transition-all duration-150
           hover:bg-cyan-400
@@ -154,7 +154,7 @@
         type="submit"
         {{if .Maintenance.Optimize.Running}}disabled{{end}}
         class="
-          inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-500 px-5 py-3
+          inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500 px-4 py-2.5
           text-sm font-semibold text-zinc-950
           transition-all duration-150
           hover:bg-cyan-400
@@ -171,3 +171,5 @@
   Maintenance never deletes ban decisions, active sources, or delivery acknowledgements.
 </p>
 {{end}}
+
+

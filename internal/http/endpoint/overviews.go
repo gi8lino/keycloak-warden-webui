@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -47,11 +48,13 @@ func parseOverviewQuery(raw string, allowed ...string) (url.Values, int, error) 
 	if err != nil {
 		return nil, 0, err
 	}
+
 	page := 1
 	for key, entries := range values {
 		if len(entries) != 1 {
 			return nil, 0, errors.New("duplicate query parameter")
 		}
+
 		if key == overviewPageParam {
 			page, err = strconv.Atoi(entries[0])
 			if err != nil || page < 1 {
@@ -59,16 +62,11 @@ func parseOverviewQuery(raw string, allowed ...string) (url.Values, int, error) 
 			}
 			continue
 		}
-		found := false
-		for _, name := range allowed {
-			if key == name {
-				found = true
-				break
-			}
-		}
-		if !found {
+
+		if !slices.Contains(allowed, key) {
 			return nil, 0, errors.New("unsupported query parameter")
 		}
+
 	}
 	return values, page, nil
 }
@@ -82,6 +80,7 @@ func overviewLinks(prefix, path string, page, next int, filters url.Values) over
 		Status:      filters.Get(overviewStatusParam),
 		Destination: filters.Get(overviewDestinationParam),
 	}
+
 	link := func(p int) string {
 		query := url.Values{}
 		for key, values := range filters {
@@ -92,13 +91,17 @@ func overviewLinks(prefix, path string, page, next int, filters url.Values) over
 		query.Set(overviewPageParam, strconv.Itoa(p))
 		return prefix + path + "?" + query.Encode()
 	}
+
 	view.Refresh = link(1)
+
 	if page > 1 {
 		view.Previous = link(page - 1)
 	}
+
 	if next > 0 {
 		view.Next = link(next)
 	}
+
 	return view
 }
 
@@ -110,6 +113,7 @@ func BanHistory(api API, pages *Pages) http.HandlerFunc {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid ban history filters.")
 			return
 		}
+
 		ip := strings.TrimSpace(values.Get(overviewIPParam))
 		if ip != "" {
 			address, parseErr := netip.ParseAddr(ip)
@@ -119,11 +123,13 @@ func BanHistory(api API, pages *Pages) http.HandlerFunc {
 			}
 			ip = address.Unmap().String()
 		}
+
 		state := decisionstate.State(values.Get(overviewStateParam))
 		if state != "" && !state.Valid() {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid decision state.")
 			return
 		}
+
 		list, err := api.ListDecisionHistory(r.Context(), client.RevisionFilter{
 			Page:  page,
 			IP:    ip,
@@ -133,6 +139,7 @@ func BanHistory(api API, pages *Pages) http.HandlerFunc {
 			pages.fail(r, w, currentUser(r), err)
 			return
 		}
+
 		pages.render(r, w, http.StatusOK, pageData{
 			Title:     "Ban history",
 			Page:      "ban-history",
@@ -151,16 +158,19 @@ func Deliveries(api API, pages *Pages) http.HandlerFunc {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid delivery filters.")
 			return
 		}
+
 		destination := strings.TrimSpace(values.Get(overviewDestinationParam))
 		if len(destination) > 128 || strings.ContainsAny(destination, "\x00\r\n\t") {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid destination filter.")
 			return
 		}
+
 		status := deliverystate.Status(values.Get(overviewStatusParam))
 		if status != "" && !status.Valid() {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid delivery status.")
 			return
 		}
+
 		list, err := api.ListDeliveries(r.Context(), client.DeliveryFilter{
 			Page:        page,
 			Status:      status,
@@ -170,6 +180,7 @@ func Deliveries(api API, pages *Pages) http.HandlerFunc {
 			pages.fail(r, w, currentUser(r), err)
 			return
 		}
+
 		pages.render(r, w, http.StatusOK, pageData{
 			Title:        "Deliveries",
 			Page:         "deliveries",
