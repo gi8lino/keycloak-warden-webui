@@ -45,6 +45,11 @@ func (*fakeAPI) Get(context.Context, string) (client.Record, error) {
 	return client.Record{Decision: client.Decision{ID: "one", IP: "203.0.113.1", State: "banned"}}, nil
 }
 
+// GetPageThroughRevision supplies decision history for browser pagination tests.
+func (a *fakeAPI) GetPageThroughRevision(ctx context.Context, id string, page int, revision int64) (client.Record, error) {
+	return a.Get(ctx, id)
+}
+
 // Ban records a successful mutation.
 func (a *fakeAPI) Ban(_ context.Context, request client.ManualBanRequest) (client.Record, error) {
 	a.banDuration.Store(int64(request.Duration))

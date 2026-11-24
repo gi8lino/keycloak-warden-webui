@@ -62,6 +62,8 @@ type pageData struct {
 	Bans []client.Record
 	// Ban is the selected persisted decision.
 	Ban client.Record
+	// History provides navigation and current delivery progress for decision details.
+	History deliveryHistoryView
 	// LocalUser permits local account actions only for local sessions.
 	LocalUser bool
 	// Users lists local accounts on the administration page.
@@ -86,8 +88,8 @@ func NewPages(
 ) (*Pages, error) {
 	templates, err := template.New("base.html").
 		Funcs(template.FuncMap{
-			"fmtTime": formatTime,
-			"pending": func(acknowledged, revision int64) bool { return acknowledged < revision },
+			"fmtTime":        formatTime,
+			"newestAttempts": newestAttempts,
 		}).ParseFS(assets, "templates/*.html")
 	if err != nil {
 		return nil, fmt.Errorf("parse HTML templates: %w", err)

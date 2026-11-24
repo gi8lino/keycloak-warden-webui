@@ -16,11 +16,11 @@ func TestEmbeddedAssets(t *testing.T) {
 		t.Parallel()
 
 		templates, err := template.New("base.html").Funcs(template.FuncMap{
-			"fmtTime": func(any) string { return "" },
-			"pending": func(int64, int64) bool { return false },
+			"fmtTime":        func(any) string { return "" },
+			"newestAttempts": func(v any) any { return v },
 		}).ParseFS(Assets, "templates/*.html")
 		require.NoError(t, err, "parse embedded templates")
-		for _, name := range []string{"account-menu", "users", "password", "dashboard", "base.html", "maintenance", "login", "setup", "error", "not-found", "detail"} {
+		for _, name := range []string{"account-menu", "users", "password", "dashboard", "base.html", "maintenance", "login", "setup", "error", "not-found", "detail", "delivery-history", "delivery-status"} {
 			assert.NotNil(t, templates.Lookup(name))
 		}
 	})

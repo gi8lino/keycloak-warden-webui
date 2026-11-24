@@ -43,19 +43,51 @@ func BanDetails(api API, pages *Pages) http.HandlerFunc {
 			return
 		}
 
-		user := currentUser(r)
+		page, through, err := parseHistoryQuery(r.URL.RawQuery)
+		if err != nil {
+			pages.Problem(r, w, http.StatusBadRequest, "Invalid delivery history page.")
+			return
+		}
 
-		record, err := api.Get(r.Context(), id)
+		user := currentUser(r)
+		latest, err := api.Get(r.Context(), id)
 		if err != nil {
 			pages.fail(r, w, user, err)
 			return
+		}
+		requestedThrough := through
+
+		// Capture the revision before fetching another page so concurrent changes
+		// cannot move an unpinned history traversal to a newer revision.
+		if through == 0 {
+			through = latest.Decision.Revision
+		}
+
+		history := latest
+		// The default first page is already part of the current-state response.
+		// Explicitly anchored pages must still be fetched through Warden's API.
+		if page != 1 || requestedThrough != 0 {
+			history, err = api.GetPageThroughRevision(r.Context(), id, page, through)
+			if err != nil {
+				pages.fail(r, w, user, err)
+				return
+			}
 		}
 
 		pages.render(r, w, http.StatusOK, pageData{
 			Title: "Decision details",
 			Page:  "detail",
 			User:  user.Name,
-			Ban:   record,
+			Ban:   latest,
+			History: historyView(
+				pages.prefix,
+				id,
+				page,
+				through,
+				history.HistoryNextPage,
+				currentDeliveryViews(latest),
+				history.DeliveryHistory,
+			),
 		})
 	}
 }

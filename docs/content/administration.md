@@ -6,6 +6,10 @@ After sign-in, Warden Web UI presents the current state of Warden through its ad
 
 The **Active bans** dashboard lists current decisions. Open a decision to inspect its IP address, state, revision, independent ban sources, and acknowledgement status per configured destination. A pending acknowledgement indicates that Warden has not yet confirmed delivery of the current revision; it is not proof of enforcement by the destination.
 
+The **Delivery history** section groups completed attempts by revision and destination, with the newest attempts first. Expand **Failure details** to inspect a provider error. Pending, retrying, delivered, exhausted, and superseded states are shown alongside acknowledgement and next-retry times when available.
+
+Use **Older history** and **Newer history** to browse pages. Navigation retains the starting revision; **Refresh latest** includes newer revisions and returns to the history section. Current acknowledgement summaries remain separate from historical attempts and include destinations with current progress even if none has ever acknowledged a revision; these show a dash for the acknowledged revision. If the latest bounded history page does not contain a destination's current status, it is shown as **not acknowledged**, rather than guessing whether it is retrying. Warden may omit older attempts within a group; the UI labels these omissions. Attempt durations are not available from the API.
+
 ## Create and release bans
 
 Create a manual ban by entering an IP address, a positive duration (for example `15m` or `1h`), and a nonempty reason. The request is sent to Warden's administrator API; Web UI does not write enforcement records directly.

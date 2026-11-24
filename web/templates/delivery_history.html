@@ -1,0 +1,120 @@
+{{define "delivery-status"}}
+  {{if eq . "delivered"}}
+    <span class="rounded-full border border-emerald-900/70 bg-emerald-950/30 px-2.5 py-1 text-xs font-medium capitalize text-emerald-200">{{.}}</span>
+  {{else if eq . "exhausted"}}
+    <span class="rounded-full border border-red-900/70 bg-red-950/30 px-2.5 py-1 text-xs font-medium capitalize text-red-200">{{.}}</span>
+  {{else}}
+    <span class="rounded-full border border-zinc-700 bg-zinc-800 px-2.5 py-1 text-xs font-medium capitalize text-zinc-200">{{.}}</span>
+  {{end}}
+{{end}}
+
+{{define "delivery-history"}}
+  <section id="delivery-history" class="scroll-mt-6 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
+    <header class="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-800 pb-6">
+      <div>
+        <h2 class="text-lg font-semibold tracking-tight text-zinc-100">Delivery history</h2>
+        <p class="mt-2 text-sm leading-6 text-zinc-400">Revisions and delivery attempts, newest first. A delivery confirms destination acceptance only.</p>
+      </div>
+      <a
+        class="
+          inline-flex items-center rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5
+          text-sm font-medium text-zinc-200 transition-all duration-150
+          hover:bg-zinc-700
+          focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400
+        "
+        href="{{.History.Latest}}"
+      >
+        Refresh latest
+      </a>
+    </header>
+    {{if .History.Entries}}
+      <ol class="mt-6 space-y-6" aria-label="Delivery history timeline">
+        {{range $index, $entry := .History.Entries}}
+          <li class="flex min-w-0 gap-4">
+            <div aria-hidden="true" class="flex shrink-0 flex-col items-center gap-2">
+              <span
+                class="
+                  flex size-10 shrink-0 items-center justify-center rounded-full border
+                  border-zinc-700 bg-zinc-800 text-sm font-semibold tabular-nums text-zinc-200
+                "
+              >
+                {{$entry.Revision}}
+              </span>
+              <span class="flex-1 border-r border-zinc-800"></span>
+            </div>
+            <article class="min-w-0 flex-1 border-b border-zinc-800 pb-6">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <h3 class="text-sm font-semibold text-zinc-100">Revision {{$entry.Revision}}</h3>
+                  <p class="mt-1 break-all text-sm font-medium text-zinc-300">{{$entry.Destination}}</p>
+                </div>
+                {{template "delivery-status" $entry.Status}}
+              </div>
+              <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+                <div>
+                  <dt class="text-zinc-500">Desired state</dt>
+                  <dd class="mt-1 capitalize text-zinc-200">{{if $entry.DesiredState}}{{$entry.DesiredState}}{{else}}Unknown{{end}}</dd>
+                </div>
+                {{if $entry.AcknowledgedAt}}
+                  <div>
+                    <dt class="text-zinc-500">Acknowledged</dt>
+                    <dd class="mt-1 text-zinc-200">{{fmtTime $entry.AcknowledgedAt}}</dd>
+                  </div>
+                {{end}}
+                {{if $entry.NextAttemptAt}}
+                  <div>
+                    <dt class="text-zinc-500">Next retry</dt>
+                    <dd class="mt-1 text-zinc-200">{{fmtTime $entry.NextAttemptAt}}</dd>
+                  </div>
+                {{end}}
+                {{if $entry.SupersededByRevision}}
+                  <div>
+                    <dt class="text-zinc-500">Replaced by revision</dt>
+                    <dd class="mt-1 tabular-nums text-zinc-200">{{$entry.SupersededByRevision}}</dd>
+                  </div>
+                {{end}}
+              </dl>
+              {{if $entry.AttemptsTruncated}}
+                <p class="mt-4 text-sm text-amber-200">Older attempts in this group were omitted by Warden.</p>
+              {{end}}
+              {{if $entry.Attempts}}
+                <details class="mt-4 border-t border-zinc-800 pt-4" {{if eq $index 0}}open{{end}}>
+                  <summary class="cursor-pointer text-sm font-medium text-cyan-400">
+                    Attempts ({{len $entry.Attempts}})
+                  </summary>
+                  <ol class="mt-4 divide-y divide-zinc-800" aria-label="Delivery attempts">
+                    {{range newestAttempts $entry.Attempts}}
+                      <li class="py-3">
+                        <div class="flex flex-wrap items-center justify-between gap-3 text-sm">
+                          <span class="font-medium text-zinc-200">Attempt {{.Number}} · {{.Outcome}}</span>
+                          <time class="text-zinc-400">{{fmtTime .At}}</time>
+                        </div>
+                        {{if .Error}}
+                          <details class="mt-3 text-sm">
+                            <summary class="cursor-pointer text-red-200">Failure details</summary>
+                            <p class="mt-2 whitespace-pre-wrap break-words font-mono text-xs text-zinc-300">{{.Error}}</p>
+                          </details>
+                        {{end}}
+                      </li>
+                    {{end}}
+                  </ol>
+                </details>
+              {{else}}
+                <p class="mt-4 text-sm text-zinc-400">No completed attempts recorded.</p>
+              {{end}}
+            </article>
+          </li>
+        {{end}}
+      </ol>
+    {{else}}
+      <p class="mt-6 text-sm text-zinc-400">No delivery history on this page.</p>
+    {{end}}
+    <nav aria-label="Delivery history pages" class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-zinc-800 pt-4 text-sm">
+      <span class="text-zinc-400">Page {{.History.Page}}</span>
+      <div class="flex flex-wrap gap-4">
+        {{if .History.Previous}}<a class="text-cyan-400 underline" href="{{.History.Previous}}">Newer history</a>{{end}}
+        {{if .History.Next}}<a class="text-cyan-400 underline" href="{{.History.Next}}">Older history</a>{{end}}
+      </div>
+    </nav>
+  </section>
+{{end}}

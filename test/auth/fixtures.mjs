@@ -91,12 +91,27 @@ export const test = base.extend({
       const url = await address();
       const management = await address();
       let backendFailure;
+      let historyPages;
+      const historyRequests = [];
       const warden = await listen((req, res) => {
         if (backendFailure) {
           res
             .writeHead(backendFailure, { "Content-Type": "application/json" })
             .end(JSON.stringify({ error: "secret backend response" }));
           return;
+        }
+        if (historyPages && req.method === "GET") {
+          const requested = new URL(req.url, "http://warden.test");
+          if (requested.pathname === "/bans/history-test") {
+            historyRequests.push(requested.search);
+            const page = Number(
+              requested.searchParams.get("history-page") || "1",
+            );
+            res
+              .writeHead(200, { "Content-Type": "application/json" })
+              .end(JSON.stringify(historyPages[page - 1]));
+            return;
+          }
         }
         if (req.method !== "GET" || req.url !== "/bans") {
           res.writeHead(404).end();
@@ -107,6 +122,10 @@ export const test = base.extend({
 
       await use({
         url: url.origin,
+        setHistoryPages: (pages) => {
+          historyPages = pages;
+        },
+        historyRequests,
         failBackend: (status) => {
           backendFailure = status;
         },
