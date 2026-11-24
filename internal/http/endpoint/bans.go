@@ -82,11 +82,15 @@ func CreateBan(api API, pages *Pages) http.HandlerFunc {
 			return
 		}
 
-		if _, err := api.Ban(r.Context(), client.ManualBanRequest{
-			IP:       ip,
-			Duration: parsedDuration,
-			Reason:   reason,
-		}); err != nil {
+		err = pages.auditAction(r, actionBan, func() error {
+			_, err := api.Ban(r.Context(), client.ManualBanRequest{
+				IP:       ip,
+				Duration: parsedDuration,
+				Reason:   reason,
+			})
+			return err
+		}, "ip_address", ip)
+		if err != nil {
 			pages.fail(r, w, currentUser(r), err)
 			return
 		}
@@ -103,7 +107,11 @@ func ReleaseBan(api API, pages *Pages) http.HandlerFunc {
 			return
 		}
 
-		if _, err := api.Unban(r.Context(), id); err != nil {
+		err := pages.auditAction(r, actionUnban, func() error {
+			_, err := api.Unban(r.Context(), id)
+			return err
+		}, "decision_id", id)
+		if err != nil {
 			pages.fail(r, w, currentUser(r), err)
 			return
 		}

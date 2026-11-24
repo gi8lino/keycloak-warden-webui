@@ -32,18 +32,27 @@ func Maintenance(api API, pages *Pages) http.HandlerFunc {
 func RunMaintenance(api API, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		operation := r.PathValue("operation")
-		if operation != "prune" && operation != "optimize" {
+		var action administrativeAction
+		var run func() error
+		switch operation {
+		case "prune":
+			action = actionPrune
+			run = func() error {
+				_, err := api.PruneObservations(r.Context())
+				return err
+			}
+		case "optimize":
+			action = actionOptimize
+			run = func() error {
+				_, err := api.OptimizeDatabase(r.Context())
+				return err
+			}
+		default:
 			NotFound(pages)(w, r)
 			return
 		}
 
-		var err error
-		switch operation {
-		case "prune":
-			_, err = api.PruneObservations(r.Context())
-		case "optimize":
-			_, err = api.OptimizeDatabase(r.Context())
-		}
+		err := pages.auditAction(r, action, run)
 		if err != nil {
 			pages.fail(r, w, currentUser(r), err)
 			return
