@@ -20,6 +20,7 @@ const (
 	overviewStateParam       = "state"
 	overviewStatusParam      = "status"
 	overviewDestinationParam = "destination"
+	overviewThroughParam     = "through-sequence"
 )
 
 // overviewNavigation supplies bounded, prefix-aware pagination and active filters.
@@ -72,7 +73,7 @@ func parseOverviewQuery(raw string, allowed ...string) (url.Values, int, error) 
 }
 
 // overviewLinks preserves the selected filters across numbered pages.
-func overviewLinks(prefix, path string, page, next int, filters url.Values) overviewNavigation {
+func overviewLinks(prefix, path string, page, next int, filters url.Values, through int64) overviewNavigation {
 	view := overviewNavigation{
 		Page:        page,
 		IP:          filters.Get(overviewIPParam),
@@ -81,25 +82,28 @@ func overviewLinks(prefix, path string, page, next int, filters url.Values) over
 		Destination: filters.Get(overviewDestinationParam),
 	}
 
-	link := func(p int) string {
+	link := func(p int, pinned bool) string {
 		query := url.Values{}
 		for key, values := range filters {
-			if key != overviewPageParam {
+			if key != overviewPageParam && key != overviewThroughParam {
 				query[key] = values
 			}
 		}
 		query.Set(overviewPageParam, strconv.Itoa(p))
+		if pinned && through > 0 && path == "/ban-history" {
+			query.Set(overviewThroughParam, strconv.FormatInt(through, 10))
+		}
 		return prefix + path + "?" + query.Encode()
 	}
 
-	view.Refresh = link(1)
+	view.Refresh = link(1, false)
 
 	if page > 1 {
-		view.Previous = link(page - 1)
+		view.Previous = link(page-1, true)
 	}
 
 	if next > 0 {
-		view.Next = link(next)
+		view.Next = link(next, true)
 	}
 
 	return view
@@ -108,7 +112,7 @@ func overviewLinks(prefix, path string, page, next int, filters url.Values) over
 // BanHistory shows immutable ban/release revision events, including released decisions.
 func BanHistory(api API, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		values, page, err := parseOverviewQuery(r.URL.RawQuery, overviewIPParam, overviewStateParam)
+		values, page, err := parseOverviewQuery(r.URL.RawQuery, overviewIPParam, overviewStateParam, overviewThroughParam)
 		if err != nil {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid ban history filters.")
 			return
@@ -130,10 +134,20 @@ func BanHistory(api API, pages *Pages) http.HandlerFunc {
 			return
 		}
 
+		through := int64(0)
+		if value := values.Get(overviewThroughParam); value != "" {
+			through, err = strconv.ParseInt(value, 10, 64)
+			if err != nil || through < 1 {
+				pages.Problem(r, w, http.StatusBadRequest, "Invalid history sequence.")
+				return
+			}
+		}
+
 		list, err := api.ListDecisionHistory(r.Context(), client.RevisionFilter{
-			Page:  page,
-			IP:    ip,
-			State: state,
+			Page:            page,
+			IP:              ip,
+			State:           state,
+			ThroughSequence: through,
 		})
 		if err != nil {
 			pages.fail(r, w, currentUser(r), err)
@@ -145,7 +159,7 @@ func BanHistory(api API, pages *Pages) http.HandlerFunc {
 			Page:      "ban-history",
 			User:      currentUser(r).Name,
 			Revisions: list,
-			Overview:  overviewLinks(pages.prefix, "/ban-history", page, list.NextPage, values),
+			Overview:  overviewLinks(pages.prefix, "/ban-history", page, list.NextPage, values, list.ThroughSequence),
 		})
 	}
 }
@@ -186,7 +200,7 @@ func Deliveries(api API, pages *Pages) http.HandlerFunc {
 			Page:         "deliveries",
 			User:         currentUser(r).Name,
 			DeliveryList: list,
-			Overview:     overviewLinks(pages.prefix, "/deliveries", page, list.NextPage, values),
+			Overview:     overviewLinks(pages.prefix, "/deliveries", page, list.NextPage, values, 0),
 		})
 	}
 }

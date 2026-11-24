@@ -44,14 +44,22 @@ func TestOverviewLinks(t *testing.T) {
 
 	t.Run("retains filters and application prefix", func(t *testing.T) {
 		t.Parallel()
-		view := overviewLinks("/ui", "/deliveries", 2, 3, url.Values{"status": {"exhausted"}, "destination": {"cloudflare.edge"}})
+		view := overviewLinks("/ui", "/deliveries", 2, 3, url.Values{"status": {"exhausted"}, "destination": {"cloudflare.edge"}}, 0)
 		assert.Equal(t, "/ui/deliveries?destination=cloudflare.edge&page=1&status=exhausted", view.Previous)
 		assert.Equal(t, "/ui/deliveries?destination=cloudflare.edge&page=3&status=exhausted", view.Next)
 	})
 
+	t.Run("anchors history pagination and resets its refresh link", func(t *testing.T) {
+		t.Parallel()
+		view := overviewLinks("/ui", "/ban-history", 2, 3, url.Values{"state": {"banned"}}, 77)
+		assert.Equal(t, "/ui/ban-history?page=1&state=banned&through-sequence=77", view.Previous)
+		assert.Equal(t, "/ui/ban-history?page=3&state=banned&through-sequence=77", view.Next)
+		assert.Equal(t, "/ui/ban-history?page=1&state=banned", view.Refresh)
+	})
+
 	t.Run("first page has no newer link", func(t *testing.T) {
 		t.Parallel()
-		view := overviewLinks("", "/ban-history", 1, 0, url.Values{})
+		view := overviewLinks("", "/ban-history", 1, 0, url.Values{}, 0)
 		assert.Empty(t, view.Previous)
 		assert.Empty(t, view.Next)
 	})
