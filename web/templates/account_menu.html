@@ -1,27 +1,29 @@
 {{define "account-menu"}}
 <details class="relative">
   <summary
-    class="cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold text-zinc-200 hover:bg-zinc-800"
+    class="
+      cursor-pointer rounded-lg px-3 py-2
+      text-sm font-semibold text-zinc-200
+      hover:bg-zinc-800
+    "
   >
     {{.User}}
   </summary>
   <div
-    class="absolute right-0 z-20 mt-2 w-48 rounded-lg border border-zinc-700 bg-zinc-900 p-2 shadow-xl md:bottom-full md:left-0 md:mb-2"
+    class="
+      absolute right-0 z-20 mt-2 w-48 rounded-lg border border-zinc-700 bg-zinc-900 p-2
+      shadow-xl md:bottom-full md:left-0 md:mb-2
+    "
   >
-    <a
-      class="block rounded-lg px-3 py-2 text-sm hover:bg-zinc-800"
-      href="{{.Prefix}}/preferences"
-      >Preferences</a
-    >
+    <a class="block rounded-lg px-3 py-2 text-sm hover:bg-zinc-800" href="{{.Prefix}}/preferences">
+      Preferences
+    </a>
     {{if or .LocalUser (ne .Mode "proxy")}}
-    <form method="post" action="{{.Prefix}}/logout">
-      <button
-        type="submit"
-        class="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-zinc-800"
-      >
-        Sign out
-      </button>
-    </form>
+      <form method="post" action="{{.Prefix}}/logout">
+        <button type="submit" class="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-zinc-800">
+          Sign out
+        </button>
+      </form>
     {{end}}
   </div>
 </details>

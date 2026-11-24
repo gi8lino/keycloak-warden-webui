@@ -1,13 +1,18 @@
 {{define "not-found"}}
 <section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
   <p class="text-4xl font-semibold tracking-tight text-zinc-500">404</p>
-  <p class="mt-5 text-sm leading-6 text-zinc-400">
-    This page does not exist or is no longer available.
-  </p>
+  <p class="mt-5 text-sm leading-6 text-zinc-400">This page does not exist or is no longer available.</p>
   <a
     href="{{.Prefix}}/"
-    class="mt-5 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-100 transition-all duration-150 hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-cyan-400"
-    >{{template "icon-arrow-left"}}Back to Warden</a
+    class="
+      mt-5 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-4
+      py-2.5 text-sm font-medium text-zinc-100
+      transition-all duration-150
+      hover:bg-zinc-700
+      focus-visible:outline-2 focus-visible:outline-cyan-400
+    "
   >
+    {{template "icon-arrow-left"}}Back to Warden
+  </a>
 </section>
 {{end}}

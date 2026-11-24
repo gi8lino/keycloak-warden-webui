@@ -1,20 +1,29 @@
 {{define "error"}}
 <section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
   <div
-    class="flex items-start gap-3 rounded-lg border border-red-900/60 bg-red-950/30 p-4 text-sm leading-6 text-red-200"
+    class="
+      flex items-start gap-3 rounded-lg border border-red-900/60 bg-red-950/30 p-4
+      text-sm leading-6 text-red-200
+    "
     role="alert"
   >
     {{template "icon-alert"}}
     <p>{{.Error}}</p>
   </div>
   <p class="mt-5 text-sm text-zinc-400">
-    Return to Warden to review the current state. Submitted actions are never
-    retried automatically.
+    Return to Warden to review the current state. Submitted actions are never retried automatically.
   </p>
   <a
     href="{{.Prefix}}/"
-    class="mt-5 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-100 transition-all duration-150 hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
-    >{{template "icon-arrow-left"}}Back to Warden</a
+    class="
+      mt-5 inline-flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-4
+      py-2.5 text-sm font-medium text-zinc-100
+      transition-all duration-150
+      hover:bg-zinc-700
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400
+    "
   >
+    {{template "icon-arrow-left"}}Back to Warden
+  </a>
 </section>
 {{end}}

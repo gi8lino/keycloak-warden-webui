@@ -1,142 +1,158 @@
 {{define "dashboard"}}
-<section
-  class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70"
->
+<section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
   <div
-    class="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-800 p-6 sm:p-8"
+    class="
+      flex flex-wrap items-start justify-between gap-4 border-b border-zinc-800 p-6 sm:p-8
+    "
   >
     <div>
-      <h2 class="text-lg font-semibold tracking-tight text-zinc-100">
-        Current bans
-      </h2>
+      <h2 class="text-lg font-semibold tracking-tight text-zinc-100">Current bans</h2>
       <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-        Active decisions and the desired security state. Select a ban to inspect
-        its sources and deliveries.
+        Active decisions and the desired security state. Select a ban to inspect its sources and deliveries.
       </p>
     </div>
     <span
-      class="inline-flex items-center rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs font-medium tabular-nums text-zinc-200"
-      >{{len .Bans}} active</span
+      class="
+        inline-flex items-center rounded-full border border-zinc-700 bg-zinc-800 px-3 py-1
+        text-xs font-medium tabular-nums
+        text-zinc-200
+      "
     >
+      {{len .Bans}} active
+    </span>
   </div>
   {{if .Bans}}
-  <div class="grid gap-3 p-4 md:hidden">
-    {{range .Bans}}
-    <article class="rounded-lg border border-zinc-800 bg-zinc-950/50 p-4">
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <p
-          class="min-w-0 break-all font-mono text-sm font-semibold text-zinc-100"
-        >
-          {{.Decision.IP}}
-        </p>
-        <span
-          class="rounded-full border border-zinc-700 px-2.5 py-1 text-xs font-medium capitalize text-zinc-300"
-          >{{.Decision.State}}</span
-        >
-      </div>
-      <dl class="mt-4 grid grid-cols-2 gap-4 text-xs">
-        <div>
-          <dt class="text-zinc-500">Revision</dt>
-          <dd class="mt-1 font-medium tabular-nums text-zinc-200">
-            {{.Decision.Revision}}
-          </dd>
-        </div>
-        <div>
-          <dt class="text-zinc-500">Expires</dt>
-          <dd class="mt-1 text-zinc-200">{{fmtTime .Decision.ExpiresAt}}</dd>
-        </div>
-      </dl>
-      <a
-        href="{{$.Prefix}}/bans/{{.Decision.ID}}"
-        class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-100 transition-all duration-150 hover:border-zinc-600 hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
-        >Inspect decision {{template "icon-arrow-up"}}</a
-      >
-    </article>
-    {{end}}
-  </div>
-  <div class="hidden overflow-x-auto md:block">
-    <table class="w-full text-left text-sm">
-      <thead
-        class="border-b border-zinc-800 bg-zinc-950/40 text-xs font-semibold uppercase tracking-wider text-zinc-500"
-      >
-        <tr>
-          <th class="px-6 py-4">IP address</th>
-          <th class="px-6 py-4">State</th>
-          <th class="px-6 py-4">Revision</th>
-          <th class="px-6 py-4">Expires</th>
-          <th class="px-6 py-4 text-right">Action</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-zinc-800">
-        {{range .Bans}}
-        <tr class="transition-all duration-150 hover:bg-zinc-800/60">
-          <td class="px-6 py-4 font-mono text-xs font-medium text-zinc-100">
-            {{.Decision.IP}}
-          </td>
-          <td class="px-6 py-4">
+    <div class="grid gap-3 p-4 md:hidden">
+      {{range .Bans}}
+        <article class="rounded-lg border border-zinc-800 bg-zinc-950/50 p-4">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <p class="min-w-0 break-all font-mono text-sm font-semibold text-zinc-100">{{.Decision.IP}}</p>
             <span
-              class="rounded-full border border-zinc-700 px-2.5 py-1 text-xs font-medium capitalize text-zinc-300"
-              >{{.Decision.State}}</span
+              class="
+                rounded-full border border-zinc-700 px-2.5 py-1
+                text-xs font-medium capitalize
+                text-zinc-300
+              "
             >
-          </td>
-          <td class="px-6 py-4 font-mono tabular-nums text-zinc-300">
-            {{.Decision.Revision}}
-          </td>
-          <td class="px-6 py-4 text-zinc-400">
-            {{fmtTime .Decision.ExpiresAt}}
-          </td>
-          <td class="px-6 py-4 text-right">
-            <a
-              href="{{$.Prefix}}/bans/{{.Decision.ID}}"
-              class="inline-flex items-center gap-2 rounded-md px-3 py-2 font-medium text-zinc-200 transition-all duration-150 hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-cyan-400"
-              >Inspect {{template "icon-arrow-up"}}</a
-            >
-          </td>
-        </tr>
-        {{end}}
-      </tbody>
-    </table>
-  </div>
+              {{.Decision.State}}
+            </span>
+          </div>
+          <dl class="mt-4 grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <dt class="text-zinc-500">Revision</dt>
+              <dd class="mt-1 font-medium tabular-nums text-zinc-200">{{.Decision.Revision}}</dd>
+            </div>
+            <div>
+              <dt class="text-zinc-500">Expires</dt>
+              <dd class="mt-1 text-zinc-200">{{fmtTime .Decision.ExpiresAt}}</dd>
+            </div>
+          </dl>
+          <a
+            href="{{$.Prefix}}/bans/{{.Decision.ID}}"
+            class="
+              mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border
+              border-zinc-700 bg-zinc-800 px-4 py-2.5
+              text-sm font-medium text-zinc-100
+              transition-all duration-150
+              hover:border-zinc-600 hover:bg-zinc-700
+              focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400
+            "
+          >
+            Inspect decision {{template "icon-arrow-up"}}
+          </a>
+        </article>
+      {{end}}
+    </div>
+    <div class="hidden overflow-x-auto md:block">
+      <table class="w-full text-left text-sm">
+        <thead
+          class="
+            border-b border-zinc-800 bg-zinc-950/40
+            text-xs font-semibold uppercase
+            tracking-wider text-zinc-500
+          "
+        >
+          <tr>
+            <th class="px-6 py-4">IP address</th>
+            <th class="px-6 py-4">State</th>
+            <th class="px-6 py-4">Revision</th>
+            <th class="px-6 py-4">Expires</th>
+            <th class="px-6 py-4 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-800">
+          {{range .Bans}}
+            <tr class="transition-all duration-150 hover:bg-zinc-800/60">
+              <td class="px-6 py-4 font-mono text-xs font-medium text-zinc-100">{{.Decision.IP}}</td>
+              <td class="px-6 py-4">
+                <span
+                  class="
+                    rounded-full border border-zinc-700 px-2.5 py-1
+                    text-xs font-medium capitalize
+                    text-zinc-300
+                  "
+                >
+                  {{.Decision.State}}
+                </span>
+              </td>
+              <td class="px-6 py-4 font-mono tabular-nums text-zinc-300">{{.Decision.Revision}}</td>
+              <td class="px-6 py-4 text-zinc-400">{{fmtTime .Decision.ExpiresAt}}</td>
+              <td class="px-6 py-4 text-right">
+                <a
+                  href="{{$.Prefix}}/bans/{{.Decision.ID}}"
+                  class="
+                    inline-flex items-center gap-2 rounded-md px-3 py-2
+                    font-medium text-zinc-200 transition-all duration-150
+                    hover:bg-zinc-700
+                    focus-visible:outline-2 focus-visible:outline-cyan-400
+                  "
+                >
+                  Inspect {{template "icon-arrow-up"}}
+                </a>
+              </td>
+            </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
   {{else}}
-  <div class="flex flex-col items-center px-6 py-14 text-center sm:py-16">
-    <span
-      class="flex size-12 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-800/60 text-zinc-400"
-      >{{template "icon-shield"}}</span
-    >
-    <h3 class="mt-5 text-base font-semibold text-zinc-100">No active bans</h3>
-    <p class="mt-2 max-w-sm text-sm leading-6 text-zinc-400">
-      No IP addresses are currently blocked. Detection and manually created bans
-      will appear here.
-    </p>
-    <a
-      href="#create-ban"
-      class="mt-6 inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-all duration-150 hover:bg-cyan-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
-      >{{template "icon-plus"}}Create a manual ban</a
-    >
-  </div>
+    <div class="flex flex-col items-center px-6 py-14 text-center sm:py-16">
+      <span
+        class="
+          flex size-12 items-center justify-center rounded-xl border border-zinc-800
+          bg-zinc-800/60 text-zinc-400
+        "
+      >
+        {{template "icon-shield"}}
+      </span>
+      <h3 class="mt-5 text-base font-semibold text-zinc-100">No active bans</h3>
+      <p class="mt-2 max-w-sm text-sm leading-6 text-zinc-400">
+        No IP addresses are currently blocked. Detection and manually created bans will appear here.
+      </p>
+      <a
+        href="#create-ban"
+        class="
+          mt-6 inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2.5
+          text-sm font-semibold text-zinc-950
+          transition-all duration-150
+          hover:bg-cyan-400
+          focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300
+        "
+      >
+        {{template "icon-plus"}}Create a manual ban
+      </a>
+    </div>
   {{end}}
 </section>
-<section
-  id="create-ban"
-  class="scroll-mt-6 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8"
->
+<section id="create-ban" class="scroll-mt-6 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
   <div class="mb-6">
-    <h2 class="text-lg font-semibold tracking-tight text-zinc-100">
-      Manual ban
-    </h2>
-    <p class="mt-2 text-sm leading-6 text-zinc-400">
-      Create or extend a block directly through Warden.
-    </p>
+    <h2 class="text-lg font-semibold tracking-tight text-zinc-100">Manual ban</h2>
+    <p class="mt-2 text-sm leading-6 text-zinc-400">Create or extend a block directly through Warden.</p>
   </div>
-  <form
-    method="post"
-    action="{{.Prefix}}/bans"
-    class="grid gap-6 sm:grid-cols-2"
-  >
-    <label
-      class="grid self-start gap-2 text-sm font-medium text-zinc-300"
-      for="ban-ip"
-      >IP address<input
+  <form method="post" action="{{.Prefix}}/bans" class="grid gap-6 sm:grid-cols-2">
+    <label class="grid self-start gap-2 text-sm font-medium text-zinc-300" for="ban-ip">
+      IP address
+      <input
         id="ban-ip"
         aria-describedby="ban-ip-error"
         name="ip"
@@ -144,17 +160,22 @@
         placeholder="203.0.113.42"
         autocomplete="off"
         maxlength="64"
-        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus:border-red-400 aria-[invalid=true]:focus:ring-red-400" /><span
-        id="ban-ip-error"
-        hidden
-        class="text-xs font-normal text-red-200"
-        aria-live="polite"
-      ></span
-    ></label>
-    <label
-      class="grid self-start gap-2 text-sm font-medium text-zinc-300"
-      for="ban-duration"
-      >Duration<input
+        class="
+          w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3
+          text-sm font-normal text-zinc-100
+          placeholder:text-zinc-600
+          transition-all duration-150
+          focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30
+          aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus:border-red-400
+          aria-[invalid=true]:focus:ring-red-400
+        "
+      />
+      <span id="ban-ip-error" hidden class="text-xs font-normal text-red-200" aria-live="polite">
+      </span>
+    </label>
+    <label class="grid self-start gap-2 text-sm font-medium text-zinc-300" for="ban-duration">
+      Duration
+      <input
         id="ban-duration"
         aria-describedby="ban-duration-error"
         name="duration"
@@ -162,28 +183,47 @@
         value="1h"
         maxlength="32"
         placeholder="1h"
-        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus:border-red-400 aria-[invalid=true]:focus:ring-red-400" /><span
-        id="ban-duration-error"
-        hidden
-        class="text-xs font-normal text-red-200"
-        aria-live="polite"
-      ></span
-    ></label>
-    <label
-      class="grid gap-2 text-sm font-medium text-zinc-300 sm:col-span-2"
-      for="ban-reason"
-      >Reason<input
+        class="
+          w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3
+          text-sm font-normal text-zinc-100
+          placeholder:text-zinc-600
+          transition-all duration-150
+          focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30
+          aria-[invalid=true]:border-red-400 aria-[invalid=true]:focus:border-red-400
+          aria-[invalid=true]:focus:ring-red-400
+        "
+      />
+      <span id="ban-duration-error" hidden class="text-xs font-normal text-red-200" aria-live="polite">
+      </span>
+    </label>
+    <label class="grid gap-2 text-sm font-medium text-zinc-300 sm:col-span-2" for="ban-reason">
+      Reason
+      <input
         id="ban-reason"
         name="reason"
         required
         placeholder="Investigation"
         maxlength="512"
-        class="w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-normal text-zinc-100 placeholder:text-zinc-600 transition-all duration-150 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
-    /></label>
+        class="
+          w-full min-w-0 rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3
+          text-sm font-normal text-zinc-100
+          placeholder:text-zinc-600
+          transition-all duration-150
+          focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30
+        "
+      />
+    </label>
     <div class="sm:col-span-2">
       <button
         type="submit"
-        class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-500 px-5 py-3 text-sm font-semibold text-zinc-950 transition-all duration-150 hover:bg-cyan-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 sm:w-auto"
+        class="
+          inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-500 px-5 py-3
+          text-sm font-semibold text-zinc-950
+          transition-all duration-150
+          hover:bg-cyan-400
+          focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300
+          sm:w-auto
+        "
       >
         {{template "icon-plus"}}Create ban
       </button>

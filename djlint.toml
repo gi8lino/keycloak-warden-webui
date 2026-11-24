@@ -1,0 +1,11 @@
+profile = "golang"
+
+indent = 2
+max_line_length = 120
+max_attribute_length = 100
+
+single_attribute_per_line = true
+preserve_class_newlines = true
+ignore_blocks = ["define"]
+
+format_attribute_template_tags = false
