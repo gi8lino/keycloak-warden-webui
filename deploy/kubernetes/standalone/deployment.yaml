@@ -51,10 +51,10 @@ spec:
                   key: setup-token
           ports:
             - name: webui-http
-              containerPort: 8092
+              containerPort: 8082
               protocol: TCP
             - name: webui-mgmt
-              containerPort: 8093
+              containerPort: 8083
               protocol: TCP
           startupProbe:
             httpGet:

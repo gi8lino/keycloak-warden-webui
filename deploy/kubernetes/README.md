@@ -52,8 +52,8 @@ No Warden service, volume, configuration, or Secret is recreated in this variant
 
 ## Browser, authentication and exposure
 
-The generated Service `keycloak-warden-webui` exposes port `8092` only.
-Configure your own authenticated ingress or Gateway and TLS for the `WARDEN_WEBUI__PUBLIC_URL` host. Keep management port `8093` and Warden's administrative listener private. WebUI is configured for local login as an initial working example; open `/setup` and use the secret's setup token on first installation. Once initialized, the setup token is not required.
+The generated Service `keycloak-warden-webui` exposes port `8082` only.
+Configure your own authenticated ingress or Gateway and TLS for the `WARDEN_WEBUI__PUBLIC_URL` host. Keep management port `8083` and Warden's administrative listener private. WebUI is configured for local login as an initial working example; open `/setup` and use the secret's setup token on first installation. Once initialized, the setup token is not required.
 
 For OIDC, set `WARDEN_WEBUI__AUTH_MODE=oidc`,
 `WARDEN_WEBUI__OIDC_ISSUER`, `WARDEN_WEBUI__OIDC_CLIENT_ID`,

@@ -86,9 +86,9 @@ func Parse(args []string, version string) (Config, error) {
 	tf.NoPositional()
 
 	finalizeServer := appkitconfig.RegisterServer(tf, &cfg.Server, appkitconfig.ServerOptions{
-		ListenAddress:           &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8092},
-		ManagementListenAddress: &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8093},
-		PublicURL:               "http://127.0.0.1:8092",
+		ListenAddress:           &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8082},
+		ManagementListenAddress: &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8083},
+		PublicURL:               "http://127.0.0.1:8082",
 	})
 
 	finalizeAuthentication := RegisterAuthentication(tf, &cfg)

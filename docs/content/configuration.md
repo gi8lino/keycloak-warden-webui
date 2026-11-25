@@ -14,8 +14,8 @@ Web UI has **one CLI flag set** (no subcommands). All options are available as f
 | `WARDEN_WEBUI__WARDEN_MAX_RESPONSE_BYTES`  | Maximum successful Warden API response size (default `1048576` bytes / 1 MiB) |
 | `WARDEN_WEBUI__SETUP_TOKEN`                | One-time bootstrap token (at least 32 characters on first startup)            |
 | `WARDEN_WEBUI__DATABASE`                   | Web UI's **own** SQLite store, default `warden-webui.db`                      |
-| `WARDEN_WEBUI__LISTEN_ADDRESS`             | Browser-facing application listener, default `127.0.0.1:8092`                 |
-| `WARDEN_WEBUI__MANAGEMENT_LISTEN_ADDRESS`  | Health listener, default `127.0.0.1:8093`                                     |
+| `WARDEN_WEBUI__LISTEN_ADDRESS`             | Browser-facing application listener, default `127.0.0.1:8082`                 |
+| `WARDEN_WEBUI__MANAGEMENT_LISTEN_ADDRESS`  | Health listener, default `127.0.0.1:8083`                                     |
 | `WARDEN_WEBUI__PUBLIC_URL`                 | Exact browser-visible URL, including scheme, host, port, and any path prefix  |
 | `WARDEN_WEBUI__ROUTE_PREFIX`               | Optional application mount path, such as `/ui`                                |
 | `WARDEN_WEBUI__AUTH_MODE`                  | Authentication mode: `local` (default), `oidc`, or `proxy`                    |

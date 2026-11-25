@@ -9,8 +9,8 @@ Install Docker with the Compose plugin and GNU Make. The demo pulls a published 
 ## Start the demo
 
 ```sh
-git clone https://github.com/gi8lino/warden-webui.git
-cd warden-webui
+git clone https://github.com/gi8lino/keycloak-warden-webui.git
+cd keycloak-warden-webui
 make e2e-up
 ```
 
@@ -19,6 +19,8 @@ The demo uses `ghcr.io/gi8lino/keycloak-warden:latest` by default, matching the 
 ```sh
 E2E_WARDEN_IMAGE=warden:dev make e2e-up
 ```
+
+The published demo ports remain 18092/18093 (18192/18193 for OIDC); they map to Web UI container ports 8082/8083.
 
 Only the Web UI image is built from this repository; Warden is pulled as a prebuilt image.
 
@@ -54,6 +56,6 @@ export WARDEN_WEBUI__SETUP_TOKEN="$(openssl rand -hex 32)"
 make run
 ```
 
-`make run` prints the assigned local URL; open its `/setup` path for first-time initialization. By default, Web UI connects to Warden at `http://127.0.0.1:8080`; set `WARDEN_WEBUI__WARDEN_URL` if necessary. The UI requires Warden **v0.13.0 or newer** for its administrative API and maintenance functionality.
+`make run` prints the assigned local URL; open its `/setup` path for first-time initialization. By default, Web UI connects to Warden at `http://127.0.0.1:8080`; set `WARDEN_WEBUI__WARDEN_URL` if necessary. The demo pins Warden **v0.32.0**, matching the Go client dependency. Use this version for the documented administrative API, maintenance, and delivery-history features; compatibility with older releases is not guaranteed.
 
 Read [Configuration](configuration.md) and [Authentication](authentication.md) before deploying outside a development environment.

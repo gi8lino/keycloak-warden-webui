@@ -96,7 +96,7 @@ func testHandlers(t *testing.T, prefix string) (http.Handler, http.Handler, *fak
 	mode := appkitauth.ModeProxy
 	cfg := flags.Config{
 		Server: appkitconfig.Server{
-			PublicURL:   "http://127.0.0.1:8092" + prefix,
+			PublicURL:   "http://127.0.0.1:8082" + prefix,
 			RoutePrefix: prefix,
 		},
 		Authentication: appkitconfig.Authentication{ModeOverride: &mode},
@@ -234,7 +234,7 @@ func TestAuthentication(t *testing.T) {
 		t.Parallel()
 		app, _, api := testHandlers(t, "")
 		request := authenticatedRequest(http.MethodPost, "/bans", "ip=203.0.113.1&duration=15m&reason=incident")
-		request.Header.Set("Origin", "http://127.0.0.1:8092")
+		request.Header.Set("Origin", "http://127.0.0.1:8082")
 		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		recorder := httptest.NewRecorder()
 		app.ServeHTTP(recorder, request)
@@ -247,7 +247,7 @@ func TestAuthentication(t *testing.T) {
 		t.Parallel()
 		app, _, api := testHandlers(t, "")
 		request := authenticatedRequest(http.MethodPost, "/bans", "ip=203.0.113.1&duration=wrong&reason=incident")
-		request.Header.Set("Origin", "http://127.0.0.1:8092")
+		request.Header.Set("Origin", "http://127.0.0.1:8082")
 		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		recorder := httptest.NewRecorder()
 		app.ServeHTTP(recorder, request)
@@ -259,7 +259,7 @@ func TestAuthentication(t *testing.T) {
 		t.Parallel()
 		app, _, api := testHandlers(t, "")
 		request := authenticatedRequest(http.MethodPost, "/maintenance/prune", "")
-		request.Header.Set("Origin", "http://127.0.0.1:8092")
+		request.Header.Set("Origin", "http://127.0.0.1:8082")
 		recorder := httptest.NewRecorder()
 		app.ServeHTTP(recorder, request)
 		assert.Equal(t, http.StatusSeeOther, recorder.Code)
@@ -270,7 +270,7 @@ func TestAuthentication(t *testing.T) {
 		t.Parallel()
 		app, _, api := testHandlers(t, "")
 		request := authenticatedRequest(http.MethodPost, "/maintenance/vacuum", "")
-		request.Header.Set("Origin", "http://127.0.0.1:8092")
+		request.Header.Set("Origin", "http://127.0.0.1:8082")
 		recorder := httptest.NewRecorder()
 		app.ServeHTTP(recorder, request)
 		assert.Equal(t, http.StatusNotFound, recorder.Code)
@@ -329,7 +329,7 @@ func TestListenerIsolation(t *testing.T) {
 
 		app, _, api := testHandlers(t, "/ui")
 		request := authenticatedRequest(http.MethodPost, "/ui/maintenance/prune", "")
-		request.Header.Set("Origin", "http://127.0.0.1:8092")
+		request.Header.Set("Origin", "http://127.0.0.1:8082")
 
 		recorder := httptest.NewRecorder()
 		app.ServeHTTP(recorder, request)
@@ -344,7 +344,7 @@ func TestListenerIsolation(t *testing.T) {
 
 		app, _, api := testHandlers(t, "/ui")
 		request := authenticatedRequest(http.MethodPost, "/ui/bans", "ip=203.0.113.1&duration=15m&reason=incident")
-		request.Header.Set("Origin", "http://127.0.0.1:8092")
+		request.Header.Set("Origin", "http://127.0.0.1:8082")
 		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		recorder := httptest.NewRecorder()
@@ -361,7 +361,7 @@ func TestThemePreference(t *testing.T) {
 	app, _, _ := testHandlers(t, "/ui")
 	request := authenticatedRequest(http.MethodPost, "/ui/preferences/theme", "theme=Nord")
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	request.Header.Set("Origin", "http://127.0.0.1:8092")
+	request.Header.Set("Origin", "http://127.0.0.1:8082")
 	saved := httptest.NewRecorder()
 	app.ServeHTTP(saved, request)
 	require.Equal(t, http.StatusSeeOther, saved.Code)

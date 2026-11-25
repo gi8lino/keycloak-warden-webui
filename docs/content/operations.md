@@ -2,7 +2,7 @@
 
 ## Health and readiness
 
-Warden Web UI has two HTTP listeners. By default, the application listens on `127.0.0.1:8092`, and the management listener on `127.0.0.1:8093`.
+Warden Web UI has two HTTP listeners. By default, the application listens on `127.0.0.1:8082`, and the management listener on `127.0.0.1:8083`.
 
 | Path       | Listener    | Purpose                          |
 | ---------- | ----------- | -------------------------------- |
@@ -30,6 +30,6 @@ For Kubernetes, use a single replica per database and `Recreate` update strategy
 
 ## Logs and diagnostics
 
-Enable `--access-log` to see HTTP requests, and `--debug` for additional diagnostics. For errors retrieving bans or maintenance information, verify Warden's application URL, token, API compatibility (Warden v0.13.0+), and network connectivity. An inaccessible Warden API does not grant browser users direct administrative access.
+Enable `--access-log` to see HTTP requests, and `--debug` for additional diagnostics. For errors retrieving bans or maintenance information, verify Warden's application URL, token, API compatibility (the demo and Go client use Warden v0.32.0), and network connectivity. An inaccessible Warden API does not grant browser users direct administrative access.
 
 Use `make test` for Go unit tests, `make test-race` for the race detector, and `make test-auth-e2e` for Playwright's local/proxy/Keycloak browser sign-in suite (requires Node.js, Chromium and Docker). See [Getting started](getting-started.md) for local Compose testing.

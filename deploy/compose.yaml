@@ -23,8 +23,8 @@ services:
       - "127.0.0.1:${E2E_WARDEN_PORT:-18081}:8080"
       - "127.0.0.1:${E2E_WARDEN_MANAGEMENT_PORT:-18082}:8081"
       - "127.0.0.1:${E2E_HOOKGLASS_PORT:-18090}:8090"
-      - "127.0.0.1:${E2E_WEBUI_PORT:-18092}:8092"
-      - "127.0.0.1:${E2E_WEBUI_MANAGEMENT_PORT:-18093}:8093"
+      - "127.0.0.1:${E2E_WEBUI_PORT:-18092}:8082"
+      - "127.0.0.1:${E2E_WEBUI_MANAGEMENT_PORT:-18093}:8083"
     volumes:
       - state:/data
       - ./warden.yaml:/config/warden.yaml:ro
@@ -55,8 +55,8 @@ services:
       receiver:
         condition: service_started
     environment:
-      WARDEN_WEBUI__LISTEN_ADDRESS: ":8092"
-      WARDEN_WEBUI__MANAGEMENT_LISTEN_ADDRESS: ":8093"
+      WARDEN_WEBUI__LISTEN_ADDRESS: ":8082"
+      WARDEN_WEBUI__MANAGEMENT_LISTEN_ADDRESS: ":8083"
       WARDEN_WEBUI__PUBLIC_URL: "http://127.0.0.1:${E2E_WEBUI_PORT:-18092}"
       WARDEN_WEBUI__WARDEN_URL: "http://127.0.0.1:8080"
       WARDEN_WEBUI__WARDEN_ADMIN_TOKEN: development-admin-token

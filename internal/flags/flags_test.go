@@ -37,13 +37,13 @@ func TestParse(t *testing.T) {
 			"--listen-address=:9000",
 			"--management-listen-address=:9001",
 			"--route-prefix=/ui",
-			"--public-url=http://127.0.0.1:8092/ui",
+			"--public-url=http://127.0.0.1:8082/ui",
 		}, "dev")
 		require.NoError(t, err)
 		assert.Equal(t, ":9000", cfg.Server.ListenAddress)
 		assert.Equal(t, ":9001", cfg.Server.ManagementListenAddress)
 		assert.Equal(t, "/ui", cfg.Server.RoutePrefix)
-		assert.Equal(t, "http://127.0.0.1:8092/ui", cfg.Server.PublicURL)
+		assert.Equal(t, "http://127.0.0.1:8082/ui", cfg.Server.PublicURL)
 		assert.Equal(t, appkitauth.ModeLocal, cfg.Mode())
 		assert.Equal(t, "warden-admins", cfg.AdminGroup)
 		assert.Equal(t, "/data/test.db", cfg.Database)

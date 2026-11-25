@@ -29,4 +29,4 @@ flowchart LR
 
 For day-to-day workflows, see [Administration](administration.md), [Operations](operations.md), and [Themes](themes.md).
 
-[Browse the source on GitHub](https://github.com/gi8lino/warden-webui) · [View releases](https://github.com/gi8lino/warden-webui/releases)
+[Browse the source on GitHub](https://github.com/gi8lino/keycloak-warden-webui) · [View releases](https://github.com/gi8lino/keycloak-warden-webui/releases)

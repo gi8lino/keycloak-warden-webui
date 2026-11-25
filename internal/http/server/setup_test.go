@@ -50,7 +50,7 @@ func newLocalServerConfig(t *testing.T, prefix string, store *db.Store) Config {
 
 	cfg := flags.Config{
 		Server: appkitconfig.Server{
-			PublicURL:   "http://127.0.0.1:8092" + prefix,
+			PublicURL:   "http://127.0.0.1:8082" + prefix,
 			RoutePrefix: prefix,
 		},
 		Authentication: appkitconfig.Authentication{SessionLifetime: time.Hour},
@@ -84,7 +84,7 @@ func newLocalServerConfig(t *testing.T, prefix string, store *db.Store) Config {
 func localForm(path string, values url.Values) *http.Request {
 	request := httptest.NewRequest(http.MethodPost, path, strings.NewReader(values.Encode()))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	request.Header.Set("Origin", "http://127.0.0.1:8092")
+	request.Header.Set("Origin", "http://127.0.0.1:8082")
 	return request
 }
 
@@ -114,7 +114,7 @@ func TestBrowserSetup(t *testing.T) {
 
 		mode := appkitauth.ModeProxy
 		cfg := flags.Config{
-			Server: appkitconfig.Server{PublicURL: "http://127.0.0.1:8092"},
+			Server: appkitconfig.Server{PublicURL: "http://127.0.0.1:8082"},
 			Authentication: appkitconfig.Authentication{
 				ModeOverride:    &mode,
 				SessionLifetime: time.Hour,
@@ -463,7 +463,7 @@ func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string, lo
 
 	cfg := flags.Config{
 		Server: appkitconfig.Server{
-			PublicURL:   "http://127.0.0.1:8092" + prefix,
+			PublicURL:   "http://127.0.0.1:8082" + prefix,
 			RoutePrefix: prefix,
 		},
 		Authentication: appkitconfig.Authentication{

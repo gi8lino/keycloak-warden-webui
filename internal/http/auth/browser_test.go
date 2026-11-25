@@ -34,7 +34,7 @@ func authStore(t *testing.T) *db.Store {
 // localConfig supplies the deployment settings for password authentication tests.
 func localConfig() flags.Config {
 	return flags.Config{
-		Server:         appkitconfig.Server{PublicURL: "http://127.0.0.1:8092"},
+		Server:         appkitconfig.Server{PublicURL: "http://127.0.0.1:8082"},
 		Authentication: appkitconfig.Authentication{SessionLifetime: time.Hour},
 		SetupToken:     testSetupToken,
 	}

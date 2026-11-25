@@ -8,7 +8,7 @@ After signing in, open **Preferences → Appearance**, select a theme, and save 
 
 ## Add a custom palette
 
-Copy any TOML file from the [themes directory](https://github.com/gi8lino/warden-webui/tree/main/themes), edit its semantic color values, and mount it on the Web UI host or container. Then set:
+Copy any TOML file from the [themes directory](https://github.com/gi8lino/keycloak-warden-webui/tree/main/themes), edit its semantic color values, and mount it on the Web UI host or container. Then set:
 
 ```sh
 WARDEN_WEBUI__THEME_DIRECTORY=/config/themes

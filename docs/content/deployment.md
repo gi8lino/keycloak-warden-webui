@@ -4,14 +4,14 @@ Deploy the Web UI as **one replica with its own SQLite database**. Keep its appl
 
 ## Kubernetes with Kustomize
 
-The repository includes [Kustomize manifests](https://github.com/gi8lino/warden-webui/tree/main/deploy/kubernetes) with two **alternative** variants:
+The repository includes [Kustomize manifests](https://github.com/gi8lino/keycloak-warden-webui/tree/main/deploy/kubernetes) with two **alternative** variants:
 
 | Variant    | Scope                                                                    | Warden connection                                                     |
 | ---------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------- |
 | Sidecar    | One `keycloak-warden` Deployment containing Warden and Web UI containers | `http://127.0.0.1:8080`                                               |
 | Standalone | An independent `keycloak-warden-webui` Deployment                        | HTTPS by default, or HTTP to a ClusterIP Service with explicit opt-in |
 
-Use **only one** variant in a namespace. Both generate a nonsecret Web UI ConfigMap, create a Web UI PVC, and expose a `ClusterIP` Service on application port `8092`. The management port (`8093`) is internal to the Pod.
+Use **only one** variant in a namespace. Both generate a nonsecret Web UI ConfigMap, create a Web UI PVC, and expose a `ClusterIP` Service on application port `8082`. The management port (`8083`) is internal to the Pod.
 
 ### Sidecar
 
@@ -22,7 +22,7 @@ kubectl apply -k deploy/kubernetes/sidecar
 
 The sidecar build also generates the Warden ConfigMap from `sidecar/warden.yaml` and manages the Warden Deployment, Service, and its own **separate** PVC. Before applying, review this configuration against any existing Warden deployment: the sidecar option will **update the existing `keycloak-warden` Deployment**.
 
-Supply Secrets independently for `keycloak-snitch`, `keycloak-warden`, and `keycloak-warden-webui` as described in [deploy/kubernetes/README.md](https://github.com/gi8lino/warden-webui/blob/main/deploy/kubernetes/README.md).
+Supply Secrets independently for `keycloak-snitch`, `keycloak-warden`, and `keycloak-warden-webui` as described in [deploy/kubernetes/README.md](https://github.com/gi8lino/keycloak-warden-webui/blob/main/deploy/kubernetes/README.md).
 
 ### Standalone
 
