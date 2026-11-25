@@ -34,7 +34,7 @@ make e2e-down  # Stop the demo
 
 ## Run locally
 
-With Warden running, configure its admin token and a one-time setup token. WebUI uses Warden's v0.35.0 Go client:
+With Warden running, configure its admin token and a one-time setup token. WebUI uses Warden's v0.36.0 Go client:
 
 ```sh
 export WARDEN_WEBUI__WARDEN_ADMIN_TOKEN='YOUR_WARDEN_ADMIN_TOKEN'

@@ -14,7 +14,7 @@ cd keycloak-warden-webui
 make e2e-up
 ```
 
-The demo uses `ghcr.io/gi8lino/keycloak-warden:latest` by default, matching the Warden Go client version in `go.mod`. To test against a different Warden image (for example one you built and tagged locally), override the image:
+The demo uses `ghcr.io/gi8lino/keycloak-warden:v0.36.0` by default, matching the Warden Go client version in `go.mod`. To test against a different Warden image (for example one you built and tagged locally), override the image:
 
 ```sh
 E2E_WARDEN_IMAGE=warden:dev make e2e-up
@@ -56,6 +56,6 @@ export WARDEN_WEBUI__SETUP_TOKEN="$(openssl rand -hex 32)"
 make run
 ```
 
-`make run` prints the assigned local URL; open its `/setup` path for first-time initialization. By default, Web UI connects to Warden at `http://127.0.0.1:8080`; set `WARDEN_WEBUI__WARDEN_URL` if necessary. The demo pins Warden **v0.35.0**, matching the Go client dependency. Use this version for the documented administrative API, maintenance, and delivery-history features; compatibility with older releases is not guaranteed.
+`make run` prints the assigned local URL; open its `/setup` path for first-time initialization. By default, Web UI connects to Warden at `http://127.0.0.1:8080`; set `WARDEN_WEBUI__WARDEN_URL` if necessary. The demo pins Warden **v0.36.0**, matching the Go client dependency and supporting the worker-status endpoint. Older Warden releases may not support every documented administrative API feature.
 
 Read [Configuration](configuration.md) and [Authentication](authentication.md) before deploying outside a development environment.
