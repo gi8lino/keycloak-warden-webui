@@ -8,8 +8,8 @@ github.com/coreos/go-oidc/v3 v3.21.0 h1:wZo4Q9Pum8dYEj0eMUPrqR+kvuGkeUplbLpNCkBq
 github.com/coreos/go-oidc/v3 v3.21.0/go.mod h1:DYCf24+ncYi+XkIH97GY1+dqoRlbaSI26KVTCI9SrY4=
 github.com/dustin/go-humanize v1.1.0 h1:dbKTrvD0klcbBV/h4AWJdMuZogJACoMlvWIWZ5b2xWg=
 github.com/dustin/go-humanize v1.1.0/go.mod h1:hc1CvRkJMsgxqjmjMQF3QNRAZBwY8AXBAzKYoSX9sFI=
-github.com/gi8lino/keycloak-warden v0.32.0 h1:K4REoaY1kfQEYZ62cz1FMU7vGcjORieSWWGu7jjmixE=
-github.com/gi8lino/keycloak-warden v0.32.0/go.mod h1:JJ1+6wwZVC2rxUtOm6bEa4sS5Hb9jjeVJ30sbBXpXK8=
+github.com/gi8lino/keycloak-warden v0.35.0 h1:ROF1aE5L4NW8F9Kxm+g63k1b8jpuA+yeQo/1r6rsk4A=
+github.com/gi8lino/keycloak-warden v0.35.0/go.mod h1:JJ1+6wwZVC2rxUtOm6bEa4sS5Hb9jjeVJ30sbBXpXK8=
 github.com/go-jose/go-jose/v4 v4.1.4 h1:moDMcTHmvE6Groj34emNPLs/qtYXRVcd6S7NHbHz3kA=
 github.com/go-jose/go-jose/v4 v4.1.4/go.mod h1:x4oUasVrzR7071A4TnHLGSPpNOm2a21K9Kf04k1rs08=
 github.com/google/pprof v0.0.0-20261016150608-1facf8f91b50 h1:PlNWJRxu5APSV0pWqfIsZ0qt9OOGHSWfZQ4zvx+WgWs=
