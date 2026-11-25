@@ -24,7 +24,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
   GOOS=$TARGETOS GOARCH=$TARGETARCH \
   go build -trimpath \
   -ldflags="-s -w -X main.Version=${VERSION}" \
-  -o /keycloak-warden-webui ./cmd/warden-webui
+  -o /warden-webui ./cmd/warden-webui
 
 # Make the database and temporary directories writable by non-root and
 # arbitrary OpenShift UIDs belonging to group 0.
@@ -32,7 +32,7 @@ RUN install -d -o 0 -g 0 -m 2775 /outfs/config /outfs/data /outfs/tmp
 
 FROM gcr.io/distroless/static:nonroot
 
-COPY --from=build /keycloak-warden-webui /keycloak-warden-webui
+COPY --from=build /warden-webui /warden-webui
 # Copy the directory entries themselves so their group-writable modes survive.
 COPY --from=build /outfs/ /
 
@@ -44,4 +44,4 @@ ENV HOME=/tmp \
 WORKDIR /data
 USER 65532:0
 
-ENTRYPOINT ["/keycloak-warden-webui"]
+ENTRYPOINT ["/warden-webui"]

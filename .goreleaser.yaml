@@ -9,7 +9,7 @@ before:
 builds:
   - id: keycloak-warden-webui
     main: ./cmd/warden-webui
-    binary: keycloak-warden-webui
+    binary: warden-webui
     env:
       - CGO_ENABLED=0
     goos:
