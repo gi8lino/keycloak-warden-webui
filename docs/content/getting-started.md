@@ -14,7 +14,7 @@ cd warden-webui
 make e2e-up
 ```
 
-The demo uses `ghcr.io/gi8lino/keycloak-warden:v0.32.0` by default, matching the Warden Go client version in `go.mod`. To test against a different Warden image (for example one you built and tagged locally), override the image:
+The demo uses `ghcr.io/gi8lino/keycloak-warden:latest` by default, matching the Warden Go client version in `go.mod`. To test against a different Warden image (for example one you built and tagged locally), override the image:
 
 ```sh
 E2E_WARDEN_IMAGE=warden:dev make e2e-up

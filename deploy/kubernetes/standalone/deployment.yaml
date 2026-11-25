@@ -93,7 +93,11 @@ spec:
           volumeMounts:
             - name: webui-data
               mountPath: /data
+            - name: tmp
+              mountPath: /tmp
       volumes:
         - name: webui-data
           persistentVolumeClaim:
             claimName: keycloak-warden-webui-data
+        - name: tmp
+          emptyDir: {}
