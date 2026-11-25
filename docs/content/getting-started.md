@@ -4,7 +4,7 @@ The quickest way to try Warden Web UI is the repository's **local Docker Compose
 
 ## Prerequisites
 
-Install Docker with the Compose plugin and GNU Make. The demo also requires a local checkout of [Keycloak Warden](https://github.com/gi8lino/keycloak-warden) (default: `../warden`).
+Install Docker with the Compose plugin and GNU Make. The demo pulls a published Warden container image, so a separate Warden source checkout is **not** required.
 
 ## Start the demo
 
@@ -14,11 +14,13 @@ cd warden-webui
 make e2e-up
 ```
 
-If your Warden checkout is elsewhere, pass its path:
+The demo uses `ghcr.io/gi8lino/keycloak-warden:v0.32.0` by default, matching the Warden Go client version in `go.mod`. To test against a different Warden image (for example one you built and tagged locally), override the image:
 
 ```sh
-make e2e-up E2E_WARDEN_DIR=../keycloak-warden
+E2E_WARDEN_IMAGE=warden:dev make e2e-up
 ```
+
+Only the Web UI image is built from this repository; Warden is pulled as a prebuilt image.
 
 Open **[http://127.0.0.1:18092/setup](http://127.0.0.1:18092/setup)**. The demo-only setup token is `development-setup-token-0123456789abcdef`. Choose an administrator username and a password of 12–72 bytes.
 

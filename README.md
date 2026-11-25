@@ -19,7 +19,7 @@ Warden Web UI manages bans through Warden's administrative API. It stores admini
 
 ## Quick start
 
-Start the local demo with Warden, Hookglass, and the Web UI:
+Start the local demo with Warden, Hookglass, and the Web UI. Warden runs from a published container image; no second repository checkout is needed:
 
 ```sh
 make e2e-up

@@ -28,8 +28,6 @@ endif
 
 E2E_PROJECT ?= warden-webui-e2e
 E2E_COMPOSE_FILE ?= deploy/compose.yaml
-E2E_WARDEN_DIR ?= ../warden
-E2E_WARDEN_CONTEXT := $(abspath $(E2E_WARDEN_DIR))
 E2E_WARDEN_PORT ?= 18081
 E2E_WARDEN_MANAGEMENT_PORT ?= 18082
 E2E_HOOKGLASS_PORT ?= 18090
@@ -37,7 +35,6 @@ E2E_WEBUI_PORT ?= 18092
 E2E_WEBUI_MANAGEMENT_PORT ?= 18093
 E2E_COMPOSE := docker compose -p $(E2E_PROJECT) -f $(E2E_COMPOSE_FILE) $(E2E_OVERLAY)
 
-export E2E_WARDEN_CONTEXT
 export E2E_WARDEN_PORT E2E_WARDEN_MANAGEMENT_PORT E2E_HOOKGLASS_PORT
 export E2E_WEBUI_PORT E2E_WEBUI_MANAGEMENT_PORT
 
@@ -165,9 +162,7 @@ serve-docs: $(DEV_PORT) $(OPEN_BROWSER) cli ## Serve, watch, and open the docume
 ##@ End-to-end Compose
 
 .PHONY: e2e-up
-e2e-up: ## Build and run the isolated Warden, Hookglass, and Web UI stack.
-	@test -f "$(E2E_WARDEN_CONTEXT)/go.mod" && test -f "$(E2E_WARDEN_CONTEXT)/Dockerfile" || \
-		{ echo "Warden source not found at $(E2E_WARDEN_CONTEXT). Set E2E_WARDEN_DIR=../keycloak-warden (or your checkout path)." >&2; exit 1; }
+e2e-up: ## Build Web UI and start the published Warden image with Hookglass.
 	$(E2E_COMPOSE) up --build --detach --remove-orphans
 	@set -eu; \
 	wait_ready() { \

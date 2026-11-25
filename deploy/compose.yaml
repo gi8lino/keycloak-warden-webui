@@ -1,10 +1,10 @@
 # Local-only integration stack. The Web UI and Hookglass share Warden's
 # network namespace, so their upstream HTTP connections stay on loopback.
-# Run through `make e2e-up` to use the locally checked-out Warden source.
+# Run through `make e2e-up`; no Warden source checkout is required.
 services:
   warden:
-    build:
-      context: ${E2E_WARDEN_CONTEXT:-../../warden}
+    # Keep the pinned image in sync with the Warden client dependency in go.mod.
+    image: ${E2E_WARDEN_IMAGE:-ghcr.io/gi8lino/keycloak-warden:v0.32.0}
     command:
       - serve
       - --config=/config/warden.yaml
