@@ -365,6 +365,15 @@ func TestLatestDeliveryStatus(t *testing.T) {
 func TestCurrentDeliveryViews(t *testing.T) {
 	t.Parallel()
 
+	t.Run("returns a non-nil empty slice without deliveries", func(t *testing.T) {
+		t.Parallel()
+
+		views := currentDeliveryViews(client.Record{})
+
+		assert.NotNil(t, views)
+		assert.Empty(t, views)
+	})
+
 	t.Run("includes current progress without a prior acknowledgement", func(t *testing.T) {
 		t.Parallel()
 

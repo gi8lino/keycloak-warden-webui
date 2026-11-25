@@ -99,6 +99,6 @@ func RunMaintenance(api API, pages *Pages) http.HandlerFunc {
 
 // isWorkerStatusUnsupported preserves maintenance support against older Warden releases.
 func isWorkerStatusUnsupported(err error) bool {
-	var upstream *client.Error
-	return errors.As(err, &upstream) && upstream.Code == http.StatusNotFound
+	upstream, ok := errors.AsType[*client.Error](err)
+	return ok && upstream.Code == http.StatusNotFound
 }

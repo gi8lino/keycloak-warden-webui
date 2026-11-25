@@ -3,6 +3,7 @@ package endpoint
 import (
 	"cmp"
 	"errors"
+	"maps"
 	"net/url"
 	"slices"
 	"strconv"
@@ -186,16 +187,13 @@ func currentDeliveryViews(record client.Record) []deliveryDestinationView {
 		views[entry.Destination] = view
 	}
 
-	result := make([]deliveryDestinationView, 0, len(views))
-	for _, view := range views {
-		result = append(result, view)
+	if len(views) == 0 {
+		return []deliveryDestinationView{}
 	}
 
-	slices.SortFunc(result, func(a, b deliveryDestinationView) int {
+	return slices.SortedFunc(maps.Values(views), func(a, b deliveryDestinationView) int {
 		return cmp.Compare(a.Destination, b.Destination)
 	})
-
-	return result
 }
 
 // newestAttempts returns a reversed copy so recent outcomes appear first without mutating API data.

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	appkitauth "github.com/containeroo/appkit/auth"
@@ -15,7 +16,7 @@ const proxyIssuer = "warden-webui-proxy"
 
 // newTrustedProxy validates trusted peers and resolves externally verified administrators.
 func newTrustedProxy(cfg appkitconfig.Proxy, origins tinyflags.Overrides, adminGroup string, resolve func(context.Context, string, string) (User, error)) (*proxy.Authenticator[User], error) {
-	cidrs := append([]string(nil), cfg.TrustedCIDRs...)
+	cidrs := slices.Clone(cfg.TrustedCIDRs)
 	overrides := cfg.DeploymentOverrides(origins)
 	if overrides.TrustedCIDRs == nil {
 		overrides.TrustedCIDRs = &cidrs

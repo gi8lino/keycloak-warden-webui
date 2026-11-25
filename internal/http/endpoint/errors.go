@@ -34,8 +34,8 @@ func (p *Pages) fail(r *http.Request, w http.ResponseWriter, user auth.User, err
 
 // upstreamErrorStatus preserves backend HTTP failures and distinguishes timeouts from connection failures.
 func upstreamErrorStatus(err error) int {
-	var upstream *client.Error
-	if errors.As(err, &upstream) && upstream.Code >= 400 && upstream.Code <= 599 {
+	upstream, ok := errors.AsType[*client.Error](err)
+	if ok && upstream.Code >= 400 && upstream.Code <= 599 {
 		return upstream.Code
 	}
 	if backendTimedOut(err) {
@@ -68,8 +68,12 @@ func upstreamErrorMessage(status int) string {
 
 // backendTimedOut recognizes context deadlines and timeout-capable transport failures.
 func backendTimedOut(err error) bool {
-	var network net.Error
-	return errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &network) && network.Timeout())
+	if errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+
+	network, ok := errors.AsType[net.Error](err)
+	return ok && network.Timeout()
 }
 
 // failure records a local backend failure and renders only the supplied safe message.
