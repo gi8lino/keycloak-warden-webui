@@ -1,4 +1,43 @@
 {{define "maintenance"}}
+<section class="mb-6" aria-labelledby="workers-title">
+  <div class="mb-4 flex items-center justify-between gap-3">
+    <h2 id="workers-title" class="text-lg font-semibold text-zinc-100">Background workers</h2>
+    <span class="text-xs text-zinc-500">Live Warden snapshot</span>
+  </div>
+  {{if .Workers}}
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
+        <h3 class="font-semibold text-zinc-100">Actions</h3>
+        <p class="mt-1 text-sm text-zinc-400">Ban expiry, Cloudflare, and webhook delivery</p>
+        <dl class="mt-4 divide-y divide-zinc-800 text-sm">
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">State</dt><dd class="font-medium text-zinc-100">{{.Workers.Actions.State}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Started</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Actions.StartedAt}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Active bans</dt><dd class="font-medium text-zinc-100">{{.Workers.Actions.ActiveBans}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Pending deliveries</dt><dd class="font-medium text-zinc-100">{{.Workers.Actions.PendingDeliveries}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Retrying deliveries</dt><dd class="font-medium text-zinc-100">{{.Workers.Actions.RetryingDeliveries}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Exhausted deliveries</dt><dd class="font-medium text-zinc-100">{{.Workers.Actions.ExhaustedDeliveries}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Next deadline</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Actions.NextDeadline}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Last delivery attempt</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Actions.LastAttemptAt}}</dd></div>
+        </dl>
+      </div>
+      <div class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
+        <h3 class="font-semibold text-zinc-100">Maintenance</h3>
+        <p class="mt-1 text-sm text-zinc-400">Scheduled observation pruning and SQLite optimization</p>
+        <dl class="mt-4 divide-y divide-zinc-800 text-sm">
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">State</dt><dd class="font-medium text-zinc-100">{{.Workers.Maintenance.State}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Started</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Maintenance.StartedAt}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Prune interval</dt><dd class="text-zinc-200">{{.Workers.Maintenance.PruneInterval}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Optimize interval</dt><dd class="text-zinc-200">{{.Workers.Maintenance.OptimizeInterval}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Last prune success</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Maintenance.Prune.LastSuccessAt}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Last optimize success</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Maintenance.Optimize.LastSuccessAt}}</dd></div>
+        </dl>
+      </div>
+    </div>
+    <p class="mt-3 text-xs text-zinc-500">Delivery counts are for current decision revisions; the last attempt timestamp is retained in SQLite across restarts. An exhausted unban may leave a remote block in place.</p>
+  {{else}}
+    <p class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 text-sm text-zinc-400" role="status">{{.WorkersUnavailable}}</p>
+  {{end}}
+</section>
 <div
   class="
     flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4
@@ -171,5 +210,3 @@
   Maintenance never deletes ban decisions, active sources, or delivery acknowledgements.
 </p>
 {{end}}
-
-

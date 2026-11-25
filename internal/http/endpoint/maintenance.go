@@ -1,8 +1,13 @@
 package endpoint
 
-import "net/http"
+import (
+	"errors"
+	"net/http"
 
-// Maintenance displays recent Warden observation cleanup and optimization status.
+	"github.com/gi8lino/keycloak-warden/pkg/client"
+)
+
+// Maintenance displays housekeeping controls and the optional worker status.
 func Maintenance(api API, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := currentUser(r)
@@ -13,17 +18,32 @@ func Maintenance(api API, pages *Pages) http.HandlerFunc {
 			return
 		}
 
+		var workerView *client.Workers
+		workerMessage := ""
+		snapshot, workerErr := api.WorkerStatus(r.Context())
+		switch {
+		case workerErr == nil:
+			workerView = &snapshot
+		case isWorkerStatusUnsupported(workerErr):
+			workerMessage = "Worker status requires a newer Warden release."
+		default:
+			pages.logger.Warn("worker status unavailable", "event", "worker_status_unavailable", "error", workerErr)
+			workerMessage = "Worker status is temporarily unavailable."
+		}
+
 		notices := map[string]string{
 			"prune":    "Observation cleanup completed.",
 			"optimize": "Database optimization completed.",
 		}
 
 		pages.render(r, w, http.StatusOK, pageData{
-			Title:       "Database maintenance",
-			Page:        "maintenance",
-			User:        user.Name,
-			Maintenance: status,
-			Notice:      notices[r.URL.Query().Get("done")],
+			Title:              "Database maintenance",
+			Page:               "maintenance",
+			User:               user.Name,
+			Maintenance:        status,
+			Workers:            workerView,
+			WorkersUnavailable: workerMessage,
+			Notice:             notices[r.URL.Query().Get("done")],
 		})
 	}
 }
@@ -60,4 +80,10 @@ func RunMaintenance(api API, pages *Pages) http.HandlerFunc {
 
 		pages.redirect(w, r, "/maintenance?done="+operation)
 	}
+}
+
+// isWorkerStatusUnsupported preserves maintenance support against older Warden releases.
+func isWorkerStatusUnsupported(err error) bool {
+	var upstream *client.Error
+	return errors.As(err, &upstream) && upstream.Code == http.StatusNotFound
 }

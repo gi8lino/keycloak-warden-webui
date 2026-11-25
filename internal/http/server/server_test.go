@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/gi8lino/keycloak-warden/pkg/client"
+	"github.com/gi8lino/keycloak-warden/pkg/workerstate"
 	"github.com/gi8lino/warden-webui/internal/db"
 	"github.com/gi8lino/warden-webui/internal/flags"
 	"github.com/gi8lino/warden-webui/internal/http/auth"
@@ -33,6 +34,8 @@ type fakeAPI struct {
 	banDuration atomic.Int64
 	// maintenanceCalls counts requested maintenance operations.
 	maintenanceCalls atomic.Int32
+	// workersError simulates an upstream worker status failure.
+	workersError error
 }
 
 // List returns a deterministic active decision.
@@ -89,8 +92,30 @@ func (a *fakeAPI) OptimizeDatabase(context.Context) (client.Maintenance, error) 
 	return client.Maintenance{}, nil
 }
 
+// WorkerStatus returns worker status through the same Warden API as other operations.
+func (a *fakeAPI) WorkerStatus(context.Context) (client.Workers, error) {
+	if a.workersError != nil {
+		return client.Workers{}, a.workersError
+	}
+	return client.Workers{
+		Actions: client.ActionWorker{
+			WorkerRuntime:     client.WorkerRuntime{State: workerstate.StateIdle},
+			PendingDeliveries: 4,
+		},
+		Maintenance: client.MaintenanceWorker{
+			WorkerRuntime: client.WorkerRuntime{State: workerstate.StateIdle},
+		},
+	}, nil
+}
+
 // testHandlers constructs the whole HTTP adapter using a trusted proxy administrator.
 func testHandlers(t *testing.T, prefix string) (http.Handler, http.Handler, *fakeAPI) {
+	t.Helper()
+	return testHandlersWithAPIError(t, prefix, nil)
+}
+
+// testHandlersWithAPIError composes an API that can simulate a worker status failure.
+func testHandlersWithAPIError(t *testing.T, prefix string, workersError error) (http.Handler, http.Handler, *fakeAPI) {
 	t.Helper()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	mode := appkitauth.ModeProxy
@@ -113,7 +138,7 @@ func testHandlers(t *testing.T, prefix string) (http.Handler, http.Handler, *fak
 	require.NoError(t, err)
 	static, err := fs.Sub(web.Assets, "static")
 	require.NoError(t, err)
-	api := &fakeAPI{}
+	api := &fakeAPI{workersError: workersError}
 	handlers := New(Config{
 		InfrastructureConfig: InfrastructureConfig{
 			RoutePrefix: prefix,
@@ -123,7 +148,9 @@ func testHandlers(t *testing.T, prefix string) (http.Handler, http.Handler, *fak
 			Logger:      logger,
 		},
 		AuthenticationConfig: AuthenticationConfig{Identity: identity},
-		ApplicationConfig:    ApplicationConfig{Warden: api},
+		ApplicationConfig: ApplicationConfig{
+			Warden: api,
+		},
 	})
 	return handlers.Application, handlers.Management, api
 }
@@ -166,6 +193,20 @@ func TestPages(t *testing.T) {
 		app.ServeHTTP(recorder, authenticatedRequest(http.MethodGet, "/maintenance", ""))
 		assert.Equal(t, http.StatusOK, recorder.Code)
 		assert.Contains(t, recorder.Body.String(), "Database maintenance")
+		assert.Contains(t, recorder.Body.String(), "Background workers")
+		assert.Contains(t, recorder.Body.String(), "Pending deliveries")
+	})
+
+	t.Run("maintenance remains usable with an older Warden", func(t *testing.T) {
+		t.Parallel()
+
+		app, _, _ := testHandlersWithAPIError(t, "", &client.Error{Code: http.StatusNotFound})
+		response := httptest.NewRecorder()
+		app.ServeHTTP(response, authenticatedRequest(http.MethodGet, "/maintenance", ""))
+
+		require.Equal(t, http.StatusOK, response.Code)
+		assert.Contains(t, response.Body.String(), "Worker status requires a newer Warden release")
+		assert.Contains(t, response.Body.String(), "Observation cleanup")
 	})
 
 	t.Run("static assets", func(t *testing.T) {

@@ -13,7 +13,7 @@ Warden Web UI manages bans through Warden's administrative API. It stores admini
 - View active bans, append-only ban/release revision history, sources, and delivery acknowledgements.
 - Inspect current delivery status across destinations, including failed unban notifications.
 - Create manual bans and release existing bans.
-- Inspect and trigger database maintenance operations.
+- Inspect background worker state, delivery queue statistics, and database maintenance operations.
 - Sign in with local accounts, Keycloak OIDC, or a trusted proxy.
 - Manage administrators and choose from built-in themes.
 
@@ -34,7 +34,7 @@ make e2e-down  # Stop the demo
 
 ## Run locally
 
-With Warden running, configure its admin token and a one-time setup token. WebUI uses Warden's v0.25.0 Go client:
+With Warden running, configure its admin token and a one-time setup token. WebUI uses Warden's v0.35.0 Go client:
 
 ```sh
 export WARDEN_WEBUI__WARDEN_ADMIN_TOKEN='YOUR_WARDEN_ADMIN_TOKEN'

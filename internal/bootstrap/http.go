@@ -46,5 +46,6 @@ func NewHTTPConfig(
 		Ready:       infrastructure.store.Ping,
 		Identity:    application.identity,
 		Warden:      infrastructure.warden,
+		Workers:     infrastructure.workers,
 	}, nil
 }

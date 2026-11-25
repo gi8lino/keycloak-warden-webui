@@ -20,7 +20,7 @@ The generated ConfigMap names have content hashes; the Deployment references are
 
 ## Sidecar (`sidecar/`)
 
-`sidecar/deployment.yaml` is a **complete `keycloak-warden` Deployment** with two containers. It pins Warden's v0.25.0 image and includes an example Warden configuration. It also includes the Warden Service and existing Warden PVC name, plus a Kustomize-generated `keycloak-warden-config` from `sidecar/warden.yaml`.
+`sidecar/deployment.yaml` is a **complete `keycloak-warden` Deployment** with two containers. It uses Warden's `latest` image as an example and includes a Warden configuration; pin a tested release before production use. It also includes the Warden Service and existing Warden PVC name, plus a Kustomize-generated `keycloak-warden-config` from `sidecar/warden.yaml`.
 Review and merge any custom Warden configuration first: applying this variant **updates the existing Warden Deployment and its configuration**. Never create a second Warden Deployment pointing to the same SQLite PVC.
 
 The WebUI connects to Warden at `http://127.0.0.1:8080` because both containers share a Pod network namespace. Warden uses `/data/warden.db` on `keycloak-warden-data`, while WebUI uses `/data/warden-webui.db` on its **own** `keycloak-warden-webui-data` claim. Both workloads are single replica with `Recreate` strategy to avoid SQLite multi-writer races.

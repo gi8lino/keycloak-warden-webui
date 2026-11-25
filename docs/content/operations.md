@@ -13,6 +13,14 @@ Warden Web UI has two HTTP listeners. By default, the application listens on `12
 
 Only the **application** listener is subject to `--route-prefix`. Keep the management listener private; it does not serve the administrative UI.
 
+## Background workers
+
+The **Database maintenance** page also shows the running Warden's two workers: actions (expiry, deliveries and retries) and maintenance (pruning and optimization). The actions card includes active bans, current-revision pending/retrying/exhausted deliveries, the next persisted deadline and the last completed attempt. The maintenance card includes process state, schedule and last successful tasks.
+
+This is a read-only snapshot from Warden's authenticated `GET /workers` application endpoint. WebUI calls the same `pkg/client.Client` used for bans, deliveries, and maintenance, and reuses Warden's `pkg/workerstate.State` enum. An older running Warden server without `/workers` shows a compatibility notice; the existing maintenance controls continue to work.
+
+**Build dependency:** Update WebUI's `github.com/gi8lino/keycloak-warden` module dependency to the first published version containing `Client.WorkerStatus` before building or releasing WebUI. The former WebUI-local `internal/workerstatus` adapter must be removed. No additional worker registry or persistence is created.
+
 ## Database maintenance
 
 The **Database maintenance** page shows Warden's housekeeping status and can trigger two operations through the server-side administrator API:
@@ -30,6 +38,6 @@ For Kubernetes, use a single replica per database and `Recreate` update strategy
 
 ## Logs and diagnostics
 
-Enable `--access-log` to see HTTP requests, and `--debug` for additional diagnostics. For errors retrieving bans or maintenance information, verify Warden's application URL, token, API compatibility (the demo and Go client use Warden v0.32.0), and network connectivity. An inaccessible Warden API does not grant browser users direct administrative access.
+Enable `--access-log` to see HTTP requests, and `--debug` for additional diagnostics. For errors retrieving bans or maintenance information, verify Warden's application URL, token, API compatibility (the demo and Go client use Warden v0.35.0), and network connectivity. An inaccessible Warden API does not grant browser users direct administrative access.
 
 Use `make test` for Go unit tests, `make test-race` for the race detector, and `make test-auth-e2e` for Playwright's local/proxy/Keycloak browser sign-in suite (requires Node.js, Chromium and Docker). See [Getting started](getting-started.md) for local Compose testing.

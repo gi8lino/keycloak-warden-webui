@@ -17,6 +17,8 @@ type API interface {
 	GetPageThroughRevision(context.Context, string, int, int64) (client.Record, error)
 	Ban(context.Context, client.ManualBanRequest) (client.Record, error)
 	Unban(context.Context, string) (client.Record, error)
+	// WorkerStatus reads both Warden worker snapshots and persistent delivery statistics.
+	WorkerStatus(context.Context) (client.Workers, error)
 	MaintenanceStatus(context.Context) (client.Maintenance, error)
 	PruneObservations(context.Context) (client.Maintenance, error)
 	OptimizeDatabase(context.Context) (client.Maintenance, error)

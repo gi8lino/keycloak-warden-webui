@@ -56,6 +56,6 @@ export WARDEN_WEBUI__SETUP_TOKEN="$(openssl rand -hex 32)"
 make run
 ```
 
-`make run` prints the assigned local URL; open its `/setup` path for first-time initialization. By default, Web UI connects to Warden at `http://127.0.0.1:8080`; set `WARDEN_WEBUI__WARDEN_URL` if necessary. The demo pins Warden **v0.32.0**, matching the Go client dependency. Use this version for the documented administrative API, maintenance, and delivery-history features; compatibility with older releases is not guaranteed.
+`make run` prints the assigned local URL; open its `/setup` path for first-time initialization. By default, Web UI connects to Warden at `http://127.0.0.1:8080`; set `WARDEN_WEBUI__WARDEN_URL` if necessary. The demo pins Warden **v0.35.0**, matching the Go client dependency. Use this version for the documented administrative API, maintenance, and delivery-history features; compatibility with older releases is not guaranteed.
 
 Read [Configuration](configuration.md) and [Authentication](authentication.md) before deploying outside a development environment.

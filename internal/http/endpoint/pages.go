@@ -89,6 +89,10 @@ type pageData struct {
 	Pending []string
 	// Maintenance contains the maintenance scheduler state.
 	Maintenance client.Maintenance
+	// Workers is the optional live status of Warden background workers.
+	Workers *client.Workers
+	// WorkersUnavailable explains why a worker snapshot could not be read.
+	WorkersUnavailable string
 }
 
 // NewPages parses HTML templates once during startup.

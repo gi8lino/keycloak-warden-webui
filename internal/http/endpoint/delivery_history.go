@@ -190,6 +190,7 @@ func currentDeliveryViews(record client.Record) []deliveryDestinationView {
 	for _, view := range views {
 		result = append(result, view)
 	}
+
 	slices.SortFunc(result, func(a, b deliveryDestinationView) int {
 		return cmp.Compare(a.Destination, b.Destination)
 	})
