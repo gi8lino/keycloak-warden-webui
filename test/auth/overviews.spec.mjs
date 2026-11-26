@@ -62,6 +62,17 @@ test("deliveries highlights exhausted release with a safe provider error", async
   lab,
   page,
 }) => {
+  lab.setDeliveryHealth([
+    {
+      destination: "cloudflare.edge",
+      pending: 0,
+      retrying: 0,
+      exhausted: 1,
+      failedUnbans: 1,
+      exhaustedUnbans: 1,
+      delivered: 3,
+    },
+  ]);
   lab.setDeliveryOverview({
     page: 1,
     items: [
@@ -81,14 +92,20 @@ test("deliveries highlights exhausted release with a safe provider error", async
   await signIn(lab, page);
   await page.getByRole("link", { name: "Deliveries" }).first().click();
   await expect(page.getByRole("heading", { name: "Deliveries" })).toBeVisible();
-  await expect(page.locator("table")).toContainText("cloudflare.edge");
-  await expect(page.locator("table")).toContainText("exhausted");
-  await expect(page.locator("table")).toContainText("unbanned");
+  const health = page.getByRole("region", { name: "Destination health" });
+  await expect(
+    health.getByRole("row").filter({ hasText: "cloudflare.edge" }),
+  ).toContainText("1");
+  const deliveries = page.locator("table").last();
+  await expect(deliveries).toContainText("cloudflare.edge");
+  await expect(deliveries).toContainText("exhausted");
+  await expect(deliveries).toContainText("unbanned");
+  await expect(
+    page.getByRole("button", { name: "Retry delivery" }),
+  ).toBeVisible();
   await page.getByText("Last provider error").click();
-  await expect(page.locator("table")).toContainText(
-    "<script>alert(1)</script>",
-  );
-  expect(await page.locator("table script").count()).toBe(0);
+  await expect(deliveries).toContainText("<script>alert(1)</script>");
+  expect(await deliveries.locator("script").count()).toBe(0);
   const refresh = page.getByRole("link", { name: "Refresh latest deliveries" });
   await expect(refresh).toHaveAttribute("href", /\/deliveries\?page=1$/);
   await expect(refresh.locator("svg")).toHaveCount(1);

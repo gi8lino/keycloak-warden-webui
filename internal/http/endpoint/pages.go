@@ -77,6 +77,14 @@ type pageData struct {
 	Revisions client.RevisionPage
 	// DeliveryList contains one page of current destination reconciliation states.
 	DeliveryList client.DeliveryOverviewPage
+	// DeliveryHealth aggregates current status across every delivery page.
+	DeliveryHealth []client.DestinationHealth
+	// HealthUnavailable indicates the aggregate query failed.
+	HealthUnavailable bool
+	// Timeline contains the selected chronological audit page.
+	Timeline client.TimelinePage
+	// Observations contains the selected hypothetical ban page.
+	Observations client.ObservationPage
 	// Overview supplies filtering and pagination for cross-decision pages.
 	Overview overviewNavigation
 	// LocalUser permits local account actions only for local sessions.

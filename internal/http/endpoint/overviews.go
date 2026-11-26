@@ -85,7 +85,7 @@ func overviewLinks(prefix, path string, page, next int, filters url.Values, thro
 	link := func(p int, pinned bool) string {
 		query := url.Values{}
 		for key, values := range filters {
-			if key != overviewPageParam && key != overviewThroughParam {
+			if key != overviewPageParam && key != overviewThroughParam && key != "notice" {
 				query[key] = values
 			}
 		}
@@ -167,7 +167,7 @@ func BanHistory(api API, pages *Pages) http.HandlerFunc {
 // Deliveries shows current revision progress across all destinations and decisions.
 func Deliveries(api API, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		values, page, err := parseOverviewQuery(r.URL.RawQuery, overviewStatusParam, overviewDestinationParam)
+		values, page, err := parseOverviewQuery(r.URL.RawQuery, overviewStatusParam, overviewDestinationParam, "notice")
 		if err != nil {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid delivery filters.")
 			return
@@ -195,12 +195,23 @@ func Deliveries(api API, pages *Pages) http.HandlerFunc {
 			return
 		}
 
+		health, healthErr := api.DeliveryHealth(r.Context())
+		if healthErr != nil {
+			pages.logger.Warn("delivery health unavailable", "error", healthErr)
+		}
+		notice := ""
+		if r.URL.Query().Get("notice") == "retry-queued" {
+			notice = "Delivery retry queued. Refresh to check its outcome."
+		}
 		pages.render(r, w, http.StatusOK, pageData{
-			Title:        "Deliveries",
-			Page:         "deliveries",
-			User:         currentUser(r).Name,
-			DeliveryList: list,
-			Overview:     overviewLinks(pages.prefix, "/deliveries", page, list.NextPage, values, 0),
+			DeliveryHealth:    health,
+			HealthUnavailable: healthErr != nil,
+			Notice:            notice,
+			Title:             "Deliveries",
+			Page:              "deliveries",
+			User:              currentUser(r).Name,
+			DeliveryList:      list,
+			Overview:          overviewLinks(pages.prefix, "/deliveries", page, list.NextPage, values, 0),
 		})
 	}
 }

@@ -53,6 +53,24 @@ func (*fakeAPI) ListDeliveries(context.Context, client.DeliveryFilter) (client.D
 	return client.DeliveryOverviewPage{Items: []client.DeliveryOverview{}, Page: 1}, nil
 }
 
+// DeliveryHealth supplies aggregate destination progress.
+func (*fakeAPI) DeliveryHealth(context.Context) ([]client.DestinationHealth, error) {
+	return []client.DestinationHealth{}, nil
+}
+
+// DecisionTimeline supplies recorded activity for route tests.
+func (*fakeAPI) DecisionTimeline(_ context.Context, id string, page int) (client.TimelinePage, error) {
+	return client.TimelinePage{DecisionID: id, IP: "203.0.113.1", Page: page}, nil
+}
+
+// RetryDelivery accepts a retry request in route tests.
+func (*fakeAPI) RetryDelivery(context.Context, client.RetryRequest) error { return nil }
+
+// ListObservations supplies hypothetical ban results.
+func (*fakeAPI) ListObservations(context.Context, int) (client.ObservationPage, error) {
+	return client.ObservationPage{Page: 1}, nil
+}
+
 // Get returns an existing decision.
 func (*fakeAPI) Get(context.Context, string) (client.Record, error) {
 	return client.Record{Decision: client.Decision{ID: "one", IP: "203.0.113.1", State: "banned"}}, nil

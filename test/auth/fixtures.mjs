@@ -94,6 +94,7 @@ export const test = base.extend({
       let historyPages;
       let decisionRevisions;
       let deliveryOverview;
+      let deliveryHealth;
       const historyRequests = [];
       const warden = await listen((req, res) => {
         if (backendFailure) {
@@ -123,6 +124,12 @@ export const test = base.extend({
               .end(JSON.stringify(decisionRevisions || { items: [], page: 1 }));
             return;
           }
+          if (requested.pathname === "/deliveries/health") {
+            res
+              .writeHead(200, { "Content-Type": "application/json" })
+              .end(JSON.stringify(deliveryHealth || []));
+            return;
+          }
           if (requested.pathname === "/deliveries") {
             res
               .writeHead(200, { "Content-Type": "application/json" })
@@ -141,6 +148,9 @@ export const test = base.extend({
         url: url.origin,
         setDecisionRevisions: (page) => {
           decisionRevisions = page;
+        },
+        setDeliveryHealth: (items) => {
+          deliveryHealth = items;
         },
         setDeliveryOverview: (page) => {
           deliveryOverview = page;

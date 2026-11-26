@@ -148,6 +148,13 @@
                 </dd>
               </div>
             </dl>
+            {{if eq .Progress.Status "exhausted"}}
+              <form method="post" action="{{$.Prefix}}/bans/{{$.Ban.Decision.ID}}/retry" class="mt-4">
+                <input type="hidden" name="revision" value="{{$.Ban.Decision.Revision}}">
+                <input type="hidden" name="destination" value="{{.Destination}}">
+                <button type="submit" class="rounded-lg border border-zinc-700 px-3 py-2 text-sm font-medium text-cyan-400 hover:bg-zinc-800">Retry delivery</button>
+              </form>
+            {{end}}
           </article>
         {{end}}
       </div>
@@ -199,6 +206,12 @@
   {{else}}
     <p class="px-6 py-6 text-sm text-zinc-400 sm:px-8">No source changes recorded since the audit migration.</p>
   {{end}}
+</section>
+
+<section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
+  <h2 class="text-lg font-semibold text-zinc-100">Decision timeline</h2>
+  <p class="mt-2 text-sm text-zinc-400">Source changes, effective decisions, expiries, delivery attempts, and explicit retries in recorded chronological order.</p>
+  <a href="{{.Prefix}}/bans/{{.Ban.Decision.ID}}/timeline" class="mt-4 inline-flex rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-cyan-400 hover:bg-zinc-800">View decision timeline</a>
 </section>
 
 {{template "delivery-history" .}}

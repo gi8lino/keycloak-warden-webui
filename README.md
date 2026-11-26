@@ -34,7 +34,7 @@ make e2e-down  # Stop the demo
 
 ## Run locally
 
-With Warden running, configure its admin token and a one-time setup token. WebUI uses Warden's v0.36.0 Go client:
+With Warden running, configure its admin token and a one-time setup token. WebUI uses the Warden Go client version pinned in `go.mod`:
 
 ```sh
 export WARDEN_WEBUI__WARDEN_ADMIN_TOKEN='YOUR_WARDEN_ADMIN_TOKEN'
@@ -62,3 +62,9 @@ For production, use HTTPS for browser access, keep the Warden admin token in a S
 ## License
 
 Licensed under the [Apache License, Version 2.0](LICENSE).
+
+## Operational visibility
+
+The Deliveries page includes aggregate destination health, with exhausted unbans prioritized. Retry buttons on exhausted current deliveries submit the exact decision revision and the authenticated local account name to Warden. Decision details link to the chronological source, decision, attempt and retry audit view. The active-bans page links to hypothetical automatic bans recorded by Warden in observe-only mode.
+
+These features require the Warden release that includes `/deliveries/health`, `/deliveries/retry`, `/bans/{id}/timeline` and `/observations`, and its matching Go client. During development, use a Go workspace with both checkouts. After publishing Warden, update the Go client module and the pinned Warden E2E image in `deploy/compose.yaml` to the same release before publishing WebUI.

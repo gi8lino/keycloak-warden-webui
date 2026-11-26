@@ -286,6 +286,12 @@
               {{if eq .Page "deliveries"}}
                 {{template "deliveries" .}}
               {{end}}
+              {{if eq .Page "timeline"}}
+                {{template "timeline" .}}
+              {{end}}
+              {{if eq .Page "observations"}}
+                {{template "observations" .}}
+              {{end}}
               {{if eq .Page "maintenance"}}
                 {{template "maintenance" .}}
               {{end}}

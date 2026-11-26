@@ -13,6 +13,8 @@ const (
 	actionBan administrativeAction = "ban"
 	// actionUnban records a manual release request.
 	actionUnban administrativeAction = "unban"
+	// actionRetry records an explicit delivery retry.
+	actionRetry administrativeAction = "delivery.retry"
 	// actionPrune records manual observation cleanup.
 	actionPrune administrativeAction = "maintenance.prune"
 	// actionOptimize records manual database optimization.
@@ -22,7 +24,11 @@ const (
 // auditAction logs an operator request and its outcome, returning the action error unchanged.
 func (p *Pages) auditAction(r *http.Request, operation administrativeAction, run func() error, attributes ...any) error {
 	started := time.Now()
-	logger := p.logger.With("actor", currentUser(r).Name, "operation", operation).With(attributes...)
+	logger := p.logger.With(
+		"actor", currentUser(r).Name,
+		"operation", operation,
+	).With(attributes...)
+
 	logger.Info("administrative action requested",
 		"event", "admin_action_requested",
 	)

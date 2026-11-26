@@ -31,6 +31,9 @@ func registerAdminRoutes(mux *http.ServeMux, config Config) {
 
 	mux.Handle("GET /ban-history", protected(endpoint.BanHistory(config.Warden, config.Pages)))
 	mux.Handle("GET /deliveries", protected(endpoint.Deliveries(config.Warden, config.Pages)))
+	mux.Handle("GET /observations", protected(endpoint.Observations(config.Warden, config.Pages)))
+	mux.Handle("GET /bans/{id}/timeline", protected(endpoint.DecisionTimeline(config.Warden, config.Pages)))
+	mux.Handle("POST /bans/{id}/retry", protected(endpoint.RetryDelivery(config.Warden, config.Pages)))
 	mux.Handle("GET /bans/{id}", protected(endpoint.BanDetails(config.Warden, config.Pages)))
 	mux.Handle("POST /bans", protected(endpoint.CreateBan(config.Warden, config.Pages)))
 	mux.Handle("POST /bans/{id}/release", protected(endpoint.ReleaseBan(config.Warden, config.Pages)))
