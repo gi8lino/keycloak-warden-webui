@@ -1,5 +1,5 @@
 // Package flags parses Warden Web UI deployment flags and environment variables.
-package flags
+package cli
 
 import (
 	"net"
@@ -20,8 +20,8 @@ const (
 	sectionAppearance = "Appearance"
 )
 
-// Config holds the deployment configuration for both listeners and browser authentication.
-type Config struct {
+// Flags holds the deployment configuration for both listeners and browser authentication.
+type Flags struct {
 	// Server contains the application and management listeners, route prefix and public URL.
 	Server appkitconfig.Server
 	// Authentication contains the selected mode and session lifetime.
@@ -59,7 +59,7 @@ type Config struct {
 }
 
 // Mode returns the effective browser authentication mode; unauthenticated mode is never enabled.
-func (c Config) Mode() appkitauth.Mode {
+func (c Flags) Mode() appkitauth.Mode {
 	if c.Authentication.ModeOverride != nil {
 		return *c.Authentication.ModeOverride
 	}
@@ -67,8 +67,7 @@ func (c Config) Mode() appkitauth.Mode {
 }
 
 // Parse registers Appkit's shared flags alongside Warden Web UI's own settings.
-func Parse(args []string, version string) (Config, error) {
-	cfg := Config{}
+func Parse(args []string, version string) (flags Flags, err error) {
 	tf := appkitconfig.NewFlagSet("warden-webui", "WARDEN_WEBUI", version)
 	tf.SectionOrder(
 		appkitconfig.SectionServer,
@@ -85,35 +84,35 @@ func Parse(args []string, version string) (Config, error) {
 	// This CLI has flags only; silently accepting positional arguments hides typos.
 	tf.NoPositional()
 
-	finalizeServer := appkitconfig.RegisterServer(tf, &cfg.Server, appkitconfig.ServerOptions{
+	finalizeServer := appkitconfig.RegisterServer(tf, &flags.Server, appkitconfig.ServerOptions{
 		ListenAddress:           &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8082},
 		ManagementListenAddress: &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8083},
 		PublicURL:               "http://127.0.0.1:8082",
 	})
 
-	finalizeAuthentication := RegisterAuthentication(tf, &cfg)
-	finalizeLogging := appkitconfig.RegisterLogging(tf, &cfg.Logging)
+	finalizeAuthentication := RegisterAuthentication(tf, &flags)
+	finalizeLogging := appkitconfig.RegisterLogging(tf, &flags.Logging)
 
-	registerWardenFlags(tf, &cfg)
-	registerLocalFlags(tf, &cfg)
+	registerWardenFlags(tf, &flags)
+	registerLocalFlags(tf, &flags)
 
-	tf.StringVar(&cfg.ThemeDirectory, "theme-directory", "", "Directory containing custom theme TOML files").
+	tf.StringVar(&flags.ThemeDirectory, "theme-directory", "", "Directory containing custom theme TOML files").
 		Section(sectionAppearance).
 		Value()
 
 	if err := tf.Parse(args); err != nil {
-		return Config{}, err
+		return Flags{}, err
 	}
 	finalizeServer()
 	finalizeAuthentication()
 	finalizeLogging()
-	cfg.Overrides = tf.Overrides()
+	flags.Overrides = tf.Overrides()
 
-	return cfg, nil
+	return flags, nil
 }
 
 // RegisterAuthentication configures
-func RegisterAuthentication(tf *tinyflags.FlagSet, cfg *Config) func() {
+func RegisterAuthentication(tf *tinyflags.FlagSet, cfg *Flags) func() {
 	finalizeAuthentication := appkitconfig.RegisterAuthentication(tf, &cfg.Authentication, appkitconfig.AuthenticationOptions{
 		RegisterSessionLifetime: true,
 		DefaultSessionLifetime:  12 * time.Hour,
@@ -126,7 +125,7 @@ func RegisterAuthentication(tf *tinyflags.FlagSet, cfg *Config) func() {
 }
 
 // registerWardenFlags configures access to the Warden administration API.
-func registerWardenFlags(tf *tinyflags.FlagSet, cfg *Config) {
+func registerWardenFlags(tf *tinyflags.FlagSet, cfg *Flags) {
 	tf.StringVar(&cfg.WardenURL, "warden-url", "http://127.0.0.1:8080", "Warden application API URL").
 		Section(sectionWarden).
 		NotBlank().
@@ -159,7 +158,7 @@ func registerWardenFlags(tf *tinyflags.FlagSet, cfg *Config) {
 }
 
 // registerLocalFlags configures the private credential database and first-run bootstrap secret.
-func registerLocalFlags(tf *tinyflags.FlagSet, cfg *Config) {
+func registerLocalFlags(tf *tinyflags.FlagSet, cfg *Flags) {
 	tf.StringVar(&cfg.Database, "database", "warden-webui.db", "Private Web UI SQLite database path").
 		Section(appkitconfig.SectionDatabase).
 		NotBlank().

@@ -17,8 +17,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/gi8lino/warden-webui/internal/cli"
 	"github.com/gi8lino/warden-webui/internal/db"
-	"github.com/gi8lino/warden-webui/internal/flags"
 	"github.com/gi8lino/warden-webui/internal/http/auth"
 	"github.com/gi8lino/warden-webui/internal/http/endpoint"
 	"github.com/gi8lino/warden-webui/web"
@@ -48,7 +48,7 @@ func newLocalApplication(t *testing.T, prefix string, store *db.Store) http.Hand
 func newLocalServerConfig(t *testing.T, prefix string, store *db.Store) Config {
 	t.Helper()
 
-	cfg := flags.Config{
+	cfg := cli.Flags{
 		Server: appkitconfig.Server{
 			PublicURL:   "http://127.0.0.1:8082" + prefix,
 			RoutePrefix: prefix,
@@ -113,7 +113,7 @@ func TestBrowserSetup(t *testing.T) {
 		t.Cleanup(func() { require.NoError(t, store.Close()) })
 
 		mode := appkitauth.ModeProxy
-		cfg := flags.Config{
+		cfg := cli.Flags{
 			Server: appkitconfig.Server{PublicURL: "http://127.0.0.1:8082"},
 			Authentication: appkitconfig.Authentication{
 				ModeOverride:    &mode,
@@ -461,7 +461,7 @@ func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string, lo
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, store.Close()) })
 
-	cfg := flags.Config{
+	cfg := cli.Flags{
 		Server: appkitconfig.Server{
 			PublicURL:   "http://127.0.0.1:8082" + prefix,
 			RoutePrefix: prefix,

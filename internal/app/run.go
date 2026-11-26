@@ -12,13 +12,13 @@ import (
 	"github.com/containeroo/httpkit/grace"
 	"github.com/containeroo/tinyflags"
 	"github.com/gi8lino/warden-webui/internal/bootstrap"
-	"github.com/gi8lino/warden-webui/internal/flags"
+	"github.com/gi8lino/warden-webui/internal/cli"
 	httpserver "github.com/gi8lino/warden-webui/internal/http/server"
 )
 
 // Run parses flags, initializes Appkit browser authentication, and serves both listeners.
 func Run(ctx context.Context, args []string, assets fs.FS, version string, stdout, stderr io.Writer) error {
-	cfg, err := flags.Parse(args, version)
+	flags, err := cli.Parse(args, version)
 	if err != nil {
 		if tinyflags.IsHelpRequested(err) || tinyflags.IsVersionRequested(err) {
 			_, _ = fmt.Fprint(stdout, err.Error())
@@ -29,18 +29,18 @@ func Run(ctx context.Context, args []string, assets fs.FS, version string, stdou
 	}
 
 	// Configure process logging and record the effective application identity.
-	logger := appkitlogging.Setup(cfg.Logging.Format, cfg.Logging.Debug, stdout)
+	logger := appkitlogging.Setup(flags.Logging.Format, flags.Logging.Debug, stdout)
 	setupLogger := logger.With("component", "setup")
 	setupLogger.Info(
 		"starting Warden Web UI",
 		"event", "app_starting",
 		"version", version,
 	)
-	if len(cfg.Overrides) > 0 {
+	if len(flags.Overrides) > 0 {
 		setupLogger.Info(
 			"CLI Overrides",
 			"event", "cli_overrides",
-			"overrides", cfg.Overrides.Values(),
+			"overrides", flags.Overrides.Values(),
 		)
 	}
 
@@ -48,7 +48,7 @@ func Run(ctx context.Context, args []string, assets fs.FS, version string, stdou
 	defer stop()
 
 	// Construct infrastructure and retain ownership until both listeners stop.
-	infrastructure, err := bootstrap.NewInfrastructure(ctx, cfg)
+	infrastructure, err := bootstrap.NewInfrastructure(ctx, flags)
 	if err != nil {
 		setupLogger.Error(
 			"initialize infrastructure",
@@ -59,7 +59,7 @@ func Run(ctx context.Context, args []string, assets fs.FS, version string, stdou
 	}
 	defer infrastructure.Close() // nolint:errcheck
 
-	application, err := bootstrap.NewApplication(ctx, cfg, infrastructure)
+	application, err := bootstrap.NewApplication(ctx, flags, infrastructure)
 	if err != nil {
 		setupLogger.Error(
 			"initialize application",
@@ -69,7 +69,7 @@ func Run(ctx context.Context, args []string, assets fs.FS, version string, stdou
 		return err
 	}
 
-	serverConfig, err := bootstrap.NewHTTPConfig(assets, cfg, infrastructure, application, logger, version)
+	serverConfig, err := bootstrap.NewHTTPConfig(assets, flags, infrastructure, application, logger, version)
 	if err != nil {
 		setupLogger.Error(
 			"configure HTTP adapter",
@@ -83,8 +83,8 @@ func Run(ctx context.Context, args []string, assets fs.FS, version string, stdou
 
 	if err := appkithttpserver.Run(
 		ctx,
-		cfg.Server.ListenAddress,
-		cfg.Server.ManagementListenAddress,
+		flags.Server.ListenAddress,
+		flags.Server.ManagementListenAddress,
 		handlers,
 		logger.With("server", "application"),
 		logger.With("server", "management"),

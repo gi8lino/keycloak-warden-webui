@@ -19,8 +19,8 @@ import (
 
 	"github.com/gi8lino/keycloak-warden/pkg/client"
 	"github.com/gi8lino/keycloak-warden/pkg/workerstate"
+	"github.com/gi8lino/warden-webui/internal/cli"
 	"github.com/gi8lino/warden-webui/internal/db"
-	"github.com/gi8lino/warden-webui/internal/flags"
 	"github.com/gi8lino/warden-webui/internal/http/auth"
 	"github.com/gi8lino/warden-webui/internal/http/endpoint"
 	"github.com/gi8lino/warden-webui/web"
@@ -119,7 +119,7 @@ func testHandlersWithAPIError(t *testing.T, prefix string, workersError error) (
 	t.Helper()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	mode := appkitauth.ModeProxy
-	cfg := flags.Config{
+	cfg := cli.Flags{
 		Server: appkitconfig.Server{
 			PublicURL:   "http://127.0.0.1:8082" + prefix,
 			RoutePrefix: prefix,

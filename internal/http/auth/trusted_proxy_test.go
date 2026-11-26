@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/gi8lino/warden-webui/internal/cli"
 	"github.com/gi8lino/warden-webui/internal/db"
-	"github.com/gi8lino/warden-webui/internal/flags"
 )
 
 // proxyService configures the same trusted ingress settings used by the HTTP adapter.
@@ -21,7 +21,7 @@ func proxyService(t *testing.T) *Service {
 	mode := appkitauth.ModeProxy
 	store := authStore(t)
 	require.NoError(t, store.CreateFounder(t.Context(), "local-admin", "hash", &db.IdentityLink{Issuer: proxyIssuer, Subject: "operator"}))
-	service, err := New(t.Context(), flags.Config{
+	service, err := New(t.Context(), cli.Flags{
 		Authentication: appkitconfig.Authentication{
 			ModeOverride: &mode,
 		},
@@ -96,7 +96,7 @@ func TestTrustedProxy(t *testing.T) {
 		t.Parallel()
 
 		mode := appkitauth.ModeProxy
-		_, err := New(t.Context(), flags.Config{
+		_, err := New(t.Context(), cli.Flags{
 			Authentication: appkitconfig.Authentication{
 				ModeOverride: &mode,
 			},
@@ -110,7 +110,7 @@ func TestExternalSetup(t *testing.T) {
 	t.Parallel()
 	store := authStore(t)
 	mode := appkitauth.ModeProxy
-	service, err := New(t.Context(), flags.Config{
+	service, err := New(t.Context(), cli.Flags{
 		Authentication: appkitconfig.Authentication{ModeOverride: &mode},
 		Proxy:          appkitconfig.Proxy{TrustedCIDRs: []string{"127.0.0.1/32"}},
 		AdminGroup:     "admins", SetupToken: testSetupToken, SetupSubject: "external-owner",

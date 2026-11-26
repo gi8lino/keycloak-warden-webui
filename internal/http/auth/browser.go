@@ -9,12 +9,12 @@ import (
 	appkitauth "github.com/containeroo/appkit/auth"
 	"github.com/containeroo/appkit/auth/oidc"
 
+	"github.com/gi8lino/warden-webui/internal/cli"
 	"github.com/gi8lino/warden-webui/internal/db"
-	"github.com/gi8lino/warden-webui/internal/flags"
 )
 
 // New configures Appkit adapters around the application's durable credential and session store.
-func New(ctx context.Context, cfg flags.Config, repository *db.Store) (*Service, error) {
+func New(ctx context.Context, cfg cli.Flags, repository *db.Store) (*Service, error) {
 	if repository == nil {
 		return nil, errors.New("authentication repository is required")
 	}

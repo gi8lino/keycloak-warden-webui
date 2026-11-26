@@ -5,7 +5,7 @@ import (
 	"io/fs"
 	"log/slog"
 
-	"github.com/gi8lino/warden-webui/internal/flags"
+	"github.com/gi8lino/warden-webui/internal/cli"
 	"github.com/gi8lino/warden-webui/internal/http/endpoint"
 	"github.com/gi8lino/warden-webui/internal/http/server"
 )
@@ -13,7 +13,7 @@ import (
 // NewHTTPConfig prepares presentation assets and wires the passive HTTP adapter.
 func NewHTTPConfig(
 	assets fs.FS,
-	cfg flags.Config,
+	cfg cli.Flags,
 	infrastructure *Infrastructure,
 	application *Application,
 	logger *slog.Logger,

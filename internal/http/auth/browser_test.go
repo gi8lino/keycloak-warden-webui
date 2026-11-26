@@ -15,8 +15,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/gi8lino/warden-webui/internal/cli"
 	"github.com/gi8lino/warden-webui/internal/db"
-	"github.com/gi8lino/warden-webui/internal/flags"
 )
 
 // testSetupToken authorizes bootstrap requests in authentication tests.
@@ -32,8 +32,8 @@ func authStore(t *testing.T) *db.Store {
 }
 
 // localConfig supplies the deployment settings for password authentication tests.
-func localConfig() flags.Config {
-	return flags.Config{
+func localConfig() cli.Flags {
+	return cli.Flags{
 		Server:         appkitconfig.Server{PublicURL: "http://127.0.0.1:8082"},
 		Authentication: appkitconfig.Authentication{SessionLifetime: time.Hour},
 		SetupToken:     testSetupToken,

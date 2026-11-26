@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/gi8lino/keycloak-warden/pkg/client"
+	"github.com/gi8lino/warden-webui/internal/cli"
 	"github.com/gi8lino/warden-webui/internal/db"
-	"github.com/gi8lino/warden-webui/internal/flags"
 )
 
 // Infrastructure owns persistence and the server-side Warden API client.
@@ -19,7 +19,7 @@ type Infrastructure struct {
 }
 
 // NewInfrastructure opens the private store and prepares the upstream client.
-func NewInfrastructure(ctx context.Context, cfg flags.Config) (*Infrastructure, error) {
+func NewInfrastructure(ctx context.Context, cfg cli.Flags) (*Infrastructure, error) {
 	store, err := db.Open(ctx, cfg.Database)
 	if err != nil {
 		return nil, fmt.Errorf("open Web UI database: %w", err)

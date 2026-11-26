@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gi8lino/warden-webui/internal/flags"
+	"github.com/gi8lino/warden-webui/internal/cli"
 	"github.com/gi8lino/warden-webui/internal/http/server"
 	"github.com/gi8lino/warden-webui/web"
 )
@@ -27,7 +27,7 @@ func TestBootstrapComposesRuntime(t *testing.T) {
 		_, _ = io.WriteString(w, `[]`)
 	}))
 	t.Cleanup(upstream.Close)
-	cfg, err := flags.Parse([]string{
+	cfg, err := cli.Parse([]string{
 		"--database", filepath.Join(t.TempDir(), "webui.db"),
 		"--warden-url", upstream.URL,
 		"--warden-admin-token", "private-token",
@@ -73,7 +73,7 @@ func TestNewInfrastructureHTTPPolicy(t *testing.T) {
 	t.Run("rejects remote HTTP by default", func(t *testing.T) {
 		t.Parallel()
 
-		cfg, err := flags.Parse([]string{
+		cfg, err := cli.Parse([]string{
 			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
 			"--warden-url=http://keycloak-warden.keycloak.svc.cluster.local:8080",
 			"--warden-admin-token=private-token",
@@ -89,7 +89,7 @@ func TestNewInfrastructureHTTPPolicy(t *testing.T) {
 	t.Run("accepts remote HTTP with opt-in", func(t *testing.T) {
 		t.Parallel()
 
-		cfg, err := flags.Parse([]string{
+		cfg, err := cli.Parse([]string{
 			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
 			"--warden-url=http://keycloak-warden.keycloak.svc.cluster.local:8080",
 			"--warden-admin-token=private-token",
@@ -107,7 +107,7 @@ func TestNewInfrastructureHTTPPolicy(t *testing.T) {
 	t.Run("still rejects unsupported URL schemes with opt-in", func(t *testing.T) {
 		t.Parallel()
 
-		cfg, err := flags.Parse([]string{
+		cfg, err := cli.Parse([]string{
 			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
 			"--warden-url=ftp://keycloak-warden.keycloak.svc.cluster.local:8080",
 			"--warden-admin-token=private-token",
@@ -124,7 +124,7 @@ func TestNewInfrastructureHTTPPolicy(t *testing.T) {
 	t.Run("accepts loopback HTTP without opt-in", func(t *testing.T) {
 		t.Parallel()
 
-		cfg, err := flags.Parse([]string{
+		cfg, err := cli.Parse([]string{
 			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
 			"--warden-url=http://127.0.0.1:8080",
 			"--warden-admin-token=private-token",
@@ -152,7 +152,7 @@ func TestNewInfrastructureClientLimits(t *testing.T) {
 		}))
 		t.Cleanup(upstream.Close)
 
-		cfg, err := flags.Parse([]string{
+		cfg, err := cli.Parse([]string{
 			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
 			"--warden-url=" + upstream.URL,
 			"--warden-admin-token=private-token",
@@ -177,7 +177,7 @@ func TestNewInfrastructureClientLimits(t *testing.T) {
 		}))
 		t.Cleanup(upstream.Close)
 
-		cfg, err := flags.Parse([]string{
+		cfg, err := cli.Parse([]string{
 			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
 			"--warden-url=" + upstream.URL,
 			"--warden-admin-token=private-token",
@@ -202,7 +202,7 @@ func TestNewInfrastructureClientLimits(t *testing.T) {
 		}))
 		t.Cleanup(upstream.Close)
 
-		cfg, err := flags.Parse([]string{
+		cfg, err := cli.Parse([]string{
 			"--database=" + filepath.Join(t.TempDir(), "webui.db"),
 			"--warden-url=" + upstream.URL,
 			"--warden-admin-token=private-token",
