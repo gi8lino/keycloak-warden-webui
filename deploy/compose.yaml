@@ -4,7 +4,7 @@
 services:
   warden:
     # Keep the pinned image in sync with the Warden client dependency in go.mod.
-    image: ${E2E_WARDEN_IMAGE:-ghcr.io/gi8lino/keycloak-warden:v0.40.0}
+    image: ${E2E_WARDEN_IMAGE:-ghcr.io/gi8lino/keycloak-warden:v0.43.0}
     command:
       - serve
       - --config=/config/warden.yaml
