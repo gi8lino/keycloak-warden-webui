@@ -30,7 +30,7 @@ services:
       - ./warden.yaml:/config/warden.yaml:ro
 
   receiver:
-    image: ghcr.io/gi8lino/hookglass:v0.1.1
+    image: ghcr.io/gi8lino/hookglass:v0.1.2
     network_mode: service:warden
     depends_on:
       warden:
