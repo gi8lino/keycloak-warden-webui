@@ -84,9 +84,10 @@ func Parse(args []string, version string) (flags Flags, err error) {
 	// This CLI has flags only; silently accepting positional arguments hides typos.
 	tf.NoPositional()
 
+	localhost := net.IPv4(127, 0, 0, 1)
 	finalizeServer := appkitconfig.RegisterServer(tf, &flags.Server, appkitconfig.ServerOptions{
-		ListenAddress:           &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8082},
-		ManagementListenAddress: &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8083},
+		ListenAddress:           &net.TCPAddr{IP: localhost, Port: 8082},
+		ManagementListenAddress: &net.TCPAddr{IP: localhost, Port: 8083},
 		PublicURL:               "http://127.0.0.1:8082",
 	})
 
