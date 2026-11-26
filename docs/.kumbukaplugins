@@ -26,3 +26,9 @@ tag_prefix = "code-annotations/v"
 asset = "code-annotations"
 version = "1.0.0"
 
+[[plugin]]
+id = "me.kumbuka.syntax-highlighting"
+repository = "kumbuka-me/plugins"
+tag_prefix = "syntax-highlighting/v"
+asset = "syntax-highlighting"
+version = "1.6.0"
