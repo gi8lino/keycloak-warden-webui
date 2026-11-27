@@ -15,6 +15,8 @@ const (
 	actionUnban administrativeAction = "unban"
 	// actionRetry records an explicit delivery retry.
 	actionRetry administrativeAction = "delivery.retry"
+	// actionNotificationRetry records an explicit incident notification retry.
+	actionNotificationRetry administrativeAction = "notification.retry"
 	// actionPrune records manual observation cleanup.
 	actionPrune administrativeAction = "maintenance.prune"
 	// actionOptimize records manual database optimization.

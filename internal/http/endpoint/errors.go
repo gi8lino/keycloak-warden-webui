@@ -52,7 +52,7 @@ func upstreamErrorMessage(status int) string {
 	case http.StatusUnauthorized, http.StatusForbidden:
 		return "Warden denied access to the Web UI. Ask an administrator to check the configured Warden API credentials."
 	case http.StatusNotFound:
-		return "The requested decision was not found."
+		return "The requested record was not found."
 	case http.StatusConflict:
 		return "The request conflicts with Warden's current state. Review the latest data before trying again."
 	case http.StatusTooManyRequests:

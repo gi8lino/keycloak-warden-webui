@@ -11,7 +11,8 @@ Warden Web UI manages bans through Warden's administrative API. It stores admini
 ## Features
 
 - View active bans, append-only ban/release revision history, sources, and delivery acknowledgements.
-- Inspect current delivery status across destinations, including failed unban notifications.
+- Inspect current enforcement delivery status across destinations, including failed releases.
+- Browse user and administrative security incidents, view notification delivery attempts and retry exhausted notifications.
 - Create manual bans and release existing bans.
 - Inspect background worker state, delivery queue statistics, and database maintenance operations.
 - Sign in with local accounts, Keycloak OIDC, or a trusted proxy.
@@ -65,8 +66,6 @@ Licensed under the [Apache License, Version 2.0](LICENSE).
 
 ## Operational visibility
 
-The Deliveries page includes aggregate destination health, with exhausted unbans prioritized. Retry buttons on exhausted current deliveries submit the exact decision revision and the authenticated local account name to Warden. Decision details link to the chronological source, decision, attempt and retry audit view. The active-bans page links to security incidents, including named rule threshold hits, monitoring and observe-only outcomes. Incidents use cursor pagination. Existing `/observations` bookmarks still open this page.
+The Deliveries page includes aggregate destination health, with exhausted unbans prioritized. Retry buttons on exhausted current deliveries submit the exact decision revision and the authenticated local account name to Warden. Decision details link to the chronological source, decision, attempt and retry audit view. The Incidents page includes hypothetical automatic bans recorded by Warden in observe-only mode. Notifications has its own occurrence history and retry controls.
 
-This release requires Warden 0.50 or later for the incidents and enforcement-worker API. Upgrade Warden and Web UI together.
-
-Keep the Warden client dependency and E2E image in `deploy/compose.yaml` on the same release.
+Keep the Warden client dependency and E2E image in `deploy/compose.yaml` on the same release (currently v0.50.1). This Web UI requires the incidents, notifications, and enforcement-worker APIs. Upgrade Warden and Web UI together. Existing `/observations` bookmarks open the Incidents page. Set `E2E_WARDEN_IMAGE` to test another compatible Warden image.

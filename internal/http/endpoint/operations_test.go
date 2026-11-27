@@ -108,7 +108,7 @@ func TestIncidents(t *testing.T) {
 	require.Equal(t, http.StatusOK, response.Code)
 	assert.Equal(t, int64(42), api.filter.BeforeID)
 	body := response.Body.String()
-	for _, expected := range []string{"&lt;script&gt;rule&lt;/script&gt;", "LOGIN_ERROR", "DELETE USER", "Observe-only; proposed ban until", "Recorded", "/warden/incidents?before-id=7"} {
+	for _, expected := range []string{"&lt;script&gt;rule&lt;/script&gt;", "LOGIN_ERROR", "DELETE USER", "Hypothetical ban", "No ban requested", "/warden/incidents?before-id=7"} {
 		assert.Contains(t, body, expected)
 	}
 	assert.NotContains(t, body, "<script>rule</script>")

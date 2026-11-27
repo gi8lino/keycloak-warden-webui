@@ -1,0 +1,22 @@
+{{define "notification-attempts"}}
+<a href="{{.Prefix}}/notifications" class="text-sm font-medium text-cyan-400 underline">Back to notifications</a>
+<section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
+  <header class="border-b border-zinc-800 px-6 py-5">
+    <h2 class="text-lg font-semibold text-zinc-100">Delivery #{{.NotificationID}}</h2>
+    <p class="mt-2 text-sm text-zinc-400">Recorded sends, including attempts from previous retry cycles. Older migrated deliveries may not have complete attempt history.</p>
+  </header>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-zinc-800/60 text-xs text-zinc-400"><tr><th scope="col" class="px-6 py-4">Attempt</th><th scope="col" class="px-4 py-4">Completed</th><th scope="col" class="px-4 py-4">Outcome</th><th scope="col" class="px-4 py-4">Error</th></tr></thead>
+      <tbody class="divide-y divide-zinc-800">
+        {{range .NotificationAttempts.Items}}
+          <tr><td class="px-6 py-4 text-zinc-300">{{.Number}}</td><td class="px-4 py-4 text-zinc-300">{{fmtTime .CompletedAt}}</td><td class="px-4 py-4 text-zinc-300">{{if .Error}}Failed{{else}}Acknowledged{{end}}</td><td class="px-4 py-4 break-words text-zinc-300">{{if .Error}}{{.Error}}{{else}}—{{end}}</td></tr>
+        {{else}}
+          <tr><td colspan="4" class="px-6 py-4 text-zinc-400">No completed sends recorded on this page.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{template "cursor-pagination" .Cursor}}
+</section>
+{{end}}

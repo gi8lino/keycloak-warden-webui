@@ -27,6 +27,14 @@ Both lists are queried through Warden's authenticated API; WebUI does not retain
 copy of Warden's audit data. Pagination is bounded and newer revisions can shift the
 results until the operator refreshes.
 
+## Incidents and notifications
+
+**Incidents** lists recorded detection rule threshold hits. Filter by rule name or user/admin event kind. Each entry includes the aggregation key, count, threshold and window, event metadata and requested ban expiry if present. Observe-only requests are labelled hypothetical. A decision link appears only when Warden provides a decision reference. Incidents do not imply successful remote enforcement.
+
+**Notifications** lists independent incident webhook deliveries, including status, completed attempt count, retry deadline, last error and completion time. Open **View attempts** to inspect completed sends. Incident IDs are shown even if the original incident has expired. Both views use Warden's cursor pagination; **Refresh latest** preserves incident filters and **Older results** loads the next page.
+
+Use **Retry notification** for exhausted deliveries. Warden decides eligibility and verifies the destination identity; a queued request is not an acknowledgement. WebUI supplies the authenticated administrator's local account name, not a browser-provided actor. Earlier attempts remain recorded. Configuration and all delivery state belong to Warden, not the WebUI database.
+
 ## Create and release bans
 
 Create a manual ban by entering an IP address, a positive duration (for example `15m` or `1h`), and a nonempty reason. The request is sent to Warden's administrator API; Web UI does not write enforcement records directly.

@@ -1,31 +1,74 @@
 {{define "incidents"}}
-<a href="{{.Prefix}}/" class="text-sm font-medium text-cyan-400 underline">Back to active bans</a>
+<section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
+  <p class="text-sm text-zinc-400">Named rule threshold hits, including recording-only rules and hypothetical bans. Incidents are not proof of successful enforcement.</p>
+  <form method="get" action="{{.Prefix}}/incidents" class="mt-6 grid gap-4 sm:grid-cols-2">
+    <label class="grid gap-2 text-sm font-medium text-zinc-300" for="incident-rule">
+      Rule
+      <input id="incident-rule" name="rule" value="{{.IncidentFilter.Rule}}" maxlength="64" class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100" placeholder="brute-force">
+    </label>
+    <label class="grid gap-2 text-sm font-medium text-zinc-300" for="incident-kind">
+      Event kind
+      <select id="incident-kind" name="kind" class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100">
+        <option value="">All events</option>
+        <option value="user" {{if eq .IncidentFilter.Kind "user"}}selected{{end}}>User</option>
+        <option value="admin" {{if eq .IncidentFilter.Kind "admin"}}selected{{end}}>Administrative</option>
+      </select>
+    </label>
+    <div class="flex items-center gap-4 sm:col-span-2">
+      <button type="submit" class="rounded-lg bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-cyan-400">Apply filters</button>
+      <a href="{{.Prefix}}/incidents" class="text-sm font-medium text-cyan-400 underline">Clear filters</a>
+    </div>
+  </form>
+</section>
 <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
-  <header class="border-b border-zinc-800 px-6 py-5">
-    <h2 class="text-lg font-semibold text-zinc-100">Security incidents</h2>
-    <p class="mt-2 text-sm text-zinc-400">Detection rules that reached their threshold, including monitoring and observe-only outcomes.</p>
-  </header>
   <div class="overflow-x-auto">
     <table class="w-full text-left text-sm">
-      <thead class="bg-zinc-800/60 text-xs text-zinc-400"><tr><th scope="col" class="px-6 py-4">Rule / event</th><th scope="col" class="px-4 py-4">Group</th><th scope="col" class="px-4 py-4">Observed</th><th scope="col" class="px-4 py-4">Count / threshold</th><th scope="col" class="px-4 py-4">Outcome</th></tr></thead>
+      <thead class="bg-zinc-800/60 text-xs text-zinc-400">
+        <tr><th scope="col" class="px-6 py-4">Incident / time</th><th scope="col" class="px-4 py-4">Rule / event</th><th scope="col" class="px-4 py-4">Aggregation</th><th scope="col" class="px-4 py-4">Ban request</th></tr>
+      </thead>
       <tbody class="divide-y divide-zinc-800">
         {{range .Incidents.Items}}
           <tr>
-            <td class="px-6 py-4 text-zinc-200">{{.Rule}}<span class="block text-xs text-zinc-400">{{.EventKind}}: {{if .EventType}}{{.EventType}}{{else}}{{.OperationType}} {{.ResourceType}}{{end}}</span></td>
-            <td class="px-4 py-4 font-mono text-zinc-200">{{.GroupBy}}: {{.GroupKey}}{{if .IdentityRealm}}<span class="block text-xs text-zinc-400">{{.IdentityRealm}}</span>{{end}}</td>
-            <td class="px-4 py-4 text-zinc-300">{{fmtTime .At}}</td>
-            <td class="px-4 py-4 tabular-nums text-zinc-300">{{.Count}} / {{.Threshold}}</td>
-            <td class="px-4 py-4 text-zinc-300">{{if .BanUntil}}{{if .ObserveOnly}}Observe-only; proposed ban until {{else}}Ban requested until {{end}}{{fmtTime .BanUntil}}{{else}}Recorded{{end}}</td>
+            <td class="px-6 py-4 text-zinc-300">#{{.ID}}<br>{{fmtTime .At}}</td>
+            <td class="px-4 py-4 text-zinc-300">
+              <p class="font-medium text-zinc-100 break-words">{{.Rule}}</p>
+              <p>{{.EventKind}} · {{if eq .EventKind "admin"}}{{.OperationType}} {{.ResourceType}}{{else}}{{.EventType}}{{end}}</p>
+              <p class="break-words">Realm: {{.RealmID}}</p>
+              <details class="mt-2 text-xs text-zinc-400">
+                <summary class="cursor-pointer text-cyan-400">Event details</summary>
+                <dl class="mt-2 break-words">
+                  <dt>Source / event ID</dt><dd>{{.Source}} / {{.EventID}}</dd>
+                  <dt>Event time</dt><dd>{{fmtTime .EventAt}}</dd>
+                  {{if .ActorRealmID}}<dt>Actor realm</dt><dd>{{.ActorRealmID}}</dd>{{end}}
+                  {{if .ClientID}}<dt>Client</dt><dd>{{.ClientID}}</dd>{{end}}
+                  {{if .UserID}}<dt>User / actor ID</dt><dd>{{.UserID}}</dd>{{end}}
+                  {{if .IP}}<dt>IP address</dt><dd>{{.IP}}</dd>{{end}}
+                  {{if .ResourcePath}}<dt>Resource path</dt><dd>{{.ResourcePath}}</dd>{{end}}
+                  {{if .Error}}<dt>Event error</dt><dd>{{.Error}}</dd>{{end}}
+                </dl>
+              </details>
+            </td>
+            <td class="px-4 py-4 text-zinc-300">
+              <p class="break-words">{{.GroupBy}} = {{.GroupKey}}</p>
+              {{if .IdentityRealm}}<p>Identity realm: {{.IdentityRealm}}</p>{{end}}
+              {{if .Distinct}}<p>Distinct: {{.Distinct}}</p>{{end}}
+              <p class="tabular-nums">{{.Count}} / {{.Threshold}} in {{.Window}}</p>
+            </td>
+            <td class="px-4 py-4 text-zinc-300">
+              {{if .BanUntil}}
+                <p>{{if .ObserveOnly}}Hypothetical ban{{else}}Requested ban{{end}}</p>
+                <p>{{fmtTime .BanUntil}}</p>
+                {{if .EffectiveBanUntil}}<p>Longest request: {{fmtTime .EffectiveBanUntil}}</p>{{end}}
+              {{else}}No ban requested{{end}}
+              {{if .DecisionID}}<a class="block text-cyan-400 underline" href="{{$.Prefix}}/bans/{{.DecisionID}}">Inspect decision (revision {{.DecisionRevision}})</a>{{end}}
+            </td>
           </tr>
         {{else}}
-          <tr><td colspan="5" class="px-6 py-4 text-zinc-400">No security incidents recorded on this page.</td></tr>
+          <tr><td colspan="4" class="px-6 py-4 text-zinc-400">No incidents recorded on this page.</td></tr>
         {{end}}
       </tbody>
     </table>
   </div>
-  <nav aria-label="Incident pagination" class="flex justify-between border-t border-zinc-800 px-6 py-4 text-sm">
-    <a href="{{.Prefix}}/incidents" class="text-cyan-400 underline">Newest incidents</a>
-    {{if .IncidentsNextURL}}<a href="{{.IncidentsNextURL}}" class="text-cyan-400 underline">Older incidents</a>{{end}}
-  </nav>
+  {{template "cursor-pagination" .Cursor}}
 </section>
 {{end}}

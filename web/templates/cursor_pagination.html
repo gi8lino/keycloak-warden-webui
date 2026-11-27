@@ -1,0 +1,6 @@
+{{define "cursor-pagination"}}
+<nav aria-label="Pagination" class="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800 px-6 py-4 text-sm">
+  <a href="{{.Refresh}}" class="font-medium text-cyan-400 underline">Refresh latest</a>
+  {{if .Next}}<a href="{{.Next}}" class="font-medium text-cyan-400 underline">Older results</a>{{end}}
+</nav>
+{{end}}

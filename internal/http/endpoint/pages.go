@@ -13,6 +13,7 @@ import (
 
 	appkitauth "github.com/containeroo/appkit/auth"
 
+	"github.com/gi8lino/keycloak-warden/pkg/client"
 	"github.com/gi8lino/keycloak-warden/pkg/model"
 	"github.com/gi8lino/warden-webui/internal/accounts"
 	"github.com/gi8lino/warden-webui/internal/http/auth"
@@ -83,10 +84,18 @@ type pageData struct {
 	HealthUnavailable bool
 	// Timeline contains the selected chronological audit page.
 	Timeline model.TimelinePage
-	// Incidents contains the selected detection-rule threshold hits.
+	// Incidents contains the selected page of detection incidents.
 	Incidents model.IncidentPage
-	// IncidentsNextURL advances using the stable incident cursor.
-	IncidentsNextURL string
+	// IncidentFilter retains the selected rule and event kind.
+	IncidentFilter client.IncidentFilter
+	// Notifications contains the selected notification delivery page.
+	Notifications model.NotificationPage
+	// NotificationID identifies the selected notification delivery.
+	NotificationID int64
+	// NotificationAttempts contains the selected page of recorded sends.
+	NotificationAttempts model.NotificationAttemptPage
+	// Cursor provides navigation for cursor-paginated listings.
+	Cursor cursorNavigation
 	// Overview supplies filtering and pagination for cross-decision pages.
 	Overview overviewNavigation
 	// LocalUser permits local account actions only for local sessions.

@@ -32,8 +32,11 @@ func registerAdminRoutes(mux *http.ServeMux, config Config) {
 	mux.Handle("GET /ban-history", protected(endpoint.BanHistory(config.Warden, config.Pages)))
 	mux.Handle("GET /deliveries", protected(endpoint.Deliveries(config.Warden, config.Pages)))
 	mux.Handle("GET /incidents", protected(endpoint.Incidents(config.Warden, config.Pages)))
-	// Keep existing observation-page bookmarks usable after the API migration.
+	// Preserve bookmarks from the observations page.
 	mux.Handle("GET /observations", protected(endpoint.Incidents(config.Warden, config.Pages)))
+	mux.Handle("GET /notifications", protected(endpoint.Notifications(config.Warden, config.Pages)))
+	mux.Handle("GET /notifications/{id}/attempts", protected(endpoint.NotificationAttempts(config.Warden, config.Pages)))
+	mux.Handle("POST /notifications/{id}/retry", protected(endpoint.RetryNotification(config.Warden, config.Pages)))
 	mux.Handle("GET /bans/{id}/timeline", protected(endpoint.DecisionTimeline(config.Warden, config.Pages)))
 	mux.Handle("POST /bans/{id}/retry", protected(endpoint.RetryDelivery(config.Warden, config.Pages)))
 	mux.Handle("GET /bans/{id}", protected(endpoint.BanDetails(config.Warden, config.Pages)))

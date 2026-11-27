@@ -18,14 +18,20 @@ type API interface {
 	DecisionTimeline(context.Context, string, int) (model.TimelinePage, error)
 	// RetryDelivery queues one exhausted revision using the authenticated operator identity.
 	RetryDelivery(context.Context, model.RetryRequest) error
-	// ListIncidents reads named detection-rule threshold hits.
+	// ListIncidents reads named detection rule threshold hits.
 	ListIncidents(context.Context, client.IncidentFilter) (model.IncidentPage, error)
+	// ListNotifications reads retained incident delivery records.
+	ListNotifications(context.Context, int64) (model.NotificationPage, error)
+	// NotificationAttempts reads completed sends for a notification.
+	NotificationAttempts(context.Context, int64, int64) (model.NotificationAttemptPage, error)
+	// RetryNotification queues an exhausted notification with the authenticated actor.
+	RetryNotification(context.Context, int64, model.NotificationRetryRequest) error
 	Get(context.Context, string) (model.Record, error)
 	// GetPageThroughRevision retrieves a bounded delivery-history page.
 	GetPageThroughRevision(context.Context, string, int, int64) (model.Record, error)
 	Ban(context.Context, client.ManualBanRequest) (model.Record, error)
 	Unban(context.Context, string) (model.Record, error)
-	// WorkerStatus reads both Warden worker snapshots and persistent delivery statistics.
+	// WorkerStatus reads Warden worker snapshots and persistent delivery statistics.
 	WorkerStatus(context.Context) (model.Workers, error)
 	MaintenanceStatus(context.Context) (model.Maintenance, error)
 	PruneObservations(context.Context) (model.Maintenance, error)

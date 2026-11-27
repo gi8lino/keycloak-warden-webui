@@ -43,7 +43,7 @@ func TestPagesFail(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		pages.fail(httptest.NewRequest("GET", "/", nil), recorder, auth.User{Name: "operator"}, &client.Error{Code: http.StatusNotFound, Message: "private details"})
 		assert.Equal(t, http.StatusNotFound, recorder.Code)
-		assert.Contains(t, recorder.Body.String(), "The requested decision was not found.")
+		assert.Contains(t, recorder.Body.String(), "The requested record was not found.")
 		assert.NotContains(t, recorder.Body.String(), "private details")
 	})
 }

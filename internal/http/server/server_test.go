@@ -33,6 +33,16 @@ type fakeAPI struct {
 	banDuration atomic.Int64
 	// maintenanceCalls counts requested maintenance operations.
 	maintenanceCalls atomic.Int32
+	// incidentFilter captures the forwarded rule and cursor.
+	incidentFilter client.IncidentFilter
+	// notificationBeforeID captures the forwarded notification cursor.
+	notificationBeforeID int64
+	// attemptBeforeNumber captures the forwarded attempt cursor.
+	attemptBeforeNumber int64
+	// notificationID captures the requested retry delivery.
+	notificationID atomic.Int64
+	// notificationActor captures the authenticated retry actor.
+	notificationActor string
 	// workersError simulates an upstream worker status failure.
 	workersError error
 }
@@ -65,9 +75,46 @@ func (*fakeAPI) DecisionTimeline(_ context.Context, id string, page int) (model.
 // RetryDelivery accepts a retry request in route tests.
 func (*fakeAPI) RetryDelivery(context.Context, model.RetryRequest) error { return nil }
 
-// ListIncidents supplies detection-rule threshold hits.
-func (*fakeAPI) ListIncidents(context.Context, client.IncidentFilter) (model.IncidentPage, error) {
-	return model.IncidentPage{}, nil
+// ListIncidents returns user and administrative rule hits.
+func (a *fakeAPI) ListIncidents(_ context.Context, filter client.IncidentFilter) (model.IncidentPage, error) {
+	a.incidentFilter = filter
+	return model.IncidentPage{Items: []model.Incident{{
+		ID:        42,
+		Rule:      "brute-force",
+		EventKind: "user",
+		EventType: "LOGIN_ERROR",
+		Count:     5,
+		Threshold: 5,
+	}}, NextBeforeID: 42}, nil
+}
+
+// ListNotifications returns an exhausted notification.
+func (a *fakeAPI) ListNotifications(_ context.Context, beforeID int64) (model.NotificationPage, error) {
+	a.notificationBeforeID = beforeID
+	return model.NotificationPage{Items: []model.NotificationDelivery{{
+		ID:          7,
+		IncidentID:  42,
+		Destination: "slack-security",
+		Status:      model.DeliveryExhausted,
+		LastError:   "<script>alert(1)</script>",
+	}}, NextBeforeID: 7}, nil
+}
+
+// NotificationAttempts returns one failed send.
+func (a *fakeAPI) NotificationAttempts(_ context.Context, id, beforeNumber int64) (model.NotificationAttemptPage, error) {
+	a.notificationID.Store(id)
+	a.attemptBeforeNumber = beforeNumber
+	return model.NotificationAttemptPage{Items: []model.NotificationAttempt{{
+		Number: 3,
+		Error:  "receiver unavailable",
+	}}, NextBeforeNumber: 3}, nil
+}
+
+// RetryNotification records a requested incident delivery retry.
+func (a *fakeAPI) RetryNotification(_ context.Context, id int64, request model.NotificationRetryRequest) error {
+	a.notificationID.Store(id)
+	a.notificationActor = request.Actor
+	return nil
 }
 
 // Get returns an existing decision.
@@ -118,6 +165,10 @@ func (a *fakeAPI) WorkerStatus(context.Context) (model.Workers, error) {
 		Enforcement: model.EnforcementWorker{
 			RuntimeStatus: model.RuntimeStatus{State: model.WorkerIdle},
 			QueueStats:    model.QueueStats{PendingDeliveries: 4},
+		},
+		Notifications: model.NotificationWorker{
+			Runtime:             &model.RuntimeStatus{State: model.WorkerIdle},
+			ExhaustedDeliveries: 2,
 		},
 		Maintenance: model.Maintenance{
 			State: model.WorkerIdle,
@@ -210,9 +261,11 @@ func TestPages(t *testing.T) {
 		assert.Contains(t, recorder.Body.String(), "Database maintenance")
 		assert.Contains(t, recorder.Body.String(), "Background workers")
 		assert.Contains(t, recorder.Body.String(), "Pending deliveries")
+		assert.Contains(t, recorder.Body.String(), "Enforcement")
+		assert.Contains(t, recorder.Body.String(), "Incident webhook delivery")
 	})
 
-	t.Run("maintenance remains usable with an older Warden", func(t *testing.T) {
+	t.Run("maintenance remains usable when worker status fails", func(t *testing.T) {
 		t.Parallel()
 
 		app, _, _ := testHandlersWithAPIError(t, "", &client.Error{Code: http.StatusNotFound})
@@ -220,7 +273,7 @@ func TestPages(t *testing.T) {
 		app.ServeHTTP(response, authenticatedRequest(http.MethodGet, "/maintenance", ""))
 
 		require.Equal(t, http.StatusOK, response.Code)
-		assert.Contains(t, response.Body.String(), "Worker status requires a newer Warden release")
+		assert.Contains(t, response.Body.String(), "Worker status is temporarily unavailable.")
 		assert.Contains(t, response.Body.String(), "Observation cleanup")
 	})
 

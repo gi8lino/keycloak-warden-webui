@@ -84,6 +84,34 @@
               {{template "icon-check"}}Deliveries
             </a>
             <a
+              href="{{.Prefix}}/incidents"
+              {{if eq .Page "incidents"}}aria-current="page"{{end}}
+              class="
+                flex items-center gap-3 rounded-lg px-3 py-3
+                text-sm font-medium text-zinc-400
+                outline-offset-2 transition-all duration-150
+                hover:bg-zinc-800 hover:text-zinc-100
+                aria-[current=page]:bg-zinc-800 aria-[current=page]:text-zinc-100
+                focus-visible:outline-2 focus-visible:outline-cyan-400
+              "
+            >
+              {{template "icon-alert"}}Incidents
+            </a>
+            <a
+              href="{{.Prefix}}/notifications"
+              {{if or (eq .Page "notifications") (eq .Page "notification-attempts")}}aria-current="page"{{end}}
+              class="
+                flex items-center gap-3 rounded-lg px-3 py-3
+                text-sm font-medium text-zinc-400
+                outline-offset-2 transition-all duration-150
+                hover:bg-zinc-800 hover:text-zinc-100
+                aria-[current=page]:bg-zinc-800 aria-[current=page]:text-zinc-100
+                focus-visible:outline-2 focus-visible:outline-cyan-400
+              "
+            >
+              {{template "icon-file"}}Notifications
+            </a>
+            <a
               href="{{.Prefix}}/maintenance"
               {{if eq .Page "maintenance"}}aria-current="page"{{end}}
               class="
@@ -192,6 +220,26 @@
                     {{template "icon-check"}}Deliveries
                   </a>
                   <a
+                    href="{{.Prefix}}/incidents"
+                    class="
+                      flex items-center gap-2 rounded-lg px-3 py-3
+                      text-sm text-zinc-200 transition-all duration-150
+                      hover:bg-zinc-800
+                    "
+                  >
+                    {{template "icon-alert"}}Incidents
+                  </a>
+                  <a
+                    href="{{.Prefix}}/notifications"
+                    class="
+                      flex items-center gap-2 rounded-lg px-3 py-3
+                      text-sm text-zinc-200 transition-all duration-150
+                      hover:bg-zinc-800
+                    "
+                  >
+                    {{template "icon-file"}}Notifications
+                  </a>
+                  <a
                     href="{{.Prefix}}/maintenance"
                     class="
                       flex items-center gap-2 rounded-lg px-3 py-3
@@ -244,7 +292,11 @@
                 {{if eq .Page "ban-history"}}
                   Review recorded ban, release, and extension events.
                 {{else if eq .Page "deliveries"}}
-                  Monitor reconciliation and delivery failures across decisions.
+                  Monitor enforcement reconciliation and delivery failures across decisions.
+                {{else if eq .Page "incidents"}}
+                  Review detection rule threshold hits.
+                {{else if or (eq .Page "notifications") (eq .Page "notification-attempts")}}
+                  Inspect incident webhook deliveries independently of ban enforcement.
                 {{else if eq .Page "detail"}}
                   Inspect the current decision, its sources, and delivery attempts.
                 {{else}}
@@ -291,6 +343,12 @@
               {{end}}
               {{if eq .Page "incidents"}}
                 {{template "incidents" .}}
+              {{end}}
+              {{if eq .Page "notifications"}}
+                {{template "notifications" .}}
+              {{end}}
+              {{if eq .Page "notification-attempts"}}
+                {{template "notification-attempts" .}}
               {{end}}
               {{if eq .Page "maintenance"}}
                 {{template "maintenance" .}}

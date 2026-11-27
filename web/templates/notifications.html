@@ -1,0 +1,44 @@
+{{define "notifications"}}
+<section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
+  <header class="border-b border-zinc-800 px-6 py-5">
+    <h2 class="text-lg font-semibold text-zinc-100">Incident deliveries</h2>
+    <p class="mt-2 text-sm text-zinc-400">Independent webhook deliveries of recorded incidents. Retry requests are subject to Warden's destination identity and eligibility checks.</p>
+  </header>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-zinc-800/60 text-xs text-zinc-400">
+        <tr><th scope="col" class="px-6 py-4">Delivery / incident</th><th scope="col" class="px-4 py-4">Destination</th><th scope="col" class="px-4 py-4">Status</th><th scope="col" class="px-4 py-4">Attempts</th><th scope="col" class="px-4 py-4">Timing</th><th scope="col" class="px-4 py-4">Actions</th></tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-800">
+        {{range .Notifications.Items}}
+          <tr>
+            <td class="px-6 py-4 text-zinc-300">#{{.ID}}<p class="text-xs text-zinc-400">Incident #{{.IncidentID}}</p></td>
+            <td class="px-4 py-4 text-zinc-300 break-words">{{.Destination}}</td>
+            <td class="px-4 py-4">
+              {{template "delivery-status" .Status}}
+              {{if .LastError}}<details class="mt-2 text-xs text-zinc-400"><summary class="cursor-pointer">Last provider error</summary><p class="mt-2 break-words text-red-200">{{.LastError}}</p></details>{{end}}
+            </td>
+            <td class="px-4 py-4 tabular-nums text-zinc-300">{{.Attempts}}</td>
+            <td class="px-4 py-4 text-zinc-300">
+              {{if .LastAttemptAt}}<p>Last: {{fmtTime .LastAttemptAt}}</p>{{end}}
+              {{if .NextAt}}<p>Next: {{fmtTime .NextAt}}</p>{{end}}
+              {{if .CompletedAt}}<p>Completed: {{fmtTime .CompletedAt}}</p>{{end}}
+            </td>
+            <td class="px-4 py-4">
+              <a href="{{$.Prefix}}/notifications/{{.ID}}/attempts" class="text-sm text-cyan-400 underline">View attempts</a>
+              {{if eq .Status "exhausted"}}
+                <form method="post" action="{{$.Prefix}}/notifications/{{.ID}}/retry" class="mt-2">
+                  <button type="submit" class="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-cyan-400 hover:bg-zinc-800">Retry notification</button>
+                </form>
+              {{end}}
+            </td>
+          </tr>
+        {{else}}
+          <tr><td colspan="6" class="px-6 py-4 text-zinc-400">No notification deliveries recorded on this page.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{template "cursor-pagination" .Cursor}}
+</section>
+{{end}}

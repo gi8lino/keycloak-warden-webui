@@ -97,6 +97,9 @@ export const test = base.extend({
       let decisionRevisions;
       let deliveryOverview;
       let deliveryHealth;
+      let incidentPage;
+      let notificationPage;
+      let notificationAttempts;
       const historyRequests = [];
       const warden = await listen((req, res) => {
         if (backendFailure) {
@@ -124,13 +127,19 @@ export const test = base.extend({
             incidentRequests.push(requested.search);
             res
               .writeHead(200, { "Content-Type": "application/json" })
-              .end(
-                JSON.stringify(
-                  incidentPages[
-                    requested.searchParams.get("before-id") || "0"
-                  ] || { items: [] },
-                ),
-              );
+              .end(JSON.stringify(incidentPages[requested.searchParams.get("before-id") || "0"] || incidentPage || { items: [] }));
+            return;
+          }
+          if (requested.pathname === "/notifications") {
+            res
+              .writeHead(200, { "Content-Type": "application/json" })
+              .end(JSON.stringify(notificationPage || { items: [] }));
+            return;
+          }
+          if (/^\/notifications\/\d+\/attempts$/.test(requested.pathname)) {
+            res
+              .writeHead(200, { "Content-Type": "application/json" })
+              .end(JSON.stringify(notificationAttempts || { items: [] }));
             return;
           }
           if (requested.pathname === "/decisions/history") {
@@ -161,10 +170,17 @@ export const test = base.extend({
 
       await use({
         url: url.origin,
-        setIncidentPages: (pages) => {
-          incidentPages = pages;
-        },
+        setIncidentPages: (pages) => { incidentPages = pages; },
         incidentRequests,
+        setIncidents: (page) => {
+          incidentPage = page;
+        },
+        setNotifications: (page) => {
+          notificationPage = page;
+        },
+        setNotificationAttempts: (page) => {
+          notificationAttempts = page;
+        },
         setDecisionRevisions: (page) => {
           decisionRevisions = page;
         },

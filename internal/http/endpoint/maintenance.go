@@ -2,11 +2,9 @@ package endpoint
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 
-	"github.com/gi8lino/keycloak-warden/pkg/client"
 	"github.com/gi8lino/keycloak-warden/pkg/model"
 )
 
@@ -40,15 +38,12 @@ func Maintenance(api API, pages *Pages) http.HandlerFunc {
 func workerStatus(ctx context.Context, api API, logger *slog.Logger) (*model.Workers, string) {
 	status, err := api.WorkerStatus(ctx)
 
-	switch {
-	case err == nil:
-		return &status, ""
-	case isWorkerStatusUnsupported(err):
-		return nil, "Worker status requires a newer Warden release."
-	default:
+	if err != nil {
 		logger.Warn("worker status unavailable", "event", "worker_status_unavailable", "error", err)
 		return nil, "Worker status is temporarily unavailable."
 	}
+
+	return &status, ""
 }
 
 // maintenanceNotice returns the success message for a completed maintenance operation.
@@ -96,10 +91,4 @@ func RunMaintenance(api API, pages *Pages) http.HandlerFunc {
 
 		pages.redirect(w, r, "/maintenance?done="+operation)
 	}
-}
-
-// isWorkerStatusUnsupported preserves maintenance support against older Warden releases.
-func isWorkerStatusUnsupported(err error) bool {
-	upstream, ok := errors.AsType[*client.Error](err)
-	return ok && upstream.Code == http.StatusNotFound
 }

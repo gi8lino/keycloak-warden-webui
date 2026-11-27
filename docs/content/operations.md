@@ -15,16 +15,19 @@ Only the **application** listener is subject to `--route-prefix`. Keep the manag
 
 ## Background workers
 
-The **Database maintenance** page also shows the running Warden's enforcement and maintenance workers: enforcement (expiry, deliveries and retries) and maintenance (pruning and optimization). The enforcement card includes active bans, current-revision pending/retrying/exhausted deliveries, the next persisted deadline and the last completed attempt. The maintenance card includes process state, schedule and last successful tasks.
+The **Database maintenance** page reports three independent Warden workers:
 
-This is a read-only snapshot from Warden's authenticated `GET /workers` application endpoint. WebUI calls the same `pkg/client.Client` used for bans, deliveries, and maintenance, and reuses Warden's `pkg/model.WorkerState` enum. An older running Warden server without `/workers` shows a compatibility notice; the existing maintenance controls continue to work.
+- **Enforcement:** ban expiry, current-revision pending/retrying/exhausted delivery counts, active bans, next deadline and last attempt.
+- **Notifications:** incident delivery lifecycle (or not configured), retained delivered/pending/retrying/exhausted counts, next deadline and last attempt.
+- **Maintenance:** process state, schedule and last successful prune/optimize tasks.
 
+This is a read-only snapshot from Warden's authenticated `GET /workers` endpoint. A temporary failure retrieving the worker snapshot does not disable maintenance operations. Counts are not proof of remote firewall enforcement.
 
 ## Database maintenance
 
 The **Database maintenance** page shows Warden's housekeeping status and can trigger two operations through the server-side administrator API:
 
-- **Prune:** remove expired login-failure observations from Warden's database.
+- **Prune:** remove expired event observations, incidents and terminal notification history according to Warden's retention settings.
 - **Optimize:** run SQLite `PRAGMA optimize` through Warden; this is not a full `VACUUM`.
 
 These operations do not delete existing ban decisions or destination acknowledgements. Warden owns the maintenance scheduler and persistence logic, not Web UI.
