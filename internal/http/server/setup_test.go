@@ -13,11 +13,9 @@ import (
 	"time"
 
 	appkitauth "github.com/containeroo/appkit/auth"
-	appkitconfig "github.com/containeroo/appkit/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gi8lino/warden-webui/internal/cli"
 	"github.com/gi8lino/warden-webui/internal/db"
 	"github.com/gi8lino/warden-webui/internal/http/auth"
 	"github.com/gi8lino/warden-webui/internal/http/endpoint"
@@ -48,13 +46,12 @@ func newLocalApplication(t *testing.T, prefix string, store *db.Store) http.Hand
 func newLocalServerConfig(t *testing.T, prefix string, store *db.Store) Config {
 	t.Helper()
 
-	cfg := cli.Flags{
-		Server: appkitconfig.Server{
-			PublicURL:   "http://127.0.0.1:8082" + prefix,
-			RoutePrefix: prefix,
-		},
-		Authentication: appkitconfig.Authentication{SessionLifetime: time.Hour},
-		SetupToken:     bootstrapSecret,
+	cfg := auth.Config{
+		PublicURL:       "http://127.0.0.1:8082" + prefix,
+		RoutePrefix:     prefix,
+		Mode:            appkitauth.ModeLocal,
+		SessionLifetime: time.Hour,
+		SetupToken:      bootstrapSecret,
 	}
 	identity, err := auth.New(t.Context(), cfg, store)
 	require.NoError(t, err)
@@ -69,7 +66,7 @@ func newLocalServerConfig(t *testing.T, prefix string, store *db.Store) Config {
 	return Config{
 		InfrastructureConfig: InfrastructureConfig{
 			RoutePrefix: prefix,
-			PublicURL:   cfg.Server.PublicURL,
+			PublicURL:   cfg.PublicURL,
 			Static:      static,
 			Pages:       pages,
 			Logger:      logger,
@@ -113,16 +110,14 @@ func TestBrowserSetup(t *testing.T) {
 		t.Cleanup(func() { require.NoError(t, store.Close()) })
 
 		mode := appkitauth.ModeProxy
-		cfg := cli.Flags{
-			Server: appkitconfig.Server{PublicURL: "http://127.0.0.1:8082"},
-			Authentication: appkitconfig.Authentication{
-				ModeOverride:    &mode,
-				SessionLifetime: time.Hour,
-			},
-			Proxy:        appkitconfig.Proxy{TrustedCIDRs: []string{"127.0.0.1/32"}},
-			AdminGroup:   "warden-admins",
-			SetupToken:   bootstrapSecret,
-			SetupSubject: "operator",
+		cfg := auth.Config{
+			PublicURL:       "http://127.0.0.1:8082",
+			Mode:            mode,
+			SessionLifetime: time.Hour,
+			Proxy:           testProxyConfig(),
+			AdminGroup:      "warden-admins",
+			SetupToken:      bootstrapSecret,
+			SetupSubject:    "operator",
 		}
 		identity, err := auth.New(t.Context(), cfg, store)
 		require.NoError(t, err)
@@ -135,7 +130,7 @@ func TestBrowserSetup(t *testing.T) {
 
 		app := New(Config{
 			InfrastructureConfig: InfrastructureConfig{
-				PublicURL: cfg.Server.PublicURL,
+				PublicURL: cfg.PublicURL,
 				Static:    static,
 				Pages:     pages,
 				Logger:    logger,
@@ -461,22 +456,18 @@ func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string, lo
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, store.Close()) })
 
-	cfg := cli.Flags{
-		Server: appkitconfig.Server{
-			PublicURL:   "http://127.0.0.1:8082" + prefix,
-			RoutePrefix: prefix,
-		},
-		Authentication: appkitconfig.Authentication{
-			ModeOverride:    &mode,
-			LocalLogin:      localLogin,
-			SessionLifetime: time.Hour,
-		},
-		AdminGroup:   "warden-admins",
-		SetupSubject: "operator",
-		SetupToken:   bootstrapSecret,
+	cfg := auth.Config{
+		PublicURL:       "http://127.0.0.1:8082" + prefix,
+		RoutePrefix:     prefix,
+		Mode:            mode,
+		LocalLogin:      localLogin,
+		SessionLifetime: time.Hour,
+		AdminGroup:      "warden-admins",
+		SetupSubject:    "operator",
+		SetupToken:      bootstrapSecret,
 	}
 	if mode == appkitauth.ModeProxy {
-		cfg.Proxy.TrustedCIDRs = []string{"127.0.0.1/32"}
+		cfg.Proxy = testProxyConfig()
 	}
 	if mode == appkitauth.ModeOIDC {
 		// Allow local recovery to avoid OIDC network discovery in this route test.
@@ -495,7 +486,7 @@ func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string, lo
 	handlers := New(Config{
 		InfrastructureConfig: InfrastructureConfig{
 			RoutePrefix: prefix,
-			PublicURL:   cfg.Server.PublicURL,
+			PublicURL:   cfg.PublicURL,
 			Static:      static,
 			Pages:       pages,
 			Logger:      logger,

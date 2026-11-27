@@ -12,7 +12,7 @@ import (
 
 // Infrastructure owns persistence and the server-side Warden API client.
 type Infrastructure struct {
-	// store persists the Web UI's administrator and sessions.
+	// store persists accounts and sessions.
 	store *db.Store
 	// warden authenticates administrative requests to the upstream Warden API.
 	warden *client.Client
@@ -25,7 +25,6 @@ func NewInfrastructure(ctx context.Context, cfg cli.Flags) (*Infrastructure, err
 		return nil, fmt.Errorf("open Web UI database: %w", err)
 	}
 
-	// Keep outbound Warden API limits separate from Web UI's HTTP server settings.
 	options := []client.Option{
 		client.WithRequestTimeout(cfg.WardenRequestTimeout),
 		client.WithMaintenanceTimeout(cfg.WardenMaintenanceTimeout),

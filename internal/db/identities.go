@@ -4,23 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-)
 
-// IdentityLink binds a verified provider subject to one local account.
-type IdentityLink struct {
-	// Issuer identifies the authority that verifies the subject.
-	Issuer string
-	// Subject is the immutable OIDC subject or trusted proxy username.
-	Subject string
-	// Username owns the mapping in the local directory.
-	Username string
-}
+	"github.com/gi8lino/warden-webui/internal/accounts"
+)
 
 // ErrIdentityLinked means an administrator must unlink an identity before reassigning it.
 var ErrIdentityLinked = errors.New("identity already linked")
 
 // LinkIdentity inserts an explicit mapping without transferring existing ownership.
-func (s *Store) LinkIdentity(ctx context.Context, link IdentityLink) error {
+func (s *Store) LinkIdentity(ctx context.Context, link accounts.IdentityLink) error {
 	result, err := s.db.ExecContext(ctx, `
 		INSERT INTO identity_links (issuer, subject, username)
 		SELECT ?, ?, username
@@ -41,7 +33,7 @@ func (s *Store) LinkIdentity(ctx context.Context, link IdentityLink) error {
 }
 
 // UnlinkIdentity drops the mapping and invalidates sessions bound to it by foreign key.
-func (s *Store) UnlinkIdentity(ctx context.Context, link IdentityLink) error {
+func (s *Store) UnlinkIdentity(ctx context.Context, link accounts.IdentityLink) error {
 	result, err := s.db.ExecContext(ctx, `
 		DELETE FROM identity_links
 		WHERE issuer = ?
@@ -79,7 +71,7 @@ func (s *Store) ResolveIdentity(ctx context.Context, issuer, subject string) (st
 }
 
 // IdentityLinks lists the explicit mappings displayed in the administration directory.
-func (s *Store) IdentityLinks(ctx context.Context, issuer string) ([]IdentityLink, error) {
+func (s *Store) IdentityLinks(ctx context.Context, issuer string) ([]accounts.IdentityLink, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT username, issuer, subject
 		FROM identity_links
@@ -91,9 +83,9 @@ func (s *Store) IdentityLinks(ctx context.Context, issuer string) ([]IdentityLin
 	}
 	defer rows.Close() //nolint:errcheck
 
-	var links []IdentityLink
+	var links []accounts.IdentityLink
 	for rows.Next() {
-		var link IdentityLink
+		var link accounts.IdentityLink
 		if err := rows.Scan(&link.Username, &link.Issuer, &link.Subject); err != nil {
 			return nil, err
 		}
@@ -146,7 +138,7 @@ func (s *Store) PendingIdentities(ctx context.Context, issuer string) ([]string,
 }
 
 // ApproveIdentity links a pending verified subject to an enabled account and consumes its request atomically.
-func (s *Store) ApproveIdentity(ctx context.Context, link IdentityLink) error {
+func (s *Store) ApproveIdentity(ctx context.Context, link accounts.IdentityLink) error {
 	result, err := s.db.ExecContext(ctx, `
 		INSERT INTO identity_links (issuer, subject, username)
 		SELECT p.issuer, p.subject, u.username

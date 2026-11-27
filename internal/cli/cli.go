@@ -1,4 +1,4 @@
-// Package flags parses Warden Web UI deployment flags and environment variables.
+// Package cli parses Warden Web UI deployment flags and environment variables.
 package cli
 
 import (
@@ -81,7 +81,6 @@ func Parse(args []string, version string) (flags Flags, err error) {
 		appkitconfig.SectionLogging,
 	)
 
-	// This CLI has flags only; silently accepting positional arguments hides typos.
 	tf.NoPositional()
 
 	localhost := net.IPv4(127, 0, 0, 1)
@@ -98,8 +97,7 @@ func Parse(args []string, version string) (flags Flags, err error) {
 	registerLocalFlags(tf, &flags)
 
 	tf.StringVar(&flags.ThemeDirectory, "theme-directory", "", "Directory containing custom theme TOML files").
-		Section(sectionAppearance).
-		Value()
+		Section(sectionAppearance)
 
 	if err := tf.Parse(args); err != nil {
 		return Flags{}, err
@@ -112,7 +110,7 @@ func Parse(args []string, version string) (flags Flags, err error) {
 	return flags, nil
 }
 
-// RegisterAuthentication configures
+// RegisterAuthentication registers browser authentication flags.
 func RegisterAuthentication(tf *tinyflags.FlagSet, cfg *Flags) func() {
 	finalizeAuthentication := appkitconfig.RegisterAuthentication(tf, &cfg.Authentication, appkitconfig.AuthenticationOptions{
 		RegisterSessionLifetime: true,
@@ -129,50 +127,39 @@ func RegisterAuthentication(tf *tinyflags.FlagSet, cfg *Flags) func() {
 func registerWardenFlags(tf *tinyflags.FlagSet, cfg *Flags) {
 	tf.StringVar(&cfg.WardenURL, "warden-url", "http://127.0.0.1:8080", "Warden application API URL").
 		Section(sectionWarden).
-		NotBlank().
-		Value()
+		NotBlank()
 	tf.StringVar(&cfg.WardenToken, "warden-admin-token", "", "Bearer token for Warden administration").
 		Section(sectionWarden).
-		OverriddenValueMaskFn(tinyflags.MaskFirstLastLimit(5)).
-		Value()
-	// Allow HTTP to a remote Warden Service only when explicitly requested.
+		OverriddenValueMaskFn(tinyflags.MaskFirstLastLimit(5))
 	tf.BoolVar(&cfg.AllowInsecureWardenHTTP, "allow-insecure-warden-http", false,
 		"Allow unencrypted HTTP to a non-loopback Warden URL (admin token is sent in cleartext)").
 		Section(sectionWarden).
-		Strict().
-		Value()
+		Strict()
 	tf.DurationVar(&cfg.WardenRequestTimeout, "warden-request-timeout", client.DefaultRequestTimeout,
 		"Timeout for ordinary Warden administrative requests").
 		Section(sectionWarden).
-		Validate(tinyflags.Positive[time.Duration]()).
-		Value()
+		Validate(tinyflags.Positive[time.Duration]())
 	tf.DurationVar(&cfg.WardenMaintenanceTimeout, "warden-maintenance-timeout", client.DefaultMaintenanceTimeout,
 		"Timeout for Warden maintenance requests").
 		Section(sectionWarden).
-		Validate(tinyflags.Positive[time.Duration]()).
-		Value()
+		Validate(tinyflags.Positive[time.Duration]())
 	tf.IntVar(&cfg.WardenMaxResponseBytes, "warden-max-response-bytes", client.DefaultMaxResponseBytes,
 		"Maximum successful Warden administrative response size in bytes").
 		Section(sectionWarden).
-		Validate(client.ValidateMaxResponseBytes).
-		Value()
+		Validate(client.ValidateMaxResponseBytes)
 }
 
 // registerLocalFlags configures the private credential database and first-run bootstrap secret.
 func registerLocalFlags(tf *tinyflags.FlagSet, cfg *Flags) {
 	tf.StringVar(&cfg.Database, "database", "warden-webui.db", "Private Web UI SQLite database path").
 		Section(appkitconfig.SectionDatabase).
-		NotBlank().
-		Value()
+		NotBlank()
 	tf.StringVar(&cfg.AdminGroup, "admin-group", "warden-admins", "Required group for OIDC and trusted-proxy administrators").
 		Section(appkitconfig.SectionAuthentication).
-		NotBlank().
-		Value()
+		NotBlank()
 	tf.StringVar(&cfg.SetupSubject, "setup-subject", "", "External subject for the initial administrator (first setup only)").
-		Section(sectionSetup).
-		Value()
+		Section(sectionSetup)
 	tf.StringVar(&cfg.SetupToken, "setup-token", "", "One-time setup authorization token (at least 32 characters)").
 		Section(sectionSetup).
-		OverriddenValueMaskFn(tinyflags.MaskFirstLastLimit(5)).
-		Value()
+		OverriddenValueMaskFn(tinyflags.MaskFirstLastLimit(5))
 }

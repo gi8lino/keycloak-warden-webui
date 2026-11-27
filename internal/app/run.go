@@ -1,4 +1,4 @@
-// Package app composes runtime dependencies and starts Warden Web UI.
+// Package app runs Warden Web UI.
 package app
 
 import (
@@ -16,7 +16,7 @@ import (
 	httpserver "github.com/gi8lino/warden-webui/internal/http/server"
 )
 
-// Run parses flags, initializes Appkit browser authentication, and serves both listeners.
+// Run parses flags, initializes the application, and serves both listeners.
 func Run(ctx context.Context, args []string, assets fs.FS, version string, stdout, stderr io.Writer) error {
 	flags, err := cli.Parse(args, version)
 	if err != nil {
@@ -28,7 +28,6 @@ func Run(ctx context.Context, args []string, assets fs.FS, version string, stdou
 		return err
 	}
 
-	// Configure process logging and record the effective application identity.
 	logger := appkitlogging.Setup(flags.Logging.Format, flags.Logging.Debug, stdout)
 	setupLogger := logger.With("component", "setup")
 	setupLogger.Info(
@@ -47,7 +46,6 @@ func Run(ctx context.Context, args []string, assets fs.FS, version string, stdou
 	ctx, stop := grace.SignalContext(ctx)
 	defer stop()
 
-	// Construct infrastructure and retain ownership until both listeners stop.
 	infrastructure, err := bootstrap.NewInfrastructure(ctx, flags)
 	if err != nil {
 		setupLogger.Error(

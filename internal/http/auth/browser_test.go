@@ -11,11 +11,9 @@ import (
 
 	appkitauth "github.com/containeroo/appkit/auth"
 	"github.com/containeroo/appkit/auth/session"
-	appkitconfig "github.com/containeroo/appkit/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gi8lino/warden-webui/internal/cli"
 	"github.com/gi8lino/warden-webui/internal/db"
 )
 
@@ -32,11 +30,12 @@ func authStore(t *testing.T) *db.Store {
 }
 
 // localConfig supplies the deployment settings for password authentication tests.
-func localConfig() cli.Flags {
-	return cli.Flags{
-		Server:         appkitconfig.Server{PublicURL: "http://127.0.0.1:8082"},
-		Authentication: appkitconfig.Authentication{SessionLifetime: time.Hour},
-		SetupToken:     testSetupToken,
+func localConfig() Config {
+	return Config{
+		PublicURL:       "http://127.0.0.1:8082",
+		Mode:            appkitauth.ModeLocal,
+		SessionLifetime: time.Hour,
+		SetupToken:      testSetupToken,
 	}
 }
 
@@ -47,7 +46,7 @@ func TestNew(t *testing.T) {
 		t.Parallel()
 		mode := appkitauth.ModeNone
 		cfg := localConfig()
-		cfg.Authentication.ModeOverride = &mode
+		cfg.Mode = mode
 		_, err := New(t.Context(), cfg, authStore(t))
 		require.ErrorContains(t, err, "unauthenticated mode is not supported")
 	})
@@ -56,7 +55,7 @@ func TestNew(t *testing.T) {
 		t.Parallel()
 		mode := appkitauth.Mode("unsupported")
 		cfg := localConfig()
-		cfg.Authentication.ModeOverride = &mode
+		cfg.Mode = mode
 		_, err := New(t.Context(), cfg, authStore(t))
 		require.ErrorContains(t, err, "unsupported authentication mode")
 	})

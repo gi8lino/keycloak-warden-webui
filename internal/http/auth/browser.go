@@ -9,22 +9,21 @@ import (
 	appkitauth "github.com/containeroo/appkit/auth"
 	"github.com/containeroo/appkit/auth/oidc"
 
-	"github.com/gi8lino/warden-webui/internal/cli"
 	"github.com/gi8lino/warden-webui/internal/db"
 )
 
 // New configures Appkit adapters around the application's durable credential and session store.
-func New(ctx context.Context, cfg cli.Flags, repository *db.Store) (*Service, error) {
+func New(ctx context.Context, cfg Config, repository *db.Store) (*Service, error) {
 	if repository == nil {
 		return nil, errors.New("authentication repository is required")
 	}
 
-	manager, cookies := newSessions(repository, cfg.Authentication.SessionLifetime, cfg.Server.PublicURL, cfg.Server.RoutePrefix)
+	manager, cookies := newSessions(repository, cfg.SessionLifetime, cfg.PublicURL, cfg.RoutePrefix)
 	service := &Service{
-		mode:         cfg.Mode(),
-		recovery:     cfg.Authentication.LocalLogin,
+		mode:         cfg.Mode,
+		recovery:     cfg.LocalLogin,
 		local:        newLocal(repository, manager),
-		routePrefix:  cfg.Server.RoutePrefix,
+		routePrefix:  cfg.RoutePrefix,
 		adminGroup:   cfg.AdminGroup,
 		repository:   repository,
 		setupSubject: cfg.SetupSubject,
@@ -39,7 +38,7 @@ func New(ctx context.Context, cfg cli.Flags, repository *db.Store) (*Service, er
 
 	case appkitauth.ModeOIDC:
 		service.discoverOIDC = func(ctx context.Context) (*oidc.Flow, error) {
-			return newOIDC(ctx, cfg.OIDC, cfg.Server.PublicURL, cfg.Server.RoutePrefix)
+			return newOIDC(ctx, cfg.OIDC, cfg.PublicURL, cfg.RoutePrefix)
 		}
 		if !service.recovery {
 			if _, err := service.oidcFlow(ctx); err != nil {
@@ -49,7 +48,7 @@ func New(ctx context.Context, cfg cli.Flags, repository *db.Store) (*Service, er
 		service.issuer = cfg.OIDC.Issuer
 
 	case appkitauth.ModeProxy:
-		authenticator, err := newTrustedProxy(cfg.Proxy, cfg.Overrides, cfg.AdminGroup, service.resolveExternal)
+		authenticator, err := newTrustedProxy(cfg.Proxy, cfg.AdminGroup, service.resolveExternal)
 		if err != nil {
 			return nil, err
 		}

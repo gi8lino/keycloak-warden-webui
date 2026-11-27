@@ -8,8 +8,7 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/gi8lino/keycloak-warden/pkg/client"
-	"github.com/gi8lino/keycloak-warden/pkg/deliverystate"
+	"github.com/gi8lino/keycloak-warden/pkg/model"
 )
 
 const (
@@ -30,7 +29,7 @@ type deliveryHistoryView struct {
 	// Current combines known destinations and their latest delivery progress.
 	Current []deliveryDestinationView
 	// Entries are the selected historical groups, independent of the current decision.
-	Entries []client.Delivery
+	Entries []model.Delivery
 }
 
 // parseHistoryQuery validates the supported pagination selectors before contacting Warden.
@@ -72,7 +71,7 @@ func historyView(
 	through int64,
 	next int,
 	current []deliveryDestinationView,
-	entries []client.Delivery,
+	entries []model.Delivery,
 ) deliveryHistoryView {
 	path := prefix + "/bans/" + url.PathEscape(id)
 	view := deliveryHistoryView{
@@ -105,7 +104,7 @@ func historyPageURL(path string, page int, through int64) string {
 // deliveryStatusView keeps typed delivery progress separate from missing history.
 type deliveryStatusView struct {
 	// Status is Warden's delivery lifecycle value when known.
-	Status deliverystate.Status
+	Status model.DeliveryStatus
 	// Known distinguishes available progress from an unacknowledged revision with no history.
 	Known bool
 }
@@ -124,10 +123,10 @@ type deliveryDestinationView struct {
 }
 
 // deliveryStatus reports known current progress without guessing from older attempts.
-func deliveryStatus(ack client.Acknowledgement, revision int64, history []client.Delivery) deliveryStatusView {
+func deliveryStatus(ack model.Acknowledgement, revision int64, history []model.Delivery) deliveryStatusView {
 	if ack.Revision > 0 && ack.Revision >= revision {
 		return deliveryStatusView{
-			Status: deliverystate.StatusDelivered,
+			Status: model.DeliveryDelivered,
 			Known:  true,
 		}
 	}
@@ -147,7 +146,7 @@ func deliveryStatus(ack client.Acknowledgement, revision int64, history []client
 // currentDeliveryViews merges acknowledgements with the complete current-revision
 // status snapshot, independently of paginated delivery attempts.
 // Older history is never interpreted as evidence of current delivery progress.
-func currentDeliveryViews(record client.Record) []deliveryDestinationView {
+func currentDeliveryViews(record model.Record) []deliveryDestinationView {
 	views := make(map[string]deliveryDestinationView)
 
 	for _, ack := range record.Deliveries {
@@ -168,7 +167,7 @@ func currentDeliveryViews(record client.Record) []deliveryDestinationView {
 			view = deliveryDestinationView{
 				Destination: entry.Destination,
 				Progress: deliveryStatus(
-					client.Acknowledgement{Destination: entry.Destination},
+					model.Acknowledgement{Destination: entry.Destination},
 					record.Decision.Revision,
 					record.CurrentDeliveries,
 				),
@@ -176,10 +175,10 @@ func currentDeliveryViews(record client.Record) []deliveryDestinationView {
 		}
 		// Completed releases may have had their delivery queue rows removed.
 		// A delivered history status remains evidence of an accepted revision.
-		if entry.Status == deliverystate.StatusDelivered && view.AcknowledgedRevision < entry.Revision {
+		if entry.Status == model.DeliveryDelivered && view.AcknowledgedRevision < entry.Revision {
 			view.AcknowledgedRevision = entry.Revision
 			view.HasAcknowledgement = true
-			view.Progress = deliveryStatus(client.Acknowledgement{
+			view.Progress = deliveryStatus(model.Acknowledgement{
 				Destination: entry.Destination,
 				Revision:    entry.Revision,
 			}, record.Decision.Revision, nil)
@@ -197,7 +196,7 @@ func currentDeliveryViews(record client.Record) []deliveryDestinationView {
 }
 
 // newestAttempts returns a reversed copy so recent outcomes appear first without mutating API data.
-func newestAttempts(attempts []client.DeliveryAttempt) []client.DeliveryAttempt {
+func newestAttempts(attempts []model.DeliveryAttempt) []model.DeliveryAttempt {
 	result := slices.Clone(attempts)
 	slices.Reverse(result)
 	return result

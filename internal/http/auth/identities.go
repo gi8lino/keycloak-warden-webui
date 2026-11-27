@@ -7,6 +7,8 @@ import (
 
 	appkitauth "github.com/containeroo/appkit/auth"
 	"github.com/containeroo/appkit/auth/provisioning"
+
+	"github.com/gi8lino/warden-webui/internal/accounts"
 	"github.com/gi8lino/warden-webui/internal/db"
 )
 
@@ -45,7 +47,7 @@ func (s *Service) lookupAdministrator(ctx context.Context, id provisioning.Ident
 }
 
 // IdentityLinks lists explicit mappings for the authenticated administration page.
-func (s *Service) IdentityLinks(ctx context.Context) ([]db.IdentityLink, error) {
+func (s *Service) IdentityLinks(ctx context.Context) ([]accounts.IdentityLink, error) {
 	if s.issuer == "" {
 		return nil, nil
 	}
@@ -65,7 +67,7 @@ func (s *Service) UpdateIdentity(ctx context.Context, actor User, name, subject 
 	if !s.canUpdateIdentity(actor, subject) {
 		return ErrInvalidLocalInput
 	}
-	link := db.IdentityLink{Username: name, Issuer: s.issuer, Subject: subject}
+	link := accounts.IdentityLink{Username: name, Issuer: s.issuer, Subject: subject}
 	if add {
 		return accountOperationError(s.repository.ApproveIdentity(ctx, link))
 	}

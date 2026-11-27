@@ -1,12 +1,13 @@
 package endpoint
 
 import (
-	"github.com/gi8lino/keycloak-warden/pkg/deliverystate"
 	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/gi8lino/keycloak-warden/pkg/model"
 )
 
 func TestParseOverviewQuery(t *testing.T) {
@@ -72,7 +73,7 @@ func TestDeliveriesRejectsSuperseded(t *testing.T) {
 		t.Parallel()
 		values, _, err := parseOverviewQuery("status=superseded", overviewStatusParam, overviewDestinationParam)
 		require.NoError(t, err)
-		status := deliverystate.Status(values.Get(overviewStatusParam))
+		status := model.DeliveryStatus(values.Get(overviewStatusParam))
 		assert.False(t, status.Current())
 	})
 }

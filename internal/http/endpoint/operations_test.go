@@ -10,11 +10,12 @@ import (
 	"testing"
 
 	appkitauth "github.com/containeroo/appkit/auth"
-	"github.com/gi8lino/keycloak-warden/pkg/client"
-	"github.com/gi8lino/warden-webui/internal/http/auth"
-	"github.com/gi8lino/warden-webui/web"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/gi8lino/keycloak-warden/pkg/model"
+	"github.com/gi8lino/warden-webui/internal/http/auth"
+	"github.com/gi8lino/warden-webui/web"
 )
 
 // retryAPI captures the browser request translated into Warden's administrative contract.
@@ -22,11 +23,11 @@ type retryAPI struct {
 	// API embeds unused operations.
 	API
 	// request captures the exact retry request.
-	request client.RetryRequest
+	request model.RetryRequest
 }
 
 // RetryDelivery records the request for assertions.
-func (a *retryAPI) RetryDelivery(_ context.Context, request client.RetryRequest) error {
+func (a *retryAPI) RetryDelivery(_ context.Context, request model.RetryRequest) error {
 	a.request = request
 	return nil
 }
@@ -47,7 +48,7 @@ func TestRetryDelivery(t *testing.T) {
 		RetryDelivery(api, pages)(response, request)
 		assert.Equal(t, http.StatusSeeOther, response.Code)
 		assert.Equal(t, "/deliveries?notice=retry-queued", response.Header().Get("Location"))
-		assert.Equal(t, client.RetryRequest{DecisionID: "one", Revision: 3, Destination: "webhook.edge", Actor: "operator"}, api.request)
+		assert.Equal(t, model.RetryRequest{DecisionID: "one", Revision: 3, Destination: "webhook.edge", Actor: "operator"}, api.request)
 	})
 
 	t.Run("rejects duplicate revision selector", func(t *testing.T) {

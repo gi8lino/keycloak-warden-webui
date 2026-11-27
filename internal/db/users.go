@@ -4,17 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-)
 
-// LocalUser describes one account in the administration directory.
-type LocalUser struct {
-	// Username is the local sign-in identifier.
-	Username string
-	// Enabled determines whether the account can sign in.
-	Enabled bool
-	// Founder identifies the bootstrap administrator whose access is protected.
-	Founder bool
-}
+	"github.com/gi8lino/warden-webui/internal/accounts"
+)
 
 // ErrUsernameTaken indicates that a local sign-in name is already registered.
 var ErrUsernameTaken = errors.New("username is already registered")
@@ -103,7 +95,7 @@ func (s *Store) initializeUsers(ctx context.Context) error {
 }
 
 // LocalUsers lists accounts without exposing credential material.
-func (s *Store) LocalUsers(ctx context.Context) ([]LocalUser, error) {
+func (s *Store) LocalUsers(ctx context.Context) ([]accounts.LocalUser, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT username, enabled, id = 1
 		FROM local_users
@@ -114,9 +106,9 @@ func (s *Store) LocalUsers(ctx context.Context) ([]LocalUser, error) {
 	}
 	defer rows.Close() //nolint:errcheck
 
-	var users []LocalUser
+	var users []accounts.LocalUser
 	for rows.Next() {
-		var u LocalUser
+		var u accounts.LocalUser
 		if err := rows.Scan(&u.Username, &u.Enabled, &u.Founder); err != nil {
 			return nil, err
 		}

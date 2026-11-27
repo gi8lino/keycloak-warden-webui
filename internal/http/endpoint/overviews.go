@@ -10,8 +10,7 @@ import (
 	"strings"
 
 	"github.com/gi8lino/keycloak-warden/pkg/client"
-	"github.com/gi8lino/keycloak-warden/pkg/decisionstate"
-	"github.com/gi8lino/keycloak-warden/pkg/deliverystate"
+	"github.com/gi8lino/keycloak-warden/pkg/model"
 )
 
 const (
@@ -128,7 +127,7 @@ func BanHistory(api API, pages *Pages) http.HandlerFunc {
 			ip = address.Unmap().String()
 		}
 
-		state := decisionstate.State(values.Get(overviewStateParam))
+		state := model.DecisionState(values.Get(overviewStateParam))
 		if state != "" && !state.Valid() {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid decision state.")
 			return
@@ -179,7 +178,7 @@ func Deliveries(api API, pages *Pages) http.HandlerFunc {
 			return
 		}
 
-		status := deliverystate.Status(values.Get(overviewStatusParam))
+		status := model.DeliveryStatus(values.Get(overviewStatusParam))
 		if status != "" && !status.Current() {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid delivery status.")
 			return

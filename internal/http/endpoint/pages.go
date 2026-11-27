@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gi8lino/warden-webui/themes"
-
 	appkitauth "github.com/containeroo/appkit/auth"
-	"github.com/gi8lino/keycloak-warden/pkg/client"
-	"github.com/gi8lino/warden-webui/internal/db"
+
+	"github.com/gi8lino/keycloak-warden/pkg/model"
+	"github.com/gi8lino/warden-webui/internal/accounts"
 	"github.com/gi8lino/warden-webui/internal/http/auth"
+	"github.com/gi8lino/warden-webui/themes"
 )
 
 // ThemePreferences is the narrow persistence capability required by page rendering.
@@ -68,37 +68,37 @@ type pageData struct {
 	// Error is a safe operator-facing error message.
 	Error string
 	// Bans are Warden's current active decisions.
-	Bans []client.Record
+	Bans []model.Record
 	// Ban is the selected persisted decision.
-	Ban client.Record
+	Ban model.Record
 	// History provides navigation and current delivery progress for decision details.
 	History deliveryHistoryView
 	// Revisions contains one page of immutable ban and release changes.
-	Revisions client.RevisionPage
+	Revisions model.RevisionPage
 	// DeliveryList contains one page of current destination reconciliation states.
-	DeliveryList client.DeliveryOverviewPage
+	DeliveryList model.DeliveryOverviewPage
 	// DeliveryHealth aggregates current status across every delivery page.
-	DeliveryHealth []client.DestinationHealth
+	DeliveryHealth []model.DestinationHealth
 	// HealthUnavailable indicates the aggregate query failed.
 	HealthUnavailable bool
 	// Timeline contains the selected chronological audit page.
-	Timeline client.TimelinePage
+	Timeline model.TimelinePage
 	// Observations contains the selected hypothetical ban page.
-	Observations client.ObservationPage
+	Observations model.ObservationPage
 	// Overview supplies filtering and pagination for cross-decision pages.
 	Overview overviewNavigation
 	// LocalUser permits local account actions only for local sessions.
 	LocalUser bool
 	// Users lists local accounts on the administration page.
-	Users []db.LocalUser
+	Users []accounts.LocalUser
 	// Links shows the verified identities assigned to accounts.
-	Links []db.IdentityLink
+	Links []accounts.IdentityLink
 	// Pending contains verified subjects awaiting a local account assignment.
 	Pending []string
 	// Maintenance contains the maintenance scheduler state.
-	Maintenance client.Maintenance
+	Maintenance model.Maintenance
 	// Workers is the optional live status of Warden background workers.
-	Workers *client.Workers
+	Workers *model.Workers
 	// WorkersUnavailable explains why a worker snapshot could not be read.
 	WorkersUnavailable string
 }

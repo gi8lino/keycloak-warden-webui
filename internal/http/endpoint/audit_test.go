@@ -12,11 +12,13 @@ import (
 	"testing"
 
 	appkitauth "github.com/containeroo/appkit/auth"
-	"github.com/gi8lino/keycloak-warden/pkg/client"
-	"github.com/gi8lino/warden-webui/internal/http/auth"
-	"github.com/gi8lino/warden-webui/web"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/gi8lino/keycloak-warden/pkg/client"
+	"github.com/gi8lino/keycloak-warden/pkg/model"
+	"github.com/gi8lino/warden-webui/internal/http/auth"
+	"github.com/gi8lino/warden-webui/web"
 )
 
 // auditAPI injects an outcome while asserting the request is logged before execution.
@@ -30,21 +32,21 @@ type auditAPI struct {
 }
 
 // OptimizeDatabase returns the configured maintenance result.
-func (a auditAPI) OptimizeDatabase(context.Context) (client.Maintenance, error) {
+func (a auditAPI) OptimizeDatabase(context.Context) (model.Maintenance, error) {
 	a.before()
-	return client.Maintenance{}, a.err
+	return model.Maintenance{}, a.err
 }
 
 // Ban returns the configured manual decision result.
-func (a auditAPI) Ban(context.Context, client.ManualBanRequest) (client.Record, error) {
+func (a auditAPI) Ban(context.Context, client.ManualBanRequest) (model.Record, error) {
 	a.before()
-	return client.Record{}, a.err
+	return model.Record{}, a.err
 }
 
 // Unban returns the configured source-release result.
-func (a auditAPI) Unban(context.Context, string) (client.Record, error) {
+func (a auditAPI) Unban(context.Context, string) (model.Record, error) {
 	a.before()
-	return client.Record{}, a.err
+	return model.Record{}, a.err
 }
 
 func TestAdministrativeActionLogs(t *testing.T) {

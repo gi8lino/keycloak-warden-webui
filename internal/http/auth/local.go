@@ -10,6 +10,7 @@ import (
 	"github.com/containeroo/appkit/auth/local"
 	"github.com/containeroo/appkit/auth/session"
 
+	"github.com/gi8lino/warden-webui/internal/accounts"
 	"github.com/gi8lino/warden-webui/internal/db"
 )
 
@@ -65,9 +66,9 @@ func (s *Service) SetupLocal(w http.ResponseWriter, r *http.Request, token, user
 	}
 
 	username = strings.TrimSpace(username)
-	var link *db.IdentityLink
+	var link *accounts.IdentityLink
 	if s.mode != appkitauth.ModeLocal && s.setupSubject != "" {
-		link = &db.IdentityLink{
+		link = &accounts.IdentityLink{
 			Issuer:   s.issuer,
 			Subject:  s.setupSubject,
 			Username: username,
@@ -154,7 +155,7 @@ func (s *Service) ChangeLocalPassword(ctx context.Context, user User, oldPasswor
 }
 
 // LocalUsers returns the directory for an authenticated administrator.
-func (s *Service) LocalUsers(ctx context.Context, actor User) ([]db.LocalUser, error) {
+func (s *Service) LocalUsers(ctx context.Context, actor User) ([]accounts.LocalUser, error) {
 	if actor.Name == "" {
 		return nil, appkitauth.ErrForbidden
 	}

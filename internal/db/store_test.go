@@ -8,6 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/gi8lino/warden-webui/internal/accounts"
 )
 
 // testStore opens an isolated SQLite store and registers cleanup.
@@ -95,7 +97,7 @@ func TestStoredSessions(t *testing.T) {
 	t.Run("persists and revokes externally verified session", func(t *testing.T) {
 		t.Parallel()
 		store := testStore(t)
-		require.NoError(t, store.CreateFounder(t.Context(), "oidc-admin", "hash", &IdentityLink{Issuer: "issuer", Subject: "sub"}))
+		require.NoError(t, store.CreateFounder(t.Context(), "oidc-admin", "hash", &accounts.IdentityLink{Issuer: "issuer", Subject: "sub"}))
 		require.NoError(t, store.CreateSession(t.Context(), "hash", Session{Name: "oidc-admin", Issuer: "issuer", Subject: "sub"}, time.Now().Add(time.Hour)))
 		identity, err := store.LookupSession(t.Context(), "hash")
 		require.NoError(t, err)
@@ -112,7 +114,7 @@ func TestStoredSessions(t *testing.T) {
 		store := testStore(t)
 		require.NoError(t, store.CreateInitialAdministrator(t.Context(), "admin", "old-hash"))
 		require.NoError(t, store.CreateSession(t.Context(), "local", Session{Name: "admin", Local: true}, time.Now().Add(time.Hour)))
-		require.NoError(t, store.LinkIdentity(t.Context(), IdentityLink{Username: "admin", Issuer: "issuer", Subject: "sub"}))
+		require.NoError(t, store.LinkIdentity(t.Context(), accounts.IdentityLink{Username: "admin", Issuer: "issuer", Subject: "sub"}))
 		require.NoError(t, store.CreateSession(t.Context(), "oidc", Session{Name: "admin", Issuer: "issuer", Subject: "sub"}, time.Now().Add(time.Hour)))
 
 		require.NoError(t, store.ChangePassword(t.Context(), "admin", "old-hash", "new-hash"))
@@ -179,7 +181,7 @@ func TestMigrateInitialAdministrator(t *testing.T) {
 func TestIdentityOwnership(t *testing.T) {
 	t.Parallel()
 	store := testStore(t)
-	link := IdentityLink{Issuer: "https://identity.example", Subject: "123", Username: "admin"}
+	link := accounts.IdentityLink{Issuer: "https://identity.example", Subject: "123", Username: "admin"}
 	require.NoError(t, store.CreateFounder(t.Context(), "admin", "hash", &link))
 	require.ErrorIs(t, store.LinkIdentity(t.Context(), link), ErrIdentityLinked)
 	_, err := store.ResolveIdentity(t.Context(), "https://other.example", "123")

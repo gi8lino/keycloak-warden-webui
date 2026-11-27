@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"github.com/gi8lino/warden-webui/internal/accounts"
 )
 
 // SetupRequired reports whether the local administrator has not been created.
@@ -26,7 +28,7 @@ func (s *Store) CreateInitialAdministrator(ctx context.Context, username, passwo
 }
 
 // CreateFounder atomically provisions the bootstrap account and its optional external identity.
-func (s *Store) CreateFounder(ctx context.Context, username, passwordHash string, link *IdentityLink) error {
+func (s *Store) CreateFounder(ctx context.Context, username, passwordHash string, link *accounts.IdentityLink) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err

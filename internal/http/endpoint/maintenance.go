@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gi8lino/keycloak-warden/pkg/client"
+	"github.com/gi8lino/keycloak-warden/pkg/model"
 )
 
 // Maintenance displays housekeeping controls and the optional worker status.
@@ -36,7 +37,7 @@ func Maintenance(api API, pages *Pages) http.HandlerFunc {
 }
 
 // workerStatus retrieves the worker snapshot and handles unavailable endpoints.
-func workerStatus(ctx context.Context, api API, logger *slog.Logger) (*client.Workers, string) {
+func workerStatus(ctx context.Context, api API, logger *slog.Logger) (*model.Workers, string) {
 	status, err := api.WorkerStatus(ctx)
 
 	switch {

@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/gi8lino/warden-webui/internal/accounts"
 	"github.com/gi8lino/warden-webui/internal/db"
 )
 
@@ -23,7 +24,7 @@ func TestDurableSessions(t *testing.T) {
 		store, err := db.Open(t.Context(), path)
 		require.NoError(t, err)
 		manager, _ := newSessions(store, time.Hour, "http://localhost", "")
-		require.NoError(t, store.CreateFounder(t.Context(), "oidc-operator", "hash", &db.IdentityLink{Issuer: "issuer", Subject: "sub"}))
+		require.NoError(t, store.CreateFounder(t.Context(), "oidc-operator", "hash", &accounts.IdentityLink{Issuer: "issuer", Subject: "sub"}))
 		token, err := manager.Start(t.Context(), User{Name: "oidc-operator", Issuer: "issuer", Subject: "sub"})
 		require.NoError(t, err)
 		require.NoError(t, store.Close())

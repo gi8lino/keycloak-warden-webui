@@ -67,4 +67,4 @@ Licensed under the [Apache License, Version 2.0](LICENSE).
 
 The Deliveries page includes aggregate destination health, with exhausted unbans prioritized. Retry buttons on exhausted current deliveries submit the exact decision revision and the authenticated local account name to Warden. Decision details link to the chronological source, decision, attempt and retry audit view. The active-bans page links to hypothetical automatic bans recorded by Warden in observe-only mode.
 
-These features require the Warden release that includes `/deliveries/health`, `/deliveries/retry`, `/bans/{id}/timeline` and `/observations`, and its matching Go client. During development, use a Go workspace with both checkouts. After publishing Warden, update the Go client module and the pinned Warden E2E image in `deploy/compose.yaml` to the same release before publishing WebUI.
+Keep the Warden client dependency and E2E image in `deploy/compose.yaml` on the same release.

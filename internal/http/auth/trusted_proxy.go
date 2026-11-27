@@ -2,32 +2,18 @@ package auth
 
 import (
 	"context"
-	"slices"
 	"strings"
 
 	appkitauth "github.com/containeroo/appkit/auth"
 	"github.com/containeroo/appkit/auth/proxy"
-	appkitconfig "github.com/containeroo/appkit/config"
-	"github.com/containeroo/tinyflags"
 )
 
 // proxyIssuer namespaces trusted-proxy subjects in the local account directory.
 const proxyIssuer = "warden-webui-proxy"
 
 // newTrustedProxy validates trusted peers and resolves externally verified administrators.
-func newTrustedProxy(cfg appkitconfig.Proxy, origins tinyflags.Overrides, adminGroup string, resolve func(context.Context, string, string) (User, error)) (*proxy.Authenticator[User], error) {
-	cidrs := slices.Clone(cfg.TrustedCIDRs)
-	overrides := cfg.DeploymentOverrides(origins)
-	if overrides.TrustedCIDRs == nil {
-		overrides.TrustedCIDRs = &cidrs
-	}
-
-	resolved, err := proxy.Resolve(proxy.Options{Overrides: overrides})
-	if err != nil {
-		return nil, err
-	}
-
-	authenticator, err := proxy.New[User](resolved, proxyIssuer, func(ctx context.Context, identity appkitauth.ExternalIdentity) (User, error) {
+func newTrustedProxy(cfg proxy.Config, adminGroup string, resolve func(context.Context, string, string) (User, error)) (*proxy.Authenticator[User], error) {
+	authenticator, err := proxy.New[User](cfg, proxyIssuer, func(ctx context.Context, identity appkitauth.ExternalIdentity) (User, error) {
 		if !hasGroup(identity.Groups, adminGroup) {
 			return User{}, appkitauth.ErrForbidden
 		}

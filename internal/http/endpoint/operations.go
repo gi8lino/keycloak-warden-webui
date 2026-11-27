@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gi8lino/keycloak-warden/pkg/client"
+	"github.com/gi8lino/keycloak-warden/pkg/model"
 )
 
 // RetryDelivery validates a browser form and sends the verified account identity to Warden.
@@ -44,27 +44,27 @@ func RetryDelivery(api API, pages *Pages) http.HandlerFunc {
 }
 
 // parseRetryRequest parses and validates a delivery retry form.
-func parseRetryRequest(r *http.Request) (client.RetryRequest, error) {
+func parseRetryRequest(r *http.Request) (model.RetryRequest, error) {
 	id := r.PathValue("id")
 	if !validID(id) {
-		return client.RetryRequest{}, errors.New("invalid decision ID")
+		return model.RetryRequest{}, errors.New("invalid decision ID")
 	}
 
 	if len(r.PostForm["revision"]) != 1 || len(r.PostForm["destination"]) != 1 {
-		return client.RetryRequest{}, errors.New("expected exactly one revision and destination")
+		return model.RetryRequest{}, errors.New("expected exactly one revision and destination")
 	}
 
 	revision, err := strconv.ParseInt(r.PostForm.Get("revision"), 10, 64)
 	if err != nil || revision < 1 {
-		return client.RetryRequest{}, errors.New("invalid revision")
+		return model.RetryRequest{}, errors.New("invalid revision")
 	}
 
 	destination := r.PostForm.Get("destination")
 	if !validDestination(destination) {
-		return client.RetryRequest{}, errors.New("invalid destination")
+		return model.RetryRequest{}, errors.New("invalid destination")
 	}
 
-	return client.RetryRequest{
+	return model.RetryRequest{
 		DecisionID:  id,
 		Revision:    revision,
 		Destination: destination,

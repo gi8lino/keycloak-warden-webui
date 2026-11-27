@@ -44,7 +44,6 @@ func TestBootstrapComposesRuntime(t *testing.T) {
 	httpConfig, err := NewHTTPConfig(web.Assets, cfg, infrastructure, application, logger, "test")
 	require.NoError(t, err)
 
-	// The configured upstream client keeps administrative credentials on the server.
 	_, err = httpConfig.Warden.List(t.Context())
 	require.NoError(t, err)
 
@@ -59,7 +58,6 @@ func TestBootstrapComposesRuntime(t *testing.T) {
 	handlers.Management.ServeHTTP(ready, httptest.NewRequest(http.MethodGet, "/readyz", nil))
 	assert.Equal(t, http.StatusNoContent, ready.Code)
 
-	// Closing the infrastructure closes the same store used by HTTP readiness.
 	require.NoError(t, infrastructure.Close())
 	closed := httptest.NewRecorder()
 	handlers.Management.ServeHTTP(closed, httptest.NewRequest(http.MethodGet, "/readyz", nil))

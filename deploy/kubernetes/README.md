@@ -65,14 +65,3 @@ then set `WARDEN_WEBUI__SETUP_SUBJECT` for the initial administrator or enable
 `<public-url>/auth/callback` with Keycloak. Never put credentials in `.env`.
 
 The deployment images must be changed from `latest` to a tested release tag or immutable digest before production use. Set PVC sizes and StorageClass for the cluster. Configure Warden's own webhook/Cloudflare target details and associated Secrets before enabling the sidecar alternative.
-
-## Previous example fragments
-
-The old files under `deploy/kubernetes-*.example.yaml` were snippets, not
-usable Kustomize builds. They are superseded by these complete variants:
-
-- `kubernetes-sidecar.example.yaml` → `sidecar/deployment.yaml`.
-- `kubernetes-webui-pvc.example.yaml` → `base/persistentvolumeclaim.yaml`.
-- `kubernetes-webui-volume.example.yaml` → the Pod volumes in each Deployment.
-
-The Compose-only files under `deploy/` stay in place and are not moved.

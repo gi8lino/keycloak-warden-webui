@@ -13,13 +13,12 @@ import (
 	"time"
 
 	appkitauth "github.com/containeroo/appkit/auth"
-	appkitconfig "github.com/containeroo/appkit/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/gi8lino/keycloak-warden/pkg/client"
-	"github.com/gi8lino/keycloak-warden/pkg/workerstate"
-	"github.com/gi8lino/warden-webui/internal/cli"
+	"github.com/gi8lino/keycloak-warden/pkg/model"
+	"github.com/gi8lino/warden-webui/internal/accounts"
 	"github.com/gi8lino/warden-webui/internal/db"
 	"github.com/gi8lino/warden-webui/internal/http/auth"
 	"github.com/gi8lino/warden-webui/internal/http/endpoint"
@@ -39,89 +38,89 @@ type fakeAPI struct {
 }
 
 // List returns a deterministic active decision.
-func (*fakeAPI) List(context.Context) ([]client.Record, error) {
-	return []client.Record{{Decision: client.Decision{ID: "one", IP: "203.0.113.1", State: "banned"}}}, nil
+func (*fakeAPI) List(context.Context) ([]model.Record, error) {
+	return []model.Record{{Decision: model.Decision{ID: "one", IP: "203.0.113.1", State: "banned"}}}, nil
 }
 
 // ListDecisionHistory supplies the audit view for routing tests.
-func (*fakeAPI) ListDecisionHistory(context.Context, client.RevisionFilter) (client.RevisionPage, error) {
-	return client.RevisionPage{Items: []client.Revision{}, Page: 1}, nil
+func (*fakeAPI) ListDecisionHistory(context.Context, client.RevisionFilter) (model.RevisionPage, error) {
+	return model.RevisionPage{Items: []model.Revision{}, Page: 1}, nil
 }
 
 // ListDeliveries supplies current progress for routing tests.
-func (*fakeAPI) ListDeliveries(context.Context, client.DeliveryFilter) (client.DeliveryOverviewPage, error) {
-	return client.DeliveryOverviewPage{Items: []client.DeliveryOverview{}, Page: 1}, nil
+func (*fakeAPI) ListDeliveries(context.Context, client.DeliveryFilter) (model.DeliveryOverviewPage, error) {
+	return model.DeliveryOverviewPage{Items: []model.DeliveryOverview{}, Page: 1}, nil
 }
 
 // DeliveryHealth supplies aggregate destination progress.
-func (*fakeAPI) DeliveryHealth(context.Context) ([]client.DestinationHealth, error) {
-	return []client.DestinationHealth{}, nil
+func (*fakeAPI) DeliveryHealth(context.Context) ([]model.DestinationHealth, error) {
+	return []model.DestinationHealth{}, nil
 }
 
 // DecisionTimeline supplies recorded activity for route tests.
-func (*fakeAPI) DecisionTimeline(_ context.Context, id string, page int) (client.TimelinePage, error) {
-	return client.TimelinePage{DecisionID: id, IP: "203.0.113.1", Page: page}, nil
+func (*fakeAPI) DecisionTimeline(_ context.Context, id string, page int) (model.TimelinePage, error) {
+	return model.TimelinePage{DecisionID: id, IP: "203.0.113.1", Page: page}, nil
 }
 
 // RetryDelivery accepts a retry request in route tests.
-func (*fakeAPI) RetryDelivery(context.Context, client.RetryRequest) error { return nil }
+func (*fakeAPI) RetryDelivery(context.Context, model.RetryRequest) error { return nil }
 
 // ListObservations supplies hypothetical ban results.
-func (*fakeAPI) ListObservations(context.Context, int) (client.ObservationPage, error) {
-	return client.ObservationPage{Page: 1}, nil
+func (*fakeAPI) ListObservations(context.Context, int) (model.ObservationPage, error) {
+	return model.ObservationPage{Page: 1}, nil
 }
 
 // Get returns an existing decision.
-func (*fakeAPI) Get(context.Context, string) (client.Record, error) {
-	return client.Record{Decision: client.Decision{ID: "one", IP: "203.0.113.1", State: "banned"}}, nil
+func (*fakeAPI) Get(context.Context, string) (model.Record, error) {
+	return model.Record{Decision: model.Decision{ID: "one", IP: "203.0.113.1", State: "banned"}}, nil
 }
 
 // GetPageThroughRevision supplies decision history for browser pagination tests.
-func (a *fakeAPI) GetPageThroughRevision(ctx context.Context, id string, page int, revision int64) (client.Record, error) {
+func (a *fakeAPI) GetPageThroughRevision(ctx context.Context, id string, page int, revision int64) (model.Record, error) {
 	return a.Get(ctx, id)
 }
 
 // Ban records a successful mutation.
-func (a *fakeAPI) Ban(_ context.Context, request client.ManualBanRequest) (client.Record, error) {
+func (a *fakeAPI) Ban(_ context.Context, request client.ManualBanRequest) (model.Record, error) {
 	a.banDuration.Store(int64(request.Duration))
 	a.banCalls.Add(1)
-	return client.Record{}, nil
+	return model.Record{}, nil
 }
 
 // Release returns a completed release.
-func (*fakeAPI) Unban(context.Context, string) (client.Record, error) {
-	return client.Record{}, nil
+func (*fakeAPI) Unban(context.Context, string) (model.Record, error) {
+	return model.Record{}, nil
 }
 
 // Maintenance returns an empty scheduler status.
-func (*fakeAPI) MaintenanceStatus(context.Context) (client.Maintenance, error) {
-	return client.Maintenance{}, nil
+func (*fakeAPI) MaintenanceStatus(context.Context) (model.Maintenance, error) {
+	return model.Maintenance{}, nil
 }
 
 // PruneObservations records an observation-cleanup request.
-func (a *fakeAPI) PruneObservations(context.Context) (client.Maintenance, error) {
+func (a *fakeAPI) PruneObservations(context.Context) (model.Maintenance, error) {
 	a.maintenanceCalls.Add(1)
-	return client.Maintenance{}, nil
+	return model.Maintenance{}, nil
 }
 
 // OptimizeDatabase records a database optimization request.
-func (a *fakeAPI) OptimizeDatabase(context.Context) (client.Maintenance, error) {
+func (a *fakeAPI) OptimizeDatabase(context.Context) (model.Maintenance, error) {
 	a.maintenanceCalls.Add(1)
-	return client.Maintenance{}, nil
+	return model.Maintenance{}, nil
 }
 
 // WorkerStatus returns worker status through the same Warden API as other operations.
-func (a *fakeAPI) WorkerStatus(context.Context) (client.Workers, error) {
+func (a *fakeAPI) WorkerStatus(context.Context) (model.Workers, error) {
 	if a.workersError != nil {
-		return client.Workers{}, a.workersError
+		return model.Workers{}, a.workersError
 	}
-	return client.Workers{
-		Actions: client.ActionWorker{
-			WorkerRuntime:     client.WorkerRuntime{State: workerstate.StateIdle},
-			PendingDeliveries: 4,
+	return model.Workers{
+		Actions: model.ActionWorker{
+			RuntimeStatus: model.RuntimeStatus{State: model.WorkerIdle},
+			QueueStats:    model.QueueStats{PendingDeliveries: 4},
 		},
-		Maintenance: client.MaintenanceWorker{
-			WorkerRuntime: client.WorkerRuntime{State: workerstate.StateIdle},
+		Maintenance: model.Maintenance{
+			State: model.WorkerIdle,
 		},
 	}, nil
 }
@@ -137,19 +136,17 @@ func testHandlersWithAPIError(t *testing.T, prefix string, workersError error) (
 	t.Helper()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	mode := appkitauth.ModeProxy
-	cfg := cli.Flags{
-		Server: appkitconfig.Server{
-			PublicURL:   "http://127.0.0.1:8082" + prefix,
-			RoutePrefix: prefix,
-		},
-		Authentication: appkitconfig.Authentication{ModeOverride: &mode},
-		Proxy:          appkitconfig.Proxy{TrustedCIDRs: []string{"127.0.0.1/32"}},
-		AdminGroup:     "warden-admins",
+	cfg := auth.Config{
+		PublicURL:   "http://127.0.0.1:8082" + prefix,
+		RoutePrefix: prefix,
+		Mode:        mode,
+		Proxy:       testProxyConfig(),
+		AdminGroup:  "warden-admins",
 	}
 	repository, err := db.Open(t.Context(), t.TempDir()+"/webui.db")
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, repository.Close()) })
-	require.NoError(t, repository.CreateFounder(t.Context(), "operator", "hash", &db.IdentityLink{Issuer: "warden-webui-proxy", Subject: "operator"}))
+	require.NoError(t, repository.CreateFounder(t.Context(), "operator", "hash", &accounts.IdentityLink{Issuer: "warden-webui-proxy", Subject: "operator"}))
 	identity, err := auth.New(t.Context(), cfg, repository)
 	require.NoError(t, err)
 	pages, err := endpoint.NewPages(web.Assets, prefix, identity.Mode(), logger, repository, "", "test")
@@ -160,7 +157,7 @@ func testHandlersWithAPIError(t *testing.T, prefix string, workersError error) (
 	handlers := New(Config{
 		InfrastructureConfig: InfrastructureConfig{
 			RoutePrefix: prefix,
-			PublicURL:   cfg.Server.PublicURL,
+			PublicURL:   cfg.PublicURL,
 			Static:      static,
 			Pages:       pages,
 			Logger:      logger,

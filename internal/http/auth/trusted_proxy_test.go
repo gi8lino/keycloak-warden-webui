@@ -6,12 +6,10 @@ import (
 	"testing"
 
 	appkitauth "github.com/containeroo/appkit/auth"
-	appkitconfig "github.com/containeroo/appkit/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gi8lino/warden-webui/internal/cli"
-	"github.com/gi8lino/warden-webui/internal/db"
+	"github.com/gi8lino/warden-webui/internal/accounts"
 )
 
 // proxyService configures the same trusted ingress settings used by the HTTP adapter.
@@ -20,14 +18,10 @@ func proxyService(t *testing.T) *Service {
 
 	mode := appkitauth.ModeProxy
 	store := authStore(t)
-	require.NoError(t, store.CreateFounder(t.Context(), "local-admin", "hash", &db.IdentityLink{Issuer: proxyIssuer, Subject: "operator"}))
-	service, err := New(t.Context(), cli.Flags{
-		Authentication: appkitconfig.Authentication{
-			ModeOverride: &mode,
-		},
-		Proxy: appkitconfig.Proxy{
-			TrustedCIDRs: []string{"127.0.0.1/32"},
-		},
+	require.NoError(t, store.CreateFounder(t.Context(), "local-admin", "hash", &accounts.IdentityLink{Issuer: proxyIssuer, Subject: "operator"}))
+	service, err := New(t.Context(), Config{
+		Mode:       mode,
+		Proxy:      testProxyConfig(),
 		AdminGroup: "warden-admins",
 	}, store)
 	require.NoError(t, err)
@@ -96,10 +90,8 @@ func TestTrustedProxy(t *testing.T) {
 		t.Parallel()
 
 		mode := appkitauth.ModeProxy
-		_, err := New(t.Context(), cli.Flags{
-			Authentication: appkitconfig.Authentication{
-				ModeOverride: &mode,
-			},
+		_, err := New(t.Context(), Config{
+			Mode: mode,
 		}, authStore(t))
 
 		require.Error(t, err)
@@ -110,10 +102,10 @@ func TestExternalSetup(t *testing.T) {
 	t.Parallel()
 	store := authStore(t)
 	mode := appkitauth.ModeProxy
-	service, err := New(t.Context(), cli.Flags{
-		Authentication: appkitconfig.Authentication{ModeOverride: &mode},
-		Proxy:          appkitconfig.Proxy{TrustedCIDRs: []string{"127.0.0.1/32"}},
-		AdminGroup:     "admins", SetupToken: testSetupToken, SetupSubject: "external-owner",
+	service, err := New(t.Context(), Config{
+		Mode:       mode,
+		Proxy:      testProxyConfig(),
+		AdminGroup: "admins", SetupToken: testSetupToken, SetupSubject: "external-owner",
 	}, store)
 	require.NoError(t, err)
 	request := httptest.NewRequest(http.MethodPost, "/setup", nil)
@@ -155,8 +147,8 @@ func TestRecoveryDuringOIDCOutage(t *testing.T) {
 	request := httptest.NewRequest(http.MethodPost, "/auth/local", nil)
 	require.NoError(t, localService.SetupLocal(httptest.NewRecorder(), request, testSetupToken, "owner", "correct-password"))
 	mode := appkitauth.ModeOIDC
-	cfg.Authentication.ModeOverride = &mode
-	cfg.Authentication.LocalLogin = true
+	cfg.Mode = mode
+	cfg.LocalLogin = true
 	cfg.OIDC.Issuer = "http://127.0.0.1:1"
 	service, err := New(t.Context(), cfg, store)
 	require.NoError(t, err)

@@ -18,8 +18,8 @@ func TestLocalAuthentication(t *testing.T) {
 	t.Run("setup signs in with a secure scoped cookie", func(t *testing.T) {
 		t.Parallel()
 		cfg := localConfig()
-		cfg.Server.RoutePrefix = "/ui"
-		cfg.Server.PublicURL = "https://warden.example/ui"
+		cfg.RoutePrefix = "/ui"
+		cfg.PublicURL = "https://warden.example/ui"
 		service, err := New(t.Context(), cfg, authStore(t))
 		require.NoError(t, err)
 

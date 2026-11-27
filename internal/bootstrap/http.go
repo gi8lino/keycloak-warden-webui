@@ -10,7 +10,7 @@ import (
 	"github.com/gi8lino/warden-webui/internal/http/server"
 )
 
-// NewHTTPConfig prepares presentation assets and wires the passive HTTP adapter.
+// NewHTTPConfig loads presentation assets and configures the HTTP handlers.
 func NewHTTPConfig(
 	assets fs.FS,
 	cfg cli.Flags,
