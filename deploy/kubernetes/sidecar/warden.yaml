@@ -1,11 +1,18 @@
 # Example Warden configuration. Replace target details with your real provider.
 # Cloudflare credentials are read from the separately managed keycloak-warden Secret.
-rule:
-  threshold: 5
-  window: 1m
-  ban: 15m
+rules:
+  brute-force:
+    selector:
+      kind: user
+      events: [LOGIN_ERROR]
+    aggregation:
+      group-by: ip
+      threshold: 5
+      window: 1m
+    actions:
+      ban: 15m
 
-targets:
+enforcements:
   cloudflare:
     edge:
       zone-id: env:CLOUDFLARE_ZONE_ID

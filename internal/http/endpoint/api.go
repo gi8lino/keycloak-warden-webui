@@ -18,8 +18,8 @@ type API interface {
 	DecisionTimeline(context.Context, string, int) (model.TimelinePage, error)
 	// RetryDelivery queues one exhausted revision using the authenticated operator identity.
 	RetryDelivery(context.Context, model.RetryRequest) error
-	// ListObservations reads hypothetical ban outcomes.
-	ListObservations(context.Context, int) (model.ObservationPage, error)
+	// ListIncidents reads named detection-rule threshold hits.
+	ListIncidents(context.Context, client.IncidentFilter) (model.IncidentPage, error)
 	Get(context.Context, string) (model.Record, error)
 	// GetPageThroughRevision retrieves a bounded delivery-history page.
 	GetPageThroughRevision(context.Context, string, int, int64) (model.Record, error)

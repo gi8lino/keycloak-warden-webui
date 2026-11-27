@@ -65,6 +65,8 @@ Licensed under the [Apache License, Version 2.0](LICENSE).
 
 ## Operational visibility
 
-The Deliveries page includes aggregate destination health, with exhausted unbans prioritized. Retry buttons on exhausted current deliveries submit the exact decision revision and the authenticated local account name to Warden. Decision details link to the chronological source, decision, attempt and retry audit view. The active-bans page links to hypothetical automatic bans recorded by Warden in observe-only mode.
+The Deliveries page includes aggregate destination health, with exhausted unbans prioritized. Retry buttons on exhausted current deliveries submit the exact decision revision and the authenticated local account name to Warden. Decision details link to the chronological source, decision, attempt and retry audit view. The active-bans page links to security incidents, including named rule threshold hits, monitoring and observe-only outcomes. Incidents use cursor pagination. Existing `/observations` bookmarks still open this page.
+
+This release requires Warden 0.50 or later for the incidents and enforcement-worker API. Upgrade Warden and Web UI together.
 
 Keep the Warden client dependency and E2E image in `deploy/compose.yaml` on the same release.

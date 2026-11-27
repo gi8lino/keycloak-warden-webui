@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gi8lino/keycloak-warden/pkg/client"
 	"github.com/gi8lino/keycloak-warden/pkg/model"
 )
 
@@ -108,27 +109,36 @@ func DecisionTimeline(api API, pages *Pages) http.HandlerFunc {
 	}
 }
 
-// Observations displays hypothetical automatic bans separately from enforced decisions.
-func Observations(api API, pages *Pages) http.HandlerFunc {
+// Incidents displays named detection-rule threshold hits and their enforcement outcome.
+func Incidents(api API, pages *Pages) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		values, page, err := parseOverviewQuery(r.URL.RawQuery)
+		values, err := url.ParseQuery(r.URL.RawQuery)
+		var before int64
+		if err == nil {
+			if cursor, ok := values["before-id"]; ok {
+				if len(cursor) != 1 {
+					err = errors.New("duplicate incident cursor")
+				} else {
+					before, err = strconv.ParseInt(cursor[0], 10, 64)
+					if before < 1 {
+						err = errors.New("invalid incident cursor")
+					}
+				}
+			}
+		}
 		if err != nil {
-			pages.Problem(r, w, http.StatusBadRequest, "Invalid observations page.")
+			pages.Problem(r, w, http.StatusBadRequest, "Invalid incident cursor.")
 			return
 		}
-
-		result, err := api.ListObservations(r.Context(), page)
+		result, err := api.ListIncidents(r.Context(), client.IncidentFilter{BeforeID: before})
 		if err != nil {
 			pages.fail(r, w, currentUser(r), err)
 			return
 		}
-
-		pages.render(r, w, http.StatusOK, pageData{
-			Title:        "Observed bans",
-			Page:         "observations",
-			User:         currentUser(r).Name,
-			Observations: result,
-			Overview:     overviewLinks(pages.prefix, "/observations", page, result.NextPage, values, 0),
-		})
+		var next string
+		if result.NextBeforeID > 0 {
+			next = pages.prefix + "/incidents?before-id=" + strconv.FormatInt(result.NextBeforeID, 10)
+		}
+		pages.render(r, w, http.StatusOK, pageData{Title: "Security incidents", Page: "incidents", User: currentUser(r).Name, Incidents: result, IncidentsNextURL: next})
 	}
 }

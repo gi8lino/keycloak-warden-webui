@@ -4,12 +4,19 @@ protected-ips:
   - 2001:db8:1234::/48
 
 # Deliberately low threshold for end-to-end testing.
-rule:
-  threshold: 2
-  window: 1m
-  ban: 15m
+rules:
+  brute-force:
+    selector:
+      kind: user
+      events: [LOGIN_ERROR]
+    aggregation:
+      group-by: ip
+      threshold: 2
+      window: 1m
+    actions:
+      ban: 15m
 
-targets:
+enforcements:
   webhook:
     receiver:
       # Receiver shares Warden's network namespace (loopback HTTP is allowed).

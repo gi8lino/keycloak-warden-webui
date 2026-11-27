@@ -83,8 +83,10 @@ type pageData struct {
 	HealthUnavailable bool
 	// Timeline contains the selected chronological audit page.
 	Timeline model.TimelinePage
-	// Observations contains the selected hypothetical ban page.
-	Observations model.ObservationPage
+	// Incidents contains the selected detection-rule threshold hits.
+	Incidents model.IncidentPage
+	// IncidentsNextURL advances using the stable incident cursor.
+	IncidentsNextURL string
 	// Overview supplies filtering and pagination for cross-decision pages.
 	Overview overviewNavigation
 	// LocalUser permits local account actions only for local sessions.

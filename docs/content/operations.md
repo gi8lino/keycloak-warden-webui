@@ -15,7 +15,7 @@ Only the **application** listener is subject to `--route-prefix`. Keep the manag
 
 ## Background workers
 
-The **Database maintenance** page also shows the running Warden's two workers: actions (expiry, deliveries and retries) and maintenance (pruning and optimization). The actions card includes active bans, current-revision pending/retrying/exhausted deliveries, the next persisted deadline and the last completed attempt. The maintenance card includes process state, schedule and last successful tasks.
+The **Database maintenance** page also shows the running Warden's enforcement and maintenance workers: enforcement (expiry, deliveries and retries) and maintenance (pruning and optimization). The enforcement card includes active bans, current-revision pending/retrying/exhausted deliveries, the next persisted deadline and the last completed attempt. The maintenance card includes process state, schedule and last successful tasks.
 
 This is a read-only snapshot from Warden's authenticated `GET /workers` application endpoint. WebUI calls the same `pkg/client.Client` used for bans, deliveries, and maintenance, and reuses Warden's `pkg/model.WorkerState` enum. An older running Warden server without `/workers` shows a compatibility notice; the existing maintenance controls continue to work.
 

@@ -91,6 +91,8 @@ export const test = base.extend({
       const url = await address();
       const management = await address();
       let backendFailure;
+      let incidentPages = {};
+      const incidentRequests = [];
       let historyPages;
       let decisionRevisions;
       let deliveryOverview;
@@ -118,6 +120,19 @@ export const test = base.extend({
         }
         if (req.method === "GET") {
           const requested = new URL(req.url, "http://warden.test");
+          if (requested.pathname === "/incidents") {
+            incidentRequests.push(requested.search);
+            res
+              .writeHead(200, { "Content-Type": "application/json" })
+              .end(
+                JSON.stringify(
+                  incidentPages[
+                    requested.searchParams.get("before-id") || "0"
+                  ] || { items: [] },
+                ),
+              );
+            return;
+          }
           if (requested.pathname === "/decisions/history") {
             res
               .writeHead(200, { "Content-Type": "application/json" })
@@ -146,6 +161,10 @@ export const test = base.extend({
 
       await use({
         url: url.origin,
+        setIncidentPages: (pages) => {
+          incidentPages = pages;
+        },
+        incidentRequests,
         setDecisionRevisions: (page) => {
           decisionRevisions = page;
         },

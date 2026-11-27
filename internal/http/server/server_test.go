@@ -65,9 +65,9 @@ func (*fakeAPI) DecisionTimeline(_ context.Context, id string, page int) (model.
 // RetryDelivery accepts a retry request in route tests.
 func (*fakeAPI) RetryDelivery(context.Context, model.RetryRequest) error { return nil }
 
-// ListObservations supplies hypothetical ban results.
-func (*fakeAPI) ListObservations(context.Context, int) (model.ObservationPage, error) {
-	return model.ObservationPage{Page: 1}, nil
+// ListIncidents supplies detection-rule threshold hits.
+func (*fakeAPI) ListIncidents(context.Context, client.IncidentFilter) (model.IncidentPage, error) {
+	return model.IncidentPage{}, nil
 }
 
 // Get returns an existing decision.
@@ -115,7 +115,7 @@ func (a *fakeAPI) WorkerStatus(context.Context) (model.Workers, error) {
 		return model.Workers{}, a.workersError
 	}
 	return model.Workers{
-		Actions: model.ActionWorker{
+		Enforcement: model.EnforcementWorker{
 			RuntimeStatus: model.RuntimeStatus{State: model.WorkerIdle},
 			QueueStats:    model.QueueStats{PendingDeliveries: 4},
 		},

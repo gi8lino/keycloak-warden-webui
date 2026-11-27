@@ -1,0 +1,31 @@
+{{define "incidents"}}
+<a href="{{.Prefix}}/" class="text-sm font-medium text-cyan-400 underline">Back to active bans</a>
+<section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
+  <header class="border-b border-zinc-800 px-6 py-5">
+    <h2 class="text-lg font-semibold text-zinc-100">Security incidents</h2>
+    <p class="mt-2 text-sm text-zinc-400">Detection rules that reached their threshold, including monitoring and observe-only outcomes.</p>
+  </header>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-zinc-800/60 text-xs text-zinc-400"><tr><th scope="col" class="px-6 py-4">Rule / event</th><th scope="col" class="px-4 py-4">Group</th><th scope="col" class="px-4 py-4">Observed</th><th scope="col" class="px-4 py-4">Count / threshold</th><th scope="col" class="px-4 py-4">Outcome</th></tr></thead>
+      <tbody class="divide-y divide-zinc-800">
+        {{range .Incidents.Items}}
+          <tr>
+            <td class="px-6 py-4 text-zinc-200">{{.Rule}}<span class="block text-xs text-zinc-400">{{.EventKind}}: {{if .EventType}}{{.EventType}}{{else}}{{.OperationType}} {{.ResourceType}}{{end}}</span></td>
+            <td class="px-4 py-4 font-mono text-zinc-200">{{.GroupBy}}: {{.GroupKey}}{{if .IdentityRealm}}<span class="block text-xs text-zinc-400">{{.IdentityRealm}}</span>{{end}}</td>
+            <td class="px-4 py-4 text-zinc-300">{{fmtTime .At}}</td>
+            <td class="px-4 py-4 tabular-nums text-zinc-300">{{.Count}} / {{.Threshold}}</td>
+            <td class="px-4 py-4 text-zinc-300">{{if .BanUntil}}{{if .ObserveOnly}}Observe-only; proposed ban until {{else}}Ban requested until {{end}}{{fmtTime .BanUntil}}{{else}}Recorded{{end}}</td>
+          </tr>
+        {{else}}
+          <tr><td colspan="5" class="px-6 py-4 text-zinc-400">No security incidents recorded on this page.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  <nav aria-label="Incident pagination" class="flex justify-between border-t border-zinc-800 px-6 py-4 text-sm">
+    <a href="{{.Prefix}}/incidents" class="text-cyan-400 underline">Newest incidents</a>
+    {{if .IncidentsNextURL}}<a href="{{.IncidentsNextURL}}" class="text-cyan-400 underline">Older incidents</a>{{end}}
+  </nav>
+</section>
+{{end}}

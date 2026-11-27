@@ -10,14 +10,14 @@
         <h3 class="font-semibold text-zinc-100">Actions</h3>
         <p class="mt-1 text-sm text-zinc-400">Ban expiry, Cloudflare, and webhook delivery</p>
         <dl class="mt-4 divide-y divide-zinc-800 text-sm">
-          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">State</dt><dd class="font-medium text-zinc-100">{{.Workers.Actions.State}}</dd></div>
-          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Started</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Actions.StartedAt}}</dd></div>
-          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Active bans</dt><dd class="font-medium text-zinc-100">{{.Workers.Actions.ActiveBans}}</dd></div>
-          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Pending deliveries</dt><dd class="font-medium text-zinc-100">{{.Workers.Actions.PendingDeliveries}}</dd></div>
-          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Retrying deliveries</dt><dd class="font-medium text-zinc-100">{{.Workers.Actions.RetryingDeliveries}}</dd></div>
-          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Exhausted deliveries</dt><dd class="font-medium text-zinc-100">{{.Workers.Actions.ExhaustedDeliveries}}</dd></div>
-          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Next deadline</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Actions.NextDeadline}}</dd></div>
-          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Last delivery attempt</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Actions.LastAttemptAt}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">State</dt><dd class="font-medium text-zinc-100">{{.Workers.Enforcement.State}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Started</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Enforcement.StartedAt}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Active bans</dt><dd class="font-medium text-zinc-100">{{.Workers.Enforcement.ActiveBans}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Pending deliveries</dt><dd class="font-medium text-zinc-100">{{.Workers.Enforcement.PendingDeliveries}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Retrying deliveries</dt><dd class="font-medium text-zinc-100">{{.Workers.Enforcement.RetryingDeliveries}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Exhausted deliveries</dt><dd class="font-medium text-zinc-100">{{.Workers.Enforcement.ExhaustedDeliveries}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Next deadline</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Enforcement.NextDeadline}}</dd></div>
+          <div class="flex justify-between gap-3 py-2"><dt class="text-zinc-400">Last delivery attempt</dt><dd class="text-right text-zinc-200">{{fmtTime .Workers.Enforcement.LastAttemptAt}}</dd></div>
         </dl>
       </div>
       <div class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
