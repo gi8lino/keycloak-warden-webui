@@ -1,0 +1,5 @@
+# Test-only destination failures exercise exhaustion and manual retries.
+services:
+  warden:
+    volumes:
+      - ./warden-test.yaml:/config/warden.yaml:ro

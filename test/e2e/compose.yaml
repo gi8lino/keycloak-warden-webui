@@ -41,11 +41,11 @@ services:
     environment:
       WEBHOOK_API_KEY: development-outbound-key
     volumes:
-      - ./hookglass.yaml:/config/header.yaml:ro
+      - ./header.yaml:/config/header.yaml:ro
 
   webui:
     build:
-      context: ..
+      context: ../..
     network_mode: service:warden
     volumes:
       - webui-state:/data

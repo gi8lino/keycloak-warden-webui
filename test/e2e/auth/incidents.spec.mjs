@@ -52,7 +52,7 @@ test("security incidents use the new API and cursor pagination", async ({
   await page.getByRole("button", { name: "Create administrator" }).click();
   await page.getByRole("link", { name: "View incidents" }).click();
   await expect(
-    page.getByText("Hypothetical ban", { exact: false }),
+    page.getByText("Hypothetical ban", { exact: true }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Older results" }).click();
   await expect(page.getByText("admin-audit")).toBeVisible();

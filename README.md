@@ -56,7 +56,7 @@ Full documentation is available at **[gi8lino.github.io/keycloak-warden-webui](h
 
 ## Deployment
 
-Kubernetes manifests support both [sidecar and standalone deployments](deploy/kubernetes/README.md) using Kustomize. The [Docker Compose configuration](deploy/compose.yaml) provides a local integration environment.
+Kubernetes manifests support both [sidecar and standalone deployments](deploy/kubernetes/README.md) using Kustomize. The [Docker Compose configuration](test/e2e/compose.yaml) provides a local integration environment.
 
 For production, use HTTPS for browser access, keep the Warden admin token in a Secret, and provide persistent storage for the Web UI's SQLite database. Authentication is always required.
 
@@ -68,4 +68,6 @@ Licensed under the [Apache License, Version 2.0](LICENSE).
 
 The Deliveries page includes aggregate destination health, with exhausted unbans prioritized. Retry buttons on exhausted current deliveries submit the exact decision revision and the authenticated local account name to Warden. Decision details link to the chronological source, decision, attempt and retry audit view. The Incidents page includes hypothetical automatic bans recorded by Warden in observe-only mode. Notifications has its own occurrence history and retry controls.
 
-Keep the Warden client dependency and E2E image in `deploy/compose.yaml` on the same release (currently v0.50.1). This Web UI requires the incidents, notifications, and enforcement-worker APIs. Upgrade Warden and Web UI together. Existing `/observations` bookmarks open the Incidents page. Set `E2E_WARDEN_IMAGE` to test another compatible Warden image.
+Keep the Warden client dependency and E2E image in `test/e2e/compose.yaml` on the same release (currently v0.50.1). This Web UI requires the incidents, notifications, and enforcement-worker APIs. Upgrade Warden and Web UI together. Existing `/observations` bookmarks open the Incidents page. Set `E2E_WARDEN_IMAGE` to test another compatible Warden image.
+
+See [E2E tests](test/e2e/README.md) for `make e2e-test` (real Warden stack) and `make e2e-auth-test` (browser authentication and UI fixtures).

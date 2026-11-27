@@ -25,3 +25,7 @@
 plugins/*.kumbukaplugin
 plugins/.downloaded
 
+# Local E2E credentials and Playwright output.
+/test/e2e/.env
+/playwright-report/
+/test-results/

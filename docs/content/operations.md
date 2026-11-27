@@ -42,4 +42,4 @@ For Kubernetes, use a single replica per database and `Recreate` update strategy
 
 Enable `--access-log` to see HTTP requests, and `--debug` for additional diagnostics. For errors retrieving bans or maintenance information, verify Warden's application URL, token, API compatibility, and network connectivity. An inaccessible Warden API does not grant browser users direct administrative access.
 
-Use `make test` for Go unit tests, `make test-race` for the race detector, and `make test-auth-e2e` for Playwright's local/proxy/Keycloak browser sign-in suite (requires Node.js, Chromium and Docker). See [Getting started](getting-started.md) for local Compose testing.
+Use `make test` for Go unit tests, `make test-race` for the race detector, and `make e2e-auth-test` for Playwright's local/proxy/Keycloak browser sign-in and UI suite, and `make e2e-test` for the real Warden Compose integration (requires Node.js, Chromium and Docker). See [Getting started](getting-started.md) for local Compose testing.

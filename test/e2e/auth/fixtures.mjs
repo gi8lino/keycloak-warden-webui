@@ -45,7 +45,7 @@ function docker(...args) {
 async function startKeycloak(directory, callback, cleanup) {
   const realm = JSON.parse(
     await readFile(
-      new URL("../../deploy/keycloak-webui-dev.json", import.meta.url),
+      new URL("../realm/webui-e2e.json", import.meta.url),
       "utf8",
     ),
   );
@@ -58,7 +58,7 @@ async function startKeycloak(directory, callback, cleanup) {
     "create",
     "-p",
     "127.0.0.1::8080",
-    "quay.io/keycloak/keycloak:26.8.1",
+    "quay.io/keycloak/keycloak:26.8.2",
     "start-dev",
     "--import-realm",
   );
@@ -131,14 +131,12 @@ export const test = base.extend({
             return;
           }
           if (requested.pathname === "/notifications") {
-            res
-              .writeHead(200, { "Content-Type": "application/json" })
+            res.writeHead(200, { "Content-Type": "application/json" })
               .end(JSON.stringify(notificationPage || { items: [] }));
             return;
           }
           if (/^\/notifications\/\d+\/attempts$/.test(requested.pathname)) {
-            res
-              .writeHead(200, { "Content-Type": "application/json" })
+            res.writeHead(200, { "Content-Type": "application/json" })
               .end(JSON.stringify(notificationAttempts || { items: [] }));
             return;
           }

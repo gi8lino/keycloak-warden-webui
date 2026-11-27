@@ -6,3 +6,8 @@ coverage.out
 *.db-shm
 *.db-wal
 node_modules
+
+# Test fixtures and local E2E credentials are not needed in the image.
+test/
+playwright-report/
+test-results/

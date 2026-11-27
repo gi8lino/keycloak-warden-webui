@@ -23,17 +23,21 @@ E2E_HOOKGLASS_PORT ?= 18190
 E2E_WEBUI_PORT ?= 18192
 E2E_WEBUI_MANAGEMENT_PORT ?= 18193
 export E2E_KEYCLOAK_PORT ?= 18180
-E2E_OVERLAY := -f deploy/compose.oidc.yaml
+E2E_OVERLAY := -f test/e2e/compose.oidc.yaml
 endif
 
 E2E_PROJECT ?= warden-webui-e2e
-E2E_COMPOSE_FILE ?= deploy/compose.yaml
+E2E_COMPOSE_FILE ?= test/e2e/compose.yaml
 E2E_WARDEN_PORT ?= 18081
 E2E_WARDEN_MANAGEMENT_PORT ?= 18082
 E2E_HOOKGLASS_PORT ?= 18090
 E2E_WEBUI_PORT ?= 18092
 E2E_WEBUI_MANAGEMENT_PORT ?= 18093
-E2E_COMPOSE := docker compose -p $(E2E_PROJECT) -f $(E2E_COMPOSE_FILE) $(E2E_OVERLAY)
+E2E_STACK_TEST ?= 0
+ifeq ($(E2E_STACK_TEST),1)
+E2E_TEST_OVERLAY := -f test/e2e/compose.test.yaml
+endif
+E2E_COMPOSE := docker compose -p $(E2E_PROJECT) -f $(E2E_COMPOSE_FILE) $(E2E_OVERLAY) $(E2E_TEST_OVERLAY)
 
 export E2E_WARDEN_PORT E2E_WARDEN_MANAGEMENT_PORT E2E_HOOKGLASS_PORT
 export E2E_WEBUI_PORT E2E_WEBUI_MANAGEMENT_PORT
@@ -215,6 +219,16 @@ e2e-oidc-down: e2e-down ## Stop the OIDC end-to-end stack.
 .PHONY: e2e-oidc-reset
 e2e-oidc-reset: e2e-reset ## Delete the OIDC end-to-end stack and SQLite volumes.
 
+.PHONY: e2e-test
+e2e-test: ## Reset the local E2E stack and test WebUI against the real Warden API.
+	$(MAKE) e2e-reset E2E_STACK_TEST=1
+	$(MAKE) e2e-up E2E_STACK_TEST=1
+	npx --no-install playwright test test/e2e/stack --workers=1 --output=build/e2e-test-results
+
+.PHONY: e2e-auth-test
+e2e-auth-test: build ## Exercise local, trusted-proxy, and Keycloak browser login and UI behavior.
+	E2E_WEBUI_BINARY="$(abspath $(BINARY))" npx --no-install playwright test test/e2e/auth --workers=3 --output=build/auth-test-results
+
 ##@ Testing
 
 .PHONY: test
@@ -224,10 +238,6 @@ test: ## Run Go tests.
 .PHONY: test-race
 test-race: ## Run Go tests with the race detector.
 	go test -race -count=1 -timeout=3m ./...
-
-.PHONY: test-auth-e2e
-test-auth-e2e: build ## Exercise local, trusted-proxy, and Keycloak browser login.
-	E2E_WEBUI_BINARY="$(abspath $(BINARY))" npx --no-install playwright test test/auth --workers=3 --output=build/auth-test-results
 
 .PHONY: cover
 cover: ## Generate and view Go test coverage.

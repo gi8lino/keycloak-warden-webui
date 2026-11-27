@@ -14,7 +14,7 @@ cd keycloak-warden-webui
 make e2e-up
 ```
 
-The demo uses the Warden image pinned in `deploy/compose.yaml`. To test against a different Warden image (for example one you built and tagged locally), override the image:
+The demo uses the Warden image pinned in `test/e2e/compose.yaml`. To test against a different Warden image (for example one you built and tagged locally), override the image:
 
 ```sh
 E2E_WARDEN_IMAGE=warden:dev make e2e-up
@@ -35,6 +35,17 @@ make e2e-reset  # Stop and delete demo volumes
 ```
 
 **Never reuse demo credentials or tokens in production.**
+
+## Run automated E2E tests
+
+Install Node.js, then run `npm ci` and `npx playwright install chromium` (add `--with-deps` on Linux if needed).
+
+```sh
+make e2e-test       # resets the demo volumes, starts the real stack, tests through the browser
+make e2e-auth-test  # isolated local/proxy/Keycloak sign-in and UI tests
+```
+
+The real-stack test submits signed schema-v2 events to Warden and checks bans, incidents, notification history, retries and worker status through WebUI. It does not run Snitch; Warden's own E2E suite covers actual Keycloak event delivery. The test-only Compose override deliberately rejects one notification destination. Stop the test stack with `make e2e-down`; use `make e2e-reset && make e2e-up` to return to normal demo settings with a clean database.
 
 ## Try Keycloak sign-in
 
