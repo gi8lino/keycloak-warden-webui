@@ -16,7 +16,11 @@
   <div class="flex flex-wrap items-start justify-between gap-4">
     <div class="min-w-0">
       <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500">IP address</p>
-      <h2 class="mt-2 break-all font-mono text-xl font-semibold text-zinc-100 sm:text-2xl">
+      <h2
+        class="
+          mt-2 break-all font-mono text-xl font-semibold text-zinc-100 sm:text-2xl
+        "
+      >
         {{.Ban.Decision.IP}}
       </h2>
       <p class="mt-2 break-all text-xs text-zinc-500">Decision ID: {{.Ban.Decision.ID}}</p>
@@ -46,7 +50,11 @@
       </span>
     </div>
   </div>
-  <div class="mt-6 flex flex-wrap items-center justify-between gap-6 border-t border-zinc-800 pt-6">
+  <div
+    class="
+      mt-6 flex flex-wrap items-center justify-between gap-6 border-t border-zinc-800 pt-6
+    "
+  >
     <dl class="grid flex-1 gap-4 text-sm sm:grid-cols-2">
       <div>
         <dt class="text-xs font-medium text-zinc-500">Expires</dt>
@@ -79,7 +87,12 @@
 </section>
 
 <div class="grid gap-6 lg:grid-cols-2">
-  <section aria-labelledby="sources-heading" class="min-w-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
+  <section
+    aria-labelledby="sources-heading"
+    class="
+      min-w-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70
+    "
+  >
     <header class="border-b border-zinc-800 px-6 py-5 sm:px-8">
       <h2 id="sources-heading" class="text-lg font-semibold tracking-tight text-zinc-100">Active sources</h2>
       <p class="mt-2 text-sm leading-6 text-zinc-400">Independent reasons for the current decision.</p>
@@ -117,7 +130,13 @@
     {{end}}
   </section>
 
-  <section id="current-deliveries" aria-labelledby="current-deliveries-heading" class="min-w-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
+  <section
+    id="current-deliveries"
+    aria-labelledby="current-deliveries-heading"
+    class="
+      min-w-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70
+    "
+  >
     <header class="border-b border-zinc-800 px-6 py-5 sm:px-8">
       <h2 id="current-deliveries-heading" class="text-lg font-semibold tracking-tight text-zinc-100">Current delivery</h2>
       <p class="mt-2 text-sm leading-6 text-zinc-400">Last known progress; acknowledgement does not prove downstream enforcement.</p>
@@ -152,7 +171,14 @@
               <form method="post" action="{{$.Prefix}}/bans/{{$.Ban.Decision.ID}}/retry" class="mt-4">
                 <input type="hidden" name="revision" value="{{$.Ban.Decision.Revision}}">
                 <input type="hidden" name="destination" value="{{.Destination}}">
-                <button type="submit" class="rounded-lg border border-zinc-700 px-3 py-2 text-sm font-medium text-cyan-400 hover:bg-zinc-800">Retry delivery</button>
+                <button
+                  type="submit"
+                  class="
+                    rounded-lg border border-zinc-700 px-3 py-2
+                    text-sm font-medium text-cyan-400
+                    hover:bg-zinc-800
+                  "
+                >Retry delivery</button>
               </form>
             {{end}}
           </article>
@@ -180,7 +206,9 @@
 
 <section
   aria-labelledby="source-audit-heading"
-  class="min-w-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70"
+  class="
+    min-w-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70
+  "
 >
   <header class="border-b border-zinc-800 px-6 py-5 sm:px-8">
     <h2 id="source-audit-heading" class="text-lg font-semibold tracking-tight text-zinc-100">Source activity</h2>
@@ -211,7 +239,14 @@
 <section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
   <h2 class="text-lg font-semibold text-zinc-100">Decision timeline</h2>
   <p class="mt-2 text-sm text-zinc-400">Source changes, effective decisions, expiries, delivery attempts, and explicit retries in recorded chronological order.</p>
-  <a href="{{.Prefix}}/bans/{{.Ban.Decision.ID}}/timeline" class="mt-4 inline-flex rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-cyan-400 hover:bg-zinc-800">View decision timeline</a>
+  <a
+    href="{{.Prefix}}/bans/{{.Ban.Decision.ID}}/timeline"
+    class="
+      mt-4 inline-flex rounded-lg border border-zinc-700 px-4 py-2
+      text-sm font-medium text-cyan-400
+      hover:bg-zinc-800
+    "
+  >View decision timeline</a>
 </section>
 
 {{template "delivery-history" .}}

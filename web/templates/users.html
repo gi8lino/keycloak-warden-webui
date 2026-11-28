@@ -25,7 +25,11 @@
     {{end}}
   </ul>
 </section>
-<section class="max-w-lg space-y-4 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
+<section
+  class="
+    max-w-lg space-y-4 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6
+  "
+>
   <h2 class="text-xl font-semibold">Add administrator</h2>
   <p class="text-sm text-zinc-400">This user can manage bans and other local administrators.</p>
   <form method="post" action="{{.Prefix}}/admin/users" class="grid gap-4">
@@ -37,7 +41,9 @@
         required
         maxlength="64"
         autocomplete="off"
-        class="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2"
+        class="
+          rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2
+        "
       />
     </label>
     <label class="grid gap-2">
@@ -49,7 +55,9 @@
         minlength="12"
         maxlength="72"
         autocomplete="new-password"
-        class="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2"
+        class="
+          rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2
+        "
       />
     </label>
     <button class="rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-zinc-950">Create administrator</button>
@@ -93,7 +101,10 @@
         <button
           name="operation"
           value="link"
-          class="rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-zinc-950"
+          class="
+            rounded-lg bg-cyan-400 px-4 py-2
+            font-semibold text-zinc-950
+          "
         >
           Approve sign-in
         </button>

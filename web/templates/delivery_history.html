@@ -1,16 +1,40 @@
 {{define "delivery-status"}}
   {{if eq . "delivered"}}
-    <span class="rounded-full border border-emerald-900/70 bg-emerald-950/30 px-2.5 py-1 text-xs font-medium capitalize text-emerald-200">{{.}}</span>
+    <span
+      class="
+        rounded-full border border-emerald-900/70 bg-emerald-950/30 px-2.5 py-1
+        text-xs font-medium capitalize text-emerald-200
+      "
+    >{{.}}</span>
   {{else if eq . "exhausted"}}
-    <span class="rounded-full border border-red-900/70 bg-red-950/30 px-2.5 py-1 text-xs font-medium capitalize text-red-200">{{.}}</span>
+    <span
+      class="
+        rounded-full border border-red-900/70 bg-red-950/30 px-2.5 py-1
+        text-xs font-medium capitalize text-red-200
+      "
+    >{{.}}</span>
   {{else}}
-    <span class="rounded-full border border-zinc-700 bg-zinc-800 px-2.5 py-1 text-xs font-medium capitalize text-zinc-200">{{.}}</span>
+    <span
+      class="
+        rounded-full border border-zinc-700 bg-zinc-800 px-2.5 py-1
+        text-xs font-medium capitalize text-zinc-200
+      "
+    >{{.}}</span>
   {{end}}
 {{end}}
 
 {{define "delivery-history"}}
-  <section id="delivery-history" class="scroll-mt-6 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
-    <header class="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-800 pb-6">
+  <section
+    id="delivery-history"
+    class="
+      scroll-mt-6 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8
+    "
+  >
+    <header
+      class="
+        flex flex-wrap items-start justify-between gap-4 border-b border-zinc-800 pb-6
+      "
+    >
       <div>
         <h2 class="text-lg font-semibold tracking-tight text-zinc-100">Delivery history</h2>
         <p class="mt-2 text-sm leading-6 text-zinc-400">Revisions and delivery attempts, newest first. A delivery confirms destination acceptance only.</p>
@@ -111,7 +135,13 @@
     {{else}}
       <p class="mt-6 text-sm text-zinc-400">No delivery history on this page.</p>
     {{end}}
-    <nav aria-label="Delivery history pages" class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-zinc-800 pt-4 text-sm">
+    <nav
+      aria-label="Delivery history pages"
+      class="
+        mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-zinc-800 pt-4
+        text-sm
+      "
+    >
       <span class="text-zinc-400">Page {{.History.Page}}</span>
       <div class="flex flex-wrap gap-4">
         {{if .History.Previous}}<a class="text-cyan-400 underline" href="{{.History.Previous}}">Newer history</a>{{end}}

@@ -1,6 +1,13 @@
 {{define "dashboard"}}
 <div class="flex justify-end">
-  <a href="{{.Prefix}}/incidents" class="rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-cyan-400 hover:bg-zinc-800">View incidents</a>
+  <a
+    href="{{.Prefix}}/incidents"
+    class="
+      rounded-lg border border-zinc-700 px-4 py-2
+      text-sm font-medium text-cyan-400
+      hover:bg-zinc-800
+    "
+  >View incidents</a>
 </div>
 <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
   <div
@@ -149,7 +156,12 @@
     </div>
   {{end}}
 </section>
-<section id="create-ban" class="scroll-mt-6 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
+<section
+  id="create-ban"
+  class="
+    scroll-mt-6 rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8
+  "
+>
   <div class="mb-6">
     <h2 class="text-lg font-semibold tracking-tight text-zinc-100">Manual ban</h2>
     <p class="mt-2 text-sm leading-6 text-zinc-400">Create or extend a block directly through Warden.</p>

@@ -8,7 +8,6 @@
         extensions appear separately.
       </p>
     </div>
-    <a href="{{.Prefix}}/ban-history" class="text-sm font-medium text-cyan-400 underline">Clear filters</a>
   </div>
 
   <form method="get" action="{{.Prefix}}/ban-history" class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
@@ -46,7 +45,7 @@
         <option value="unbanned" {{if eq .Overview.State "unbanned"}}selected{{end}}>Unbanned</option>
       </select>
     </label>
-    <div class="flex items-center sm:col-span-2">
+    <div class="flex flex-wrap items-center gap-3 sm:col-span-2">
       <button
         type="submit"
         class="
@@ -58,6 +57,18 @@
       >
         Apply filters
       </button>
+      <a
+        href="{{.Prefix}}/ban-history"
+        class="
+          inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2.5
+          text-sm font-medium text-zinc-300
+          transition-all duration-150
+          hover:bg-zinc-800 hover:text-zinc-100
+          focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400
+        "
+      >
+        {{template "icon-filter-x"}}Clear filters
+      </a>
     </div>
   </form>
 </section>
@@ -73,7 +84,11 @@
   {{if .Revisions.Items}}
     <div class="overflow-x-auto">
       <table class="w-full text-left text-sm">
-        <thead class="bg-zinc-800/60 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+        <thead
+          class="
+            bg-zinc-800/60 text-xs font-semibold uppercase tracking-wider text-zinc-400
+          "
+        >
           <tr>
             <th scope="col" class="px-6 py-4">Changed</th>
             <th scope="col" class="px-6 py-4">IP address</th>

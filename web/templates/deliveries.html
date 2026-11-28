@@ -1,5 +1,10 @@
 {{define "deliveries"}}
-<section aria-labelledby="delivery-health-heading" class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70">
+<section
+  aria-labelledby="delivery-health-heading"
+  class="
+    overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70
+  "
+>
   <header class="border-b border-zinc-800 px-6 py-5">
     <h2 id="delivery-health-heading" class="text-lg font-semibold text-zinc-100">Destination health</h2>
     <p class="mt-2 text-sm text-zinc-400">Across all current revisions, independent of the filters below. Exhausted releases are listed first.</p>
@@ -19,8 +24,18 @@
               <td class="px-4 py-4 tabular-nums text-zinc-300">{{.Pending}}</td>
               <td class="px-4 py-4 tabular-nums"><a class="text-cyan-400 underline" href="{{$.Prefix}}/deliveries?status=retrying&amp;destination={{.Destination | urlquery}}">{{.Retrying}}</a></td>
               <td class="px-4 py-4 tabular-nums"><a class="text-cyan-400 underline" href="{{$.Prefix}}/deliveries?status=exhausted&amp;destination={{.Destination | urlquery}}">{{.Exhausted}}</a></td>
-              <td class="px-4 py-4 tabular-nums {{if .FailedUnbans}}font-semibold text-red-200{{else}}text-zinc-400{{end}}">{{.FailedUnbans}}</td>
-              <td class="px-4 py-4 tabular-nums {{if .ExhaustedUnbans}}font-semibold text-red-200{{else}}text-zinc-400{{end}}">{{.ExhaustedUnbans}}</td>
+              <td
+                class="
+                  px-4 py-4 tabular-nums
+                  {{if .FailedUnbans}}font-semibold text-red-200{{else}}text-zinc-400{{end}}
+                "
+              >{{.FailedUnbans}}</td>
+              <td
+                class="
+                  px-4 py-4 tabular-nums
+                  {{if .ExhaustedUnbans}}font-semibold text-red-200{{else}}text-zinc-400{{end}}
+                "
+              >{{.ExhaustedUnbans}}</td>
               <td class="px-4 py-4 tabular-nums text-zinc-300">{{.Delivered}}</td>
             </tr>
           {{end}}
@@ -120,7 +135,11 @@
   {{if .DeliveryList.Items}}
     <div class="overflow-x-auto">
       <table class="w-full text-left text-sm">
-        <thead class="bg-zinc-800/60 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+        <thead
+          class="
+            bg-zinc-800/60 text-xs font-semibold uppercase tracking-wider text-zinc-400
+          "
+        >
           <tr>
             <th scope="col" class="px-6 py-4">IP address</th>
             <th scope="col" class="px-6 py-4">Destination</th>
@@ -161,7 +180,14 @@
                   <form method="post" action="{{$.Prefix}}/bans/{{.DecisionID}}/retry" class="mt-2">
                     <input type="hidden" name="revision" value="{{.Revision}}">
                     <input type="hidden" name="destination" value="{{.Destination}}">
-                    <button type="submit" class="rounded-lg border border-zinc-700 px-3 py-2 text-sm font-medium text-cyan-400 hover:bg-zinc-800">Retry delivery</button>
+                    <button
+                      type="submit"
+                      class="
+                        rounded-lg border border-zinc-700 px-3 py-2
+                        text-sm font-medium text-cyan-400
+                        hover:bg-zinc-800
+                      "
+                    >Retry delivery</button>
                   </form>
                 {{end}}
               </td>

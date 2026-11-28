@@ -1,22 +1,74 @@
 {{define "incidents"}}
-<section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6">
-  <p class="text-sm text-zinc-400">Named rule threshold hits, including recording-only rules and hypothetical bans. Incidents are not proof of successful enforcement.</p>
+<section class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-6 sm:p-8">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <p class="max-w-3xl text-sm leading-6 text-zinc-400">Named rule threshold hits, including recording-only rules and hypothetical bans. Incidents are not proof of successful enforcement.</p>
+    <a
+      href="{{.Cursor.Refresh}}"
+      aria-label="Refresh latest incidents"
+      title="Refresh latest incidents"
+      class="
+        inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-zinc-700
+        text-cyan-400 transition-all duration-150
+        hover:bg-zinc-800 hover:text-zinc-100
+        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400
+      "
+    >
+      {{template "icon-refresh"}}
+    </a>
+  </div>
   <form method="get" action="{{.Prefix}}/incidents" class="mt-6 grid gap-4 sm:grid-cols-2">
     <label class="grid gap-2 text-sm font-medium text-zinc-300" for="incident-rule">
       Rule
-      <input id="incident-rule" name="rule" value="{{.IncidentFilter.Rule}}" maxlength="64" class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100" placeholder="brute-force">
+      <input
+        id="incident-rule"
+        name="rule"
+        value="{{.IncidentFilter.Rule}}"
+        maxlength="64"
+        class="
+          w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3
+          text-sm text-zinc-100
+        "
+        placeholder="brute-force"
+      >
     </label>
     <label class="grid gap-2 text-sm font-medium text-zinc-300" for="incident-kind">
       Event kind
-      <select id="incident-kind" name="kind" class="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100">
+      <select
+        id="incident-kind"
+        name="kind"
+        class="
+          w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3
+          text-sm text-zinc-100
+        "
+      >
         <option value="">All events</option>
         <option value="user" {{if eq .IncidentFilter.Kind "user"}}selected{{end}}>User</option>
         <option value="admin" {{if eq .IncidentFilter.Kind "admin"}}selected{{end}}>Administrative</option>
       </select>
     </label>
-    <div class="flex items-center gap-4 sm:col-span-2">
-      <button type="submit" class="rounded-lg bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-cyan-400">Apply filters</button>
-      <a href="{{.Prefix}}/incidents" class="text-sm font-medium text-cyan-400 underline">Clear filters</a>
+    <div class="flex flex-wrap items-center gap-3 sm:col-span-2">
+      <button
+        type="submit"
+        class="
+          inline-flex items-center justify-center rounded-lg bg-cyan-500 px-4 py-2.5
+          text-sm font-semibold text-zinc-950
+          transition-all duration-150
+          hover:bg-cyan-400
+          focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300
+        "
+      >Apply filters</button>
+      <a
+        href="{{.Prefix}}/incidents"
+        class="
+          inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2.5
+          text-sm font-medium text-zinc-300
+          transition-all duration-150
+          hover:bg-zinc-800 hover:text-zinc-100
+          focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400
+        "
+      >
+        {{template "icon-filter-x"}}Clear filters
+      </a>
     </div>
   </form>
 </section>
