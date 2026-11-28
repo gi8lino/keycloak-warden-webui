@@ -33,7 +33,7 @@ async function sendEvent(kind, payload) {
     body,
     signal: AbortSignal.timeout(10_000),
   });
-  expect(response.status(), await response.text()).toBe(204);
+  expect(response.status, await response.text()).toBe(204);
 }
 
 // Read authoritative Warden state while its asynchronous workers finish delivery.
@@ -42,7 +42,7 @@ async function readAPI(path) {
     headers: { Authorization: `Bearer ${adminToken}` },
     signal: AbortSignal.timeout(10_000),
   });
-  expect(response.status()).toBe(200);
+  expect(response.status).toBe(200);
   return response.json();
 }
 
