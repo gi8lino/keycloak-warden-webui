@@ -206,7 +206,7 @@ func TestDeliveryHistorySnapshots(t *testing.T) {
 		BanDetails(api, pages)(response, request)
 
 		require.Equal(t, http.StatusOK, response.Code)
-		sections := strings.SplitN(response.Body.String(), `<section id="delivery-history"`, 2)
+		sections := strings.SplitN(response.Body.String(), `id="delivery-history"`, 2)
 		require.Len(t, sections, 2)
 		assert.Contains(t, sections[0], "203.0.113.11")
 		assert.NotContains(t, sections[0], "203.0.113.8")
@@ -309,7 +309,7 @@ func TestDeliveryHistoryWithoutAcknowledgements(t *testing.T) {
 	BanDetails(api, pages)(response, request)
 
 	require.Equal(t, http.StatusOK, response.Code)
-	sections := strings.SplitN(response.Body.String(), `<section id="delivery-history"`, 2)
+	sections := strings.SplitN(response.Body.String(), `id="delivery-history"`, 2)
 	require.Len(t, sections, 2)
 	assert.Contains(t, sections[0], "webhook.retrying")
 	assert.Contains(t, sections[0], "webhook.exhausted")
