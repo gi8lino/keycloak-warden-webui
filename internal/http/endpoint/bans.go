@@ -55,6 +55,7 @@ func BanDetails(api API, pages *Pages) http.HandlerFunc {
 			pages.fail(r, w, user, err)
 			return
 		}
+
 		requestedThrough := through
 
 		// Capture the revision before fetching another page so concurrent changes
@@ -126,6 +127,7 @@ func CreateBan(api API, pages *Pages) http.HandlerFunc {
 			pages.fail(r, w, currentUser(r), err)
 			return
 		}
+
 		pages.redirect(w, r, "/?notice=ban-created")
 	}
 }

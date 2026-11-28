@@ -46,6 +46,7 @@ func (p *Pages) auditAction(r *http.Request, operation administrativeAction, run
 		)
 		return err
 	}
+
 	logger.Info("administrative action completed",
 		"event", "admin_action_completed",
 		"outcome", "completed",

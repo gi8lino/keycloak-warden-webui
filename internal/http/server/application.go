@@ -19,9 +19,11 @@ func newApplication(config Config) http.Handler {
 	middlewares := []httpkitmiddleware.Middleware{
 		middleware.SecurityHeaders(),
 	}
+
 	if config.AccessLog {
 		middlewares = append(middlewares, httpkitmiddleware.AccessLogWithErrorReference(config.Logger))
 	}
+
 	middlewares = append(middlewares,
 		middleware.RecoverPanics(config.Logger),
 		middleware.RejectCrossSiteWrites(config.PublicURL),

@@ -18,6 +18,7 @@ func (s *Store) SetupRequired(ctx context.Context) (bool, error) {
 		    FROM local_users
 		)
 	`).Scan(&required)
+
 	return required, err
 }
 
@@ -34,6 +35,7 @@ func (s *Store) CreateFounder(ctx context.Context, username, passwordHash string
 		return err
 	}
 	defer tx.Rollback() // nolint:errcheck
+
 	result, err := tx.ExecContext(ctx, `
 		INSERT INTO local_users (id, username, password_hash)
 		VALUES (1, ?, ?)
@@ -50,6 +52,7 @@ func (s *Store) CreateFounder(ctx context.Context, username, passwordHash string
 	if created == 0 {
 		return ErrSetupComplete
 	}
+
 	if link != nil {
 		if _, err := tx.ExecContext(ctx, `
 			INSERT INTO identity_links (issuer, subject, username)
@@ -58,6 +61,7 @@ func (s *Store) CreateFounder(ctx context.Context, username, passwordHash string
 			return err
 		}
 	}
+
 	return tx.Commit()
 }
 
@@ -73,6 +77,7 @@ func (s *Store) LookupCredential(ctx context.Context, username string) (string, 
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", ErrNotFound
 	}
+
 	return hash, err
 }
 
@@ -94,6 +99,7 @@ func (s *Store) ChangePassword(ctx context.Context, username, previousHash, pass
 	if err != nil {
 		return fmt.Errorf("update password: %w", err)
 	}
+
 	updated, err := result.RowsAffected()
 	if err != nil {
 		return err
@@ -105,5 +111,6 @@ func (s *Store) ChangePassword(ctx context.Context, username, previousHash, pass
 	if err := revokeUserSessions(ctx, tx, username); err != nil {
 		return fmt.Errorf("revoke administrator sessions: %w", err)
 	}
+
 	return tx.Commit()
 }

@@ -23,6 +23,7 @@ func TestBootstrapComposesRuntime(t *testing.T) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/bans", r.URL.Path)
 		assert.Equal(t, "Bearer private-token", r.Header.Get("Authorization"))
+
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = io.WriteString(w, `[]`)
 	}))
@@ -40,6 +41,7 @@ func TestBootstrapComposesRuntime(t *testing.T) {
 	t.Cleanup(func() { _ = infrastructure.Close() })
 	application, err := NewApplication(t.Context(), cfg, infrastructure)
 	require.NoError(t, err)
+
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	httpConfig, err := NewHTTPConfig(web.Assets, cfg, infrastructure, application, logger, "test")
 	require.NoError(t, err)
@@ -50,17 +52,21 @@ func TestBootstrapComposesRuntime(t *testing.T) {
 	handlers := server.New(httpConfig)
 	setup := httptest.NewRecorder()
 	handlers.Application.ServeHTTP(setup, httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 	assert.Equal(t, http.StatusOK, setup.Code)
 	assert.Contains(t, setup.Body.String(), "Create administrator")
 	assert.NotContains(t, setup.Body.String(), "private-token")
 
 	ready := httptest.NewRecorder()
 	handlers.Management.ServeHTTP(ready, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+
 	assert.Equal(t, http.StatusNoContent, ready.Code)
 
 	require.NoError(t, infrastructure.Close())
+
 	closed := httptest.NewRecorder()
 	handlers.Management.ServeHTTP(closed, httptest.NewRequest(http.MethodGet, "/readyz", nil))
+
 	assert.Equal(t, http.StatusServiceUnavailable, closed.Code)
 }
 

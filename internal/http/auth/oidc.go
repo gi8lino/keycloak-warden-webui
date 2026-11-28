@@ -31,15 +31,19 @@ func (s *Service) oidcFlow(ctx context.Context) (*oidc.Flow, error) {
 	if s.discoverOIDC == nil {
 		return nil, appkitauth.ErrForbidden
 	}
+
 	s.oidcMu.Lock()
 	defer s.oidcMu.Unlock()
+
 	if s.oidc != nil {
 		return s.oidc, nil
 	}
+
 	flow, err := s.discoverOIDC(ctx)
 	if err == nil {
 		s.oidc = flow
 	}
+
 	return flow, err
 }
 
@@ -73,11 +77,13 @@ func (s *Service) CompleteOIDC(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+
 	token, err := s.sessions.Start(r.Context(), user)
 	if err != nil {
 		return err
 	}
 
 	http.SetCookie(w, s.cookies.Cookie(token, false))
+
 	return nil
 }

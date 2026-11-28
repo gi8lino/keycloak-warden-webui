@@ -99,5 +99,6 @@ func (s *Store) RevokeSession(ctx context.Context, hash string) error {
 		DELETE FROM sessions
 		WHERE token_hash = ?
 	`, hash)
+
 	return err
 }

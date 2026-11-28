@@ -24,10 +24,12 @@ func NewApplication(ctx context.Context, cfg cli.Flags, infrastructure *Infrastr
 	if err != nil {
 		return nil, fmt.Errorf("resolve authentication settings: %w", err)
 	}
+
 	identity, err := auth.New(ctx, settings, infrastructure.store)
 	if err != nil {
 		return nil, fmt.Errorf("configure browser authentication: %w", err)
 	}
+
 	return &Application{identity: identity}, nil
 }
 
@@ -53,10 +55,12 @@ func authenticationConfig(cfg cli.Flags) (auth.Config, error) {
 	if overrides.TrustedCIDRs == nil {
 		overrides.TrustedCIDRs = &cidrs
 	}
+
 	resolved, err := proxy.Resolve(proxy.Options{Overrides: overrides})
 	if err != nil {
 		return auth.Config{}, err
 	}
+
 	settings.Proxy = resolved
 	return settings, nil
 }

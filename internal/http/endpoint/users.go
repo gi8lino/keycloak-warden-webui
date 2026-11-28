@@ -20,11 +20,13 @@ func Users(identity *auth.Service, pages *Pages) http.HandlerFunc {
 				pages.Problem(r, w, http.StatusBadRequest, "Invalid user form.")
 				return
 			}
+
 			err := updateUser(identity, r, actor)
 			if err == nil {
 				pages.redirect(w, r, "/admin/users")
 				return
 			}
+
 			switch {
 			case errors.Is(err, auth.ErrIdentityLinked):
 				pages.Problem(r, w, http.StatusConflict, "Identity already linked or account unavailable.")
@@ -37,23 +39,28 @@ func Users(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			default:
 				pages.failure(r, w, err, "Unable to update user.")
 			}
+
 			return
 		}
+
 		users, err := identity.LocalUsers(r.Context(), actor)
 		if err != nil {
 			pages.failure(r, w, err, "Unable to list users.")
 			return
 		}
+
 		links, err := identity.IdentityLinks(r.Context())
 		if err != nil {
 			pages.failure(r, w, err, "Unable to list mappings.")
 			return
 		}
+
 		pending, err := identity.PendingIdentities(r.Context())
 		if err != nil {
 			pages.failure(r, w, err, "Unable to list pending identities.")
 			return
 		}
+
 		pages.render(r, w, http.StatusOK, pageData{Title: "User administration", Page: "users", User: actor.Name, Users: users, Links: links, Pending: pending})
 	}
 }

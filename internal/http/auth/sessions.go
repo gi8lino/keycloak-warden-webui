@@ -44,6 +44,7 @@ func (s sessionStore) Lookup(ctx context.Context, hash string) (User, error) {
 	if err != nil {
 		return User{}, err
 	}
+
 	return User{Name: user.Name, Local: user.Local, Issuer: user.Issuer, Subject: user.Subject}, nil
 }
 
@@ -66,6 +67,7 @@ func newSessions(repository *db.Store, lifetime time.Duration, publicURL, routeP
 		Secure:   strings.HasPrefix(publicURL, "https://"),
 		SameSite: http.SameSiteLaxMode,
 	}
+
 	return manager, cookies
 }
 
@@ -74,6 +76,7 @@ func cookiePath(prefix string) string {
 	if prefix == "" {
 		return "/"
 	}
+
 	return prefix
 }
 
@@ -82,12 +85,15 @@ func (s *Service) Logout(w http.ResponseWriter, r *http.Request) error {
 	if s.proxy != nil && !s.recovery {
 		return errors.New("proxy identity must be logged out at the identity provider")
 	}
+
 	if cookie, err := r.Cookie(cookieName); err == nil {
 		if err := s.sessions.End(r.Context(), cookie.Value); err != nil {
 			return err
 		}
 	}
+
 	http.SetCookie(w, s.cookies.Cookie("", true))
+
 	return nil
 }
 

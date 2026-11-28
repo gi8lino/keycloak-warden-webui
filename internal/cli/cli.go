@@ -63,6 +63,7 @@ func (c Flags) Mode() appkitauth.Mode {
 	if c.Authentication.ModeOverride != nil {
 		return *c.Authentication.ModeOverride
 	}
+
 	return appkitauth.ModeLocal
 }
 
@@ -102,6 +103,7 @@ func Parse(args []string, version string) (flags Flags, err error) {
 	if err := tf.Parse(args); err != nil {
 		return Flags{}, err
 	}
+
 	finalizeServer()
 	finalizeAuthentication()
 	finalizeLogging()
@@ -128,21 +130,26 @@ func registerWardenFlags(tf *tinyflags.FlagSet, cfg *Flags) {
 	tf.StringVar(&cfg.WardenURL, "warden-url", "http://127.0.0.1:8080", "Warden application API URL").
 		Section(sectionWarden).
 		NotBlank()
+
 	tf.StringVar(&cfg.WardenToken, "warden-admin-token", "", "Bearer token for Warden administration").
 		Section(sectionWarden).
 		OverriddenValueMaskFn(tinyflags.MaskFirstLastLimit(5))
+
 	tf.BoolVar(&cfg.AllowInsecureWardenHTTP, "allow-insecure-warden-http", false,
 		"Allow unencrypted HTTP to a non-loopback Warden URL (admin token is sent in cleartext)").
 		Section(sectionWarden).
 		Strict()
+
 	tf.DurationVar(&cfg.WardenRequestTimeout, "warden-request-timeout", client.DefaultRequestTimeout,
 		"Timeout for ordinary Warden administrative requests").
 		Section(sectionWarden).
 		Validate(tinyflags.Positive[time.Duration]())
+
 	tf.DurationVar(&cfg.WardenMaintenanceTimeout, "warden-maintenance-timeout", client.DefaultMaintenanceTimeout,
 		"Timeout for Warden maintenance requests").
 		Section(sectionWarden).
 		Validate(tinyflags.Positive[time.Duration]())
+
 	tf.IntVar(&cfg.WardenMaxResponseBytes, "warden-max-response-bytes", client.DefaultMaxResponseBytes,
 		"Maximum successful Warden administrative response size in bytes").
 		Section(sectionWarden).
@@ -154,11 +161,14 @@ func registerLocalFlags(tf *tinyflags.FlagSet, cfg *Flags) {
 	tf.StringVar(&cfg.Database, "database", "warden-webui.db", "Private Web UI SQLite database path").
 		Section(appkitconfig.SectionDatabase).
 		NotBlank()
+
 	tf.StringVar(&cfg.AdminGroup, "admin-group", "warden-admins", "Required group for OIDC and trusted-proxy administrators").
 		Section(appkitconfig.SectionAuthentication).
 		NotBlank()
+
 	tf.StringVar(&cfg.SetupSubject, "setup-subject", "", "External subject for the initial administrator (first setup only)").
 		Section(sectionSetup)
+
 	tf.StringVar(&cfg.SetupToken, "setup-token", "", "One-time setup authorization token (at least 32 characters)").
 		Section(sectionSetup).
 		OverriddenValueMaskFn(tinyflags.MaskFirstLastLimit(5))

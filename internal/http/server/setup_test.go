@@ -32,6 +32,7 @@ func localHandlers(t *testing.T, prefix string) http.Handler {
 	store, err := db.Open(t.Context(), filepath.Join(t.TempDir(), "webui.db"))
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, store.Close()) })
+
 	return newLocalApplication(t, prefix, store)
 }
 
@@ -82,6 +83,7 @@ func localForm(path string, values url.Values) *http.Request {
 	request := httptest.NewRequest(http.MethodPost, path, strings.NewReader(values.Encode()))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	request.Header.Set("Origin", "http://127.0.0.1:8082")
+
 	return request
 }
 
@@ -90,14 +92,17 @@ func TestBrowserSetup(t *testing.T) {
 
 	t.Run("new local installation redirects to setup", func(t *testing.T) {
 		t.Parallel()
+
 		app := localHandlers(t, "")
 		recorder := httptest.NewRecorder()
 		app.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/", nil))
+
 		assert.Equal(t, http.StatusSeeOther, recorder.Code)
 		assert.Equal(t, "/setup", recorder.Header().Get("Location"))
 
 		recorder = httptest.NewRecorder()
 		app.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Equal(t, http.StatusOK, recorder.Code)
 		assert.Contains(t, recorder.Body.String(), "Create administrator")
 	})
@@ -125,6 +130,7 @@ func TestBrowserSetup(t *testing.T) {
 		logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 		pages, err := endpoint.NewPages(web.Assets, "", identity.Mode(), logger, store, "", "test")
 		require.NoError(t, err)
+
 		static, err := fs.Sub(web.Assets, "static")
 		require.NoError(t, err)
 
@@ -141,6 +147,7 @@ func TestBrowserSetup(t *testing.T) {
 
 		before := httptest.NewRecorder()
 		app.ServeHTTP(before, httptest.NewRequest(http.MethodGet, "/", nil))
+
 		assert.Equal(t, http.StatusSeeOther, before.Code)
 		assert.Equal(t, "/setup", before.Header().Get("Location"))
 
@@ -151,21 +158,25 @@ func TestBrowserSetup(t *testing.T) {
 			"password":        {"correct-password"},
 			"confirmPassword": {"correct-password"},
 		}))
+
 		require.Equal(t, http.StatusSeeOther, setup.Code)
 		assert.False(t, identity.SetupRequired())
 
 		after := httptest.NewRecorder()
 		app.ServeHTTP(after, httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Equal(t, http.StatusNotFound, after.Code)
 
 		unauthorized := httptest.NewRecorder()
 		app.ServeHTTP(unauthorized, httptest.NewRequest(http.MethodGet, "/", nil))
+
 		assert.Equal(t, http.StatusSeeOther, unauthorized.Code)
 		assert.Equal(t, "/login", unauthorized.Header().Get("Location"))
 	})
 
 	t.Run("invalid token cannot provision administrator", func(t *testing.T) {
 		t.Parallel()
+
 		app := localHandlers(t, "")
 		recorder := httptest.NewRecorder()
 		app.ServeHTTP(recorder, localForm("/setup", url.Values{
@@ -174,14 +185,18 @@ func TestBrowserSetup(t *testing.T) {
 			"password":        {"correct-password"},
 			"confirmPassword": {"correct-password"},
 		}))
+
 		assert.Equal(t, http.StatusForbidden, recorder.Code)
+
 		recorder = httptest.NewRecorder()
 		app.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Equal(t, http.StatusOK, recorder.Code)
 	})
 
 	t.Run("setup logs in and cannot run twice", func(t *testing.T) {
 		t.Parallel()
+
 		app := localHandlers(t, "")
 		recorder := httptest.NewRecorder()
 		app.ServeHTTP(recorder, localForm("/setup", url.Values{
@@ -190,19 +205,23 @@ func TestBrowserSetup(t *testing.T) {
 			"password":        {"correct-password"},
 			"confirmPassword": {"correct-password"},
 		}))
+
 		require.Equal(t, http.StatusSeeOther, recorder.Code)
 		assert.Equal(t, "/", recorder.Header().Get("Location"))
+
 		cookies := recorder.Result().Cookies()
 		require.Len(t, cookies, 1)
 
 		recorder = httptest.NewRecorder()
 		app.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Equal(t, http.StatusNotFound, recorder.Code)
 
 		recorder = httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, "/account/password", nil)
 		request.AddCookie(cookies[0])
 		app.ServeHTTP(recorder, request)
+
 		assert.Equal(t, http.StatusOK, recorder.Code)
 		assert.Contains(t, recorder.Body.String(), "Change password")
 	})
@@ -218,10 +237,12 @@ func TestBrowserSetup(t *testing.T) {
 			"password":        {"correct-password"},
 			"confirmPassword": {"correct-password"},
 		}))
+
 		require.Equal(t, http.StatusSeeOther, setup.Code)
 
 		get := httptest.NewRecorder()
 		app.ServeHTTP(get, httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Equal(t, http.StatusNotFound, get.Code)
 
 		post := httptest.NewRecorder()
@@ -231,16 +252,19 @@ func TestBrowserSetup(t *testing.T) {
 			"password":        {"other-password"},
 			"confirmPassword": {"other-password"},
 		}))
+
 		assert.Equal(t, http.StatusNotFound, post.Code)
 
 		root := httptest.NewRecorder()
 		app.ServeHTTP(root, httptest.NewRequest(http.MethodGet, "/", nil))
+
 		assert.Equal(t, http.StatusSeeOther, root.Code)
 		assert.Equal(t, "/login", root.Header().Get("Location"))
 	})
 
 	t.Run("password rotation revokes session and requires new credentials", func(t *testing.T) {
 		t.Parallel()
+
 		app := localHandlers(t, "")
 		setup := httptest.NewRecorder()
 		app.ServeHTTP(setup, localForm("/setup", url.Values{
@@ -249,9 +273,12 @@ func TestBrowserSetup(t *testing.T) {
 			"password":        {"correct-password"},
 			"confirmPassword": {"correct-password"},
 		}))
+
 		require.Equal(t, http.StatusSeeOther, setup.Code)
+
 		oldCookies := setup.Result().Cookies()
 		require.Len(t, oldCookies, 1)
+
 		oldCookie := oldCookies[0]
 
 		change := localForm("/account/password", url.Values{
@@ -262,6 +289,7 @@ func TestBrowserSetup(t *testing.T) {
 		change.AddCookie(oldCookie)
 		recorder := httptest.NewRecorder()
 		app.ServeHTTP(recorder, change)
+
 		require.Equal(t, http.StatusSeeOther, recorder.Code)
 		assert.Equal(t, "/login?changed=1", recorder.Header().Get("Location"))
 
@@ -269,6 +297,7 @@ func TestBrowserSetup(t *testing.T) {
 		protected := httptest.NewRequest(http.MethodGet, "/", nil)
 		protected.AddCookie(oldCookie)
 		app.ServeHTTP(recorder, protected)
+
 		assert.Equal(t, http.StatusSeeOther, recorder.Code)
 		assert.Equal(t, "/login", recorder.Header().Get("Location"))
 
@@ -277,16 +306,19 @@ func TestBrowserSetup(t *testing.T) {
 			"username": {"admin"},
 			"password": {"new-password-2026"},
 		}))
+
 		assert.Equal(t, http.StatusSeeOther, recorder.Code)
 	})
 
 	t.Run("same-origin protection applies to setup", func(t *testing.T) {
 		t.Parallel()
+
 		app := localHandlers(t, "")
 		request := localForm("/setup", url.Values{"setupToken": {bootstrapSecret}})
 		request.Header.Set("Origin", "https://attacker.example")
 		recorder := httptest.NewRecorder()
 		app.ServeHTTP(recorder, request)
+
 		assert.Equal(t, http.StatusForbidden, recorder.Code)
 	})
 
@@ -339,6 +371,7 @@ func TestBrowserSetup(t *testing.T) {
 			"password":        {"correct-password"},
 			"confirmPassword": {"correct-password"},
 		}))
+
 		require.Equal(t, http.StatusSeeOther, setup.Code)
 
 		recorder := httptest.NewRecorder()
@@ -362,6 +395,7 @@ func TestBrowserSetup(t *testing.T) {
 			"password":        {"correct-password"},
 			"confirmPassword": {"correct-password"},
 		}))
+
 		require.Equal(t, http.StatusSeeOther, setup.Code)
 
 		cookies := setup.Result().Cookies()
@@ -385,17 +419,22 @@ func TestBrowserSetup(t *testing.T) {
 // postAccountForm exercises a protected or public account form with browser origin checks.
 func postAccountForm(t *testing.T, app http.Handler, path string, values url.Values, cookie *http.Cookie) *httptest.ResponseRecorder {
 	t.Helper()
+
 	r := localForm(path, values)
+
 	if cookie != nil {
 		r.AddCookie(cookie)
 	}
+
 	result := httptest.NewRecorder()
 	app.ServeHTTP(result, r)
+
 	return result
 }
 
 func TestAdministratorDirectory(t *testing.T) {
 	t.Parallel()
+
 	app := localHandlers(t, "/ui")
 	path := "/ui/admin/users"
 	setup := postAccountForm(t, app, "/ui/setup", url.Values{
@@ -404,7 +443,9 @@ func TestAdministratorDirectory(t *testing.T) {
 		"confirmPassword": {"owner-password"},
 		"setupToken":      {bootstrapSecret},
 	}, nil)
+
 	require.Equal(t, http.StatusSeeOther, setup.Code)
+
 	owner := setup.Result().Cookies()[0]
 	create := url.Values{
 		"operation": {"create"},
@@ -412,6 +453,7 @@ func TestAdministratorDirectory(t *testing.T) {
 		"password":  {"operator-password"},
 	}
 	result := postAccountForm(t, app, path, create, owner)
+
 	require.Equal(t, http.StatusSeeOther, result.Code)
 	assert.Equal(t, path, result.Header().Get("Location"))
 	require.Equal(t, http.StatusConflict, postAccountForm(t, app, path, create, owner).Code)
@@ -421,12 +463,15 @@ func TestAdministratorDirectory(t *testing.T) {
 		"password": {"operator-password"},
 	}
 	signedIn := postAccountForm(t, app, "/ui/login", login, nil)
+
 	require.Equal(t, http.StatusSeeOther, signedIn.Code)
+
 	operator := signedIn.Result().Cookies()[0]
 	request := httptest.NewRequest(http.MethodGet, "/ui/preferences", nil)
 	request.AddCookie(operator)
 	page := httptest.NewRecorder()
 	app.ServeHTTP(page, request)
+
 	require.Equal(t, http.StatusOK, page.Code)
 	assert.Contains(t, page.Body.String(), "Change password")
 	assert.Contains(t, page.Body.String(), "/ui/admin/users")
@@ -435,15 +480,20 @@ func TestAdministratorDirectory(t *testing.T) {
 		"operation": {"disable"},
 		"username":  {"operator"},
 	}
+
 	require.Equal(t, http.StatusConflict, postAccountForm(t, app, path, disable, operator).Code)
 	require.Equal(t, http.StatusSeeOther, postAccountForm(t, app, path, disable, owner).Code)
+
 	enable := url.Values{
 		"operation": {"enable"},
 		"username":  {"operator"},
 	}
+
 	require.Equal(t, http.StatusSeeOther, postAccountForm(t, app, path, enable, owner).Code)
+
 	page = httptest.NewRecorder()
 	app.ServeHTTP(page, request)
+
 	assert.Equal(t, "/ui/login", page.Header().Get("Location"))
 	require.Equal(t, http.StatusSeeOther, postAccountForm(t, app, "/ui/login", login, nil).Code)
 }
@@ -466,9 +516,11 @@ func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string, lo
 		SetupSubject:    "operator",
 		SetupToken:      bootstrapSecret,
 	}
+
 	if mode == appkitauth.ModeProxy {
 		cfg.Proxy = testProxyConfig()
 	}
+
 	if mode == appkitauth.ModeOIDC {
 		// Allow local recovery to avoid OIDC network discovery in this route test.
 		cfg.OIDC.Issuer = "https://identity.example/realms/test"
@@ -480,6 +532,7 @@ func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string, lo
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	pages, err := endpoint.NewPages(web.Assets, prefix, identity.Mode(), logger, store, "", "test")
 	require.NoError(t, err)
+
 	static, err := fs.Sub(web.Assets, "static")
 	require.NoError(t, err)
 
@@ -494,6 +547,7 @@ func freshExternalHandlers(t *testing.T, mode appkitauth.Mode, prefix string, lo
 		AuthenticationConfig: AuthenticationConfig{Identity: identity},
 		ApplicationConfig:    ApplicationConfig{Warden: &fakeAPI{}},
 	})
+
 	return handlers.Application
 }
 
@@ -516,6 +570,7 @@ func TestExternalFirstRunSetup(t *testing.T) {
 
 		setup := httptest.NewRecorder()
 		app.ServeHTTP(setup, httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Equal(t, http.StatusOK, setup.Code)
 	})
 
@@ -555,21 +610,25 @@ func TestExternalFirstRunSetup(t *testing.T) {
 			"password":        {"correct-password"},
 			"confirmPassword": {"correct-password"},
 		}))
+
 		require.Equal(t, http.StatusSeeOther, setup.Code)
 		assert.Empty(t, setup.Result().Cookies())
 
 		approved := httptest.NewRecorder()
 		app.ServeHTTP(approved, authenticatedRequest(http.MethodGet, "/", ""))
+
 		assert.Equal(t, http.StatusOK, approved.Code)
 
 		unapproved := authenticatedRequest(http.MethodGet, "/", "")
 		unapproved.Header.Set("X-Forwarded-Groups", "other-group")
 		response := httptest.NewRecorder()
 		app.ServeHTTP(response, unapproved)
+
 		assert.Equal(t, http.StatusForbidden, response.Code)
 
 		completed := httptest.NewRecorder()
 		app.ServeHTTP(completed, httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Equal(t, http.StatusNotFound, completed.Code)
 	})
 
@@ -596,6 +655,7 @@ func TestExternalFirstRunSetup(t *testing.T) {
 			"password":        {"correct-password"},
 			"confirmPassword": {"correct-password"},
 		}))
+
 		require.Equal(t, http.StatusSeeOther, setup.Code)
 		assert.Empty(t, setup.Result().Cookies())
 
@@ -609,12 +669,16 @@ func TestExternalFirstRunSetup(t *testing.T) {
 
 func TestRecoveryPasswordChange(t *testing.T) {
 	t.Parallel()
+
 	t.Run("proxy keeps recovery login", func(t *testing.T) {
 		t.Parallel()
+
 		assertRecoveryPasswordChange(t, appkitauth.ModeProxy)
 	})
+
 	t.Run("OIDC keeps recovery login", func(t *testing.T) {
 		t.Parallel()
+
 		assertRecoveryPasswordChange(t, appkitauth.ModeOIDC)
 	})
 }
@@ -622,32 +686,40 @@ func TestRecoveryPasswordChange(t *testing.T) {
 // assertRecoveryPasswordChange verifies password rotation keeps external-mode users on local recovery.
 func assertRecoveryPasswordChange(t *testing.T, mode appkitauth.Mode) {
 	t.Helper()
+
 	app := freshExternalHandlers(t, mode, "/ui", true)
 	setup := postAccountForm(t, app, "/ui/setup", url.Values{
 		"setupToken": {bootstrapSecret}, "username": {"owner"},
 		"password": {"correct-password"}, "confirmPassword": {"correct-password"},
 	}, nil)
+
 	require.Equal(t, http.StatusSeeOther, setup.Code)
 
 	login := postAccountForm(t, app, "/ui/login", url.Values{
 		"username": {"owner"}, "password": {"correct-password"},
 	}, nil)
+
 	require.Equal(t, http.StatusSeeOther, login.Code)
 	require.Len(t, login.Result().Cookies(), 1)
+
 	cookie := login.Result().Cookies()[0]
 	changed := postAccountForm(t, app, "/ui/account/password", url.Values{
 		"currentPassword": {"correct-password"}, "newPassword": {"new-password-2026"},
 		"confirmPassword": {"new-password-2026"},
 	}, cookie)
+
 	require.Equal(t, http.StatusSeeOther, changed.Code)
 	require.Equal(t, "/ui/auth/local?changed=1", changed.Header().Get("Location"))
 
 	page := httptest.NewRecorder()
 	app.ServeHTTP(page, httptest.NewRequest(http.MethodGet, changed.Header().Get("Location"), nil))
+
 	assert.Equal(t, http.StatusOK, page.Code)
+
 	login = postAccountForm(t, app, "/ui/login", url.Values{
 		"username": {"owner"}, "password": {"new-password-2026"},
 	}, nil)
+
 	assert.Equal(t, http.StatusSeeOther, login.Code)
 }
 
@@ -667,9 +739,11 @@ func TestSetupRouteRegistration(t *testing.T) {
 		registerPublicRoutes(mux, config)
 
 		_, getPattern := mux.Handler(httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Equal(t, "GET /setup", getPattern)
 
 		_, postPattern := mux.Handler(httptest.NewRequest(http.MethodPost, "/setup", nil))
+
 		assert.Equal(t, "POST /setup", postPattern)
 	})
 
@@ -686,18 +760,22 @@ func TestSetupRouteRegistration(t *testing.T) {
 		registerPublicRoutes(mux, config)
 
 		_, getPattern := mux.Handler(httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Empty(t, getPattern)
 
 		_, postPattern := mux.Handler(httptest.NewRequest(http.MethodPost, "/setup", nil))
+
 		assert.Empty(t, postPattern)
 
 		app := New(config).Application
 		get := httptest.NewRecorder()
 		app.ServeHTTP(get, httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Equal(t, http.StatusNotFound, get.Code)
 
 		post := httptest.NewRecorder()
 		app.ServeHTTP(post, localForm("/setup", url.Values{}))
+
 		assert.Equal(t, http.StatusNotFound, post.Code)
 	})
 
@@ -716,6 +794,7 @@ func TestSetupRouteRegistration(t *testing.T) {
 			"password":        {"correct-password"},
 			"confirmPassword": {"correct-password"},
 		}))
+
 		require.Equal(t, http.StatusSeeOther, setup.Code)
 		require.NoError(t, first.Close())
 
@@ -724,22 +803,29 @@ func TestSetupRouteRegistration(t *testing.T) {
 		t.Cleanup(func() { require.NoError(t, reopened.Close()) })
 
 		config := newLocalServerConfig(t, "", reopened)
+
 		require.False(t, config.Identity.SetupRequired())
+
 		mux := http.NewServeMux()
 		registerPublicRoutes(mux, config)
 
 		_, getPattern := mux.Handler(httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Empty(t, getPattern)
+
 		_, postPattern := mux.Handler(httptest.NewRequest(http.MethodPost, "/setup", nil))
+
 		assert.Empty(t, postPattern)
 
 		restarted := New(config).Application
 		get := httptest.NewRecorder()
 		restarted.ServeHTTP(get, httptest.NewRequest(http.MethodGet, "/setup", nil))
+
 		assert.Equal(t, http.StatusNotFound, get.Code)
 
 		root := httptest.NewRecorder()
 		restarted.ServeHTTP(root, httptest.NewRequest(http.MethodGet, "/", nil))
+
 		assert.Equal(t, http.StatusSeeOther, root.Code)
 		assert.Equal(t, "/login", root.Header().Get("Location"))
 	})

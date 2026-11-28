@@ -12,6 +12,7 @@ func (s *Store) Theme(ctx context.Context, name string) (string, error) {
 		    WHERE username = ?
 		), '')
 	`, name).Scan(&title)
+
 	return title, err
 }
 
@@ -23,5 +24,6 @@ func (s *Store) SaveTheme(ctx context.Context, name, title string) error {
 		ON CONFLICT (username) DO UPDATE
 		    SET theme = excluded.theme
 	`, name, title)
+
 	return err
 }

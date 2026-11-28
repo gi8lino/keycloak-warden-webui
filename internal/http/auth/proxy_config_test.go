@@ -6,5 +6,6 @@ import "github.com/containeroo/appkit/auth/proxy"
 func testProxyConfig() proxy.Config {
 	cfg := proxy.Defaults()
 	cfg.TrustedCIDRs = []string{"127.0.0.1/32"}
+
 	return cfg
 }

@@ -16,6 +16,7 @@ func Incidents(api API, pages *Pages) http.HandlerFunc {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid incident filters.")
 			return
 		}
+
 		rule, kind := values.Get("rule"), values.Get("kind")
 		if !validIncidentRuleFilter(rule) || !validIncidentKindFilter(kind) {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid incident filters.")
@@ -50,6 +51,7 @@ func validIncidentRuleFilter(rule string) bool {
 	if len(rule) > 64 {
 		return false
 	}
+
 	return !strings.ContainsFunc(rule, func(r rune) bool {
 		return unicode.IsSpace(r) || unicode.IsControl(r)
 	})

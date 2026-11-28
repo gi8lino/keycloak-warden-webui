@@ -23,9 +23,11 @@ const testSetupToken = "long-test-setup-token-0123456789abcdef"
 // authStore creates an isolated administrator store for authentication tests.
 func authStore(t *testing.T) *db.Store {
 	t.Helper()
+
 	store, err := db.Open(t.Context(), filepath.Join(t.TempDir(), "warden-webui.db"))
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, store.Close()) })
+
 	return store
 }
 
@@ -44,24 +46,29 @@ func TestNew(t *testing.T) {
 
 	t.Run("rejects unauthenticated mode", func(t *testing.T) {
 		t.Parallel()
+
 		mode := appkitauth.ModeNone
 		cfg := localConfig()
 		cfg.Mode = mode
 		_, err := New(t.Context(), cfg, authStore(t))
+
 		require.ErrorContains(t, err, "unauthenticated mode is not supported")
 	})
 
 	t.Run("rejects unknown mode", func(t *testing.T) {
 		t.Parallel()
+
 		mode := appkitauth.Mode("unsupported")
 		cfg := localConfig()
 		cfg.Mode = mode
 		_, err := New(t.Context(), cfg, authStore(t))
+
 		require.ErrorContains(t, err, "unsupported authentication mode")
 	})
 
 	t.Run("defaults to local mode", func(t *testing.T) {
 		t.Parallel()
+
 		service, err := New(t.Context(), localConfig(), authStore(t))
 		require.NoError(t, err)
 		assert.Equal(t, appkitauth.ModeLocal, service.Mode())
@@ -70,16 +77,20 @@ func TestNew(t *testing.T) {
 
 	t.Run("requires a bootstrap token before initial local setup", func(t *testing.T) {
 		t.Parallel()
+
 		cfg := localConfig()
 		cfg.SetupToken = ""
 		_, err := New(t.Context(), cfg, authStore(t))
+
 		require.ErrorContains(t, err, "setup-token")
 	})
 
 	t.Run("permits an existing local administrator without a setup token", func(t *testing.T) {
 		t.Parallel()
+
 		store := authStore(t)
 		require.NoError(t, store.CreateInitialAdministrator(t.Context(), "admin", "hash"))
+
 		cfg := localConfig()
 		cfg.SetupToken = ""
 		_, err := New(t.Context(), cfg, store)
@@ -88,7 +99,9 @@ func TestNew(t *testing.T) {
 
 	t.Run("requires repository", func(t *testing.T) {
 		t.Parallel()
+
 		_, err := New(t.Context(), localConfig(), nil)
+
 		require.ErrorContains(t, err, "repository")
 	})
 }
@@ -136,6 +149,7 @@ func TestSetupState(t *testing.T) {
 		store := authStore(t)
 		first, err := New(t.Context(), localConfig(), store)
 		require.NoError(t, err)
+
 		second, err := New(t.Context(), localConfig(), store)
 		require.NoError(t, err)
 		require.True(t, second.SetupRequired())
@@ -165,6 +179,7 @@ func TestSetupState(t *testing.T) {
 				results <- service.SetupLocal(httptest.NewRecorder(), request, testSetupToken, name, "correct-password")
 			}()
 		}
+
 		close(start)
 
 		successes, conflicts := 0, 0
@@ -179,6 +194,7 @@ func TestSetupState(t *testing.T) {
 				assert.NoError(t, err)
 			}
 		}
+
 		assert.Equal(t, 1, successes)
 		assert.Equal(t, 1, conflicts)
 		assert.False(t, service.SetupRequired())
@@ -194,12 +210,14 @@ func TestSetupState(t *testing.T) {
 		store := authStore(t)
 		service, err := New(t.Context(), localConfig(), store)
 		require.NoError(t, err)
+
 		failure := errors.New("session persistence unavailable")
 		service.sessions.Store = failingSessionStore{Store: service.sessions.Store, err: failure}
 
 		response := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodPost, "/setup", nil).WithContext(t.Context())
 		err = service.SetupLocal(response, request, testSetupToken, "admin", "correct-password")
+
 		require.ErrorIs(t, err, failure)
 		assert.Empty(t, response.Result().Cookies())
 		assert.False(t, service.SetupRequired())
@@ -213,6 +231,7 @@ func TestSetupState(t *testing.T) {
 		login := httptest.NewRecorder()
 		require.NoError(t, service.SignInLocal(login, request, "admin", "correct-password"))
 		require.Len(t, login.Result().Cookies(), 1)
+
 		authenticated := httptest.NewRequest(http.MethodGet, "/", nil).WithContext(t.Context())
 		authenticated.AddCookie(login.Result().Cookies()[0])
 		user, err := service.Authenticate(authenticated)
@@ -225,6 +244,7 @@ func TestSetupState(t *testing.T) {
 
 		store := authStore(t)
 		require.NoError(t, store.CreateInitialAdministrator(t.Context(), "admin", "hash"))
+
 		cfg := localConfig()
 		cfg.SetupToken = ""
 

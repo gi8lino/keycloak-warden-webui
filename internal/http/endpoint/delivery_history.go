@@ -98,6 +98,7 @@ func historyPageURL(path string, page int, through int64) string {
 	if through > 0 {
 		query.Set(historyThroughRevisionParam, strconv.FormatInt(through, 10))
 	}
+
 	return path + "?" + query.Encode() + "#delivery-history"
 }
 
@@ -162,6 +163,7 @@ func currentDeliveryViews(record model.Record) []deliveryDestinationView {
 		if entry.Revision != record.Decision.Revision {
 			continue
 		}
+
 		view, exists := views[entry.Destination]
 		if !exists {
 			view = deliveryDestinationView{
@@ -183,6 +185,7 @@ func currentDeliveryViews(record model.Record) []deliveryDestinationView {
 				Revision:    entry.Revision,
 			}, record.Decision.Revision, nil)
 		}
+
 		views[entry.Destination] = view
 	}
 
@@ -199,5 +202,6 @@ func currentDeliveryViews(record model.Record) []deliveryDestinationView {
 func newestAttempts(attempts []model.DeliveryAttempt) []model.DeliveryAttempt {
 	result := slices.Clone(attempts)
 	slices.Reverse(result)
+
 	return result
 }

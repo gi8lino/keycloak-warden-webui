@@ -19,6 +19,7 @@ func Ready(check func(context.Context) error) http.HandlerFunc {
 			http.Error(w, "Web UI database unavailable.", http.StatusServiceUnavailable)
 			return
 		}
+
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

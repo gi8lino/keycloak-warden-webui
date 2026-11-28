@@ -20,6 +20,7 @@ func TestEmbeddedAssets(t *testing.T) {
 			"newestAttempts": func(v any) any { return v },
 		}).ParseFS(Assets, "templates/*.html")
 		require.NoError(t, err, "parse embedded templates")
+
 		for _, name := range []string{"account-menu", "users", "password", "dashboard", "base.html", "maintenance", "login", "setup", "error", "not-found", "detail", "delivery-history", "delivery-status", "ban-history", "deliveries"} {
 			assert.NotNil(t, templates.Lookup(name))
 		}

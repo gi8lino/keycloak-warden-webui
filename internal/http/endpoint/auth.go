@@ -25,6 +25,7 @@ func LoginPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 				})
 				return
 			}
+
 			if err := identity.BeginOIDC(w, r); err != nil {
 				pages.Problem(r, w, http.StatusServiceUnavailable, "OIDC login unavailable.")
 			}
@@ -47,6 +48,7 @@ func LocalLoginPage(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			NotFound(pages)(w, r)
 			return
 		}
+
 		pages.render(r, w, http.StatusOK, pageData{
 			Title:  "Local sign in",
 			Page:   "login",
@@ -73,11 +75,13 @@ func LoginLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 
 		u := r.FormValue("username")
 		pw := r.FormValue("password")
+
 		if err := identity.SignInLocal(w, r, u, pw); err != nil {
 			if !isRejectedLocalLogin(err) {
 				pages.failure(r, w, err, "Authentication unavailable.")
 				return
 			}
+
 			pages.render(r, w, http.StatusUnauthorized, pageData{
 				Title: "Sign in",
 				Page:  "login",
@@ -97,6 +101,7 @@ func OIDCCallback(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			pages.Problem(r, w, http.StatusForbidden, "OIDC authentication failed or administrator group missing.")
 			return
 		}
+
 		pages.redirect(w, r, "/")
 	}
 }
@@ -112,6 +117,7 @@ func Logout(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			pages.Problem(r, w, http.StatusBadRequest, "Sign out through your identity provider.")
 			return
 		}
+
 		redirectAfterAuthForm(w, r, identity, pages, "/login")
 	}
 }
@@ -121,6 +127,7 @@ func loginNotice(r *http.Request) string {
 	if r.URL.Query().Get("changed") == "1" {
 		return "Password changed. Sign in again."
 	}
+
 	return ""
 }
 
@@ -134,5 +141,6 @@ func redirectAfterAuthForm(w http.ResponseWriter, r *http.Request, identity *aut
 	if identity.Mode() == appkitauth.ModeOIDC {
 		destination = "/login?continue=1"
 	}
+
 	pages.redirect(w, r, destination)
 }

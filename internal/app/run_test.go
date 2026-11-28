@@ -11,7 +11,9 @@ import (
 
 func TestRunHelp(t *testing.T) {
 	t.Parallel()
+
 	var out, errs bytes.Buffer
+
 	require.NoError(t, Run(context.Background(), []string{"--help"}, web.Assets, "v1.0.0", &out, &errs))
 	assert.Contains(t, out.String(), "warden-webui")
 }

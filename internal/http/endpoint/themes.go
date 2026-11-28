@@ -15,10 +15,12 @@ func (p *Pages) accountTheme(ctx context.Context, name string) themes.Theme {
 		if err != nil {
 			p.logger.Error("read theme preference", "event", "theme_read_failed", "error", err)
 		}
+
 		if theme, ok := themes.Find(p.catalog, title); ok {
 			return theme
 		}
 	}
+
 	fallback, _ := themes.Find(p.catalog, themes.DefaultTheme)
 	return fallback
 }
@@ -29,6 +31,7 @@ func (p *Pages) SaveTheme(w http.ResponseWriter, r *http.Request) {
 		p.Problem(r, w, http.StatusBadRequest, "Invalid theme form.")
 		return
 	}
+
 	theme, ok := themes.Find(p.catalog, r.PostForm.Get("theme"))
 	if !ok {
 		p.Problem(r, w, http.StatusBadRequest, "Unknown theme.")
@@ -38,6 +41,7 @@ func (p *Pages) SaveTheme(w http.ResponseWriter, r *http.Request) {
 		p.failure(r, w, err, "Unable to save theme.")
 		return
 	}
+
 	p.redirect(w, r, "/preferences")
 }
 
@@ -48,7 +52,9 @@ func (p *Pages) ThemeStylesheet(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+
 	w.Header().Set("Content-Type", "text/css; charset=utf-8")
+
 	if err := palette.Execute(w, theme); err != nil {
 		p.logger.Error("write theme stylesheet", "event", "theme_write_failed", "error", err)
 	}

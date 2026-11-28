@@ -18,7 +18,9 @@ func TestParse(t *testing.T) {
 
 	t.Run("help documents the one flagset", func(t *testing.T) {
 		t.Parallel()
+
 		_, err := Parse([]string{"--help"}, "v0.1.0")
+
 		require.Error(t, err)
 		assert.True(t, tinyflags.IsHelpRequested(err))
 		assert.Contains(t, err.Error(), "Usage: warden-webui [flags]")
@@ -30,6 +32,7 @@ func TestParse(t *testing.T) {
 
 	t.Run("flags configure listeners and route prefix", func(t *testing.T) {
 		t.Parallel()
+
 		cfg, err := Parse([]string{
 			"--warden-admin-token=secret",
 			"--database=/data/test.db",
@@ -156,7 +159,9 @@ func TestParse(t *testing.T) {
 
 	t.Run("no subcommands", func(t *testing.T) {
 		t.Parallel()
+
 		_, err := Parse([]string{"serve", "--warden-admin-token=secret"}, "dev")
+
 		require.ErrorContains(t, err, "accepts no positional arguments")
 	})
 
@@ -164,6 +169,7 @@ func TestParse(t *testing.T) {
 		t.Parallel()
 
 		_, err := Parse([]string{"--warden-admin-token=secret", "unexpected"}, "dev")
+
 		require.ErrorContains(t, err, "accepts no positional arguments")
 	})
 }

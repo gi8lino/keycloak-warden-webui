@@ -24,6 +24,7 @@ func Run(ctx context.Context, args []string, assets fs.FS, version string, stdou
 			_, _ = fmt.Fprint(stdout, err.Error())
 			return nil
 		}
+
 		_, _ = fmt.Fprintln(stderr, err)
 		return err
 	}
@@ -35,6 +36,7 @@ func Run(ctx context.Context, args []string, assets fs.FS, version string, stdou
 		"event", "app_starting",
 		"version", version,
 	)
+
 	if len(flags.Overrides) > 0 {
 		setupLogger.Info(
 			"CLI Overrides",

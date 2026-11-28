@@ -15,11 +15,13 @@ func Notifications(api API, pages *Pages) http.HandlerFunc {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid notification page.")
 			return
 		}
+
 		result, err := api.ListNotifications(r.Context(), before)
 		if err != nil {
 			pages.fail(r, w, currentUser(r), err)
 			return
 		}
+
 		var notice string
 		if values.Get("notice") == "retry-queued" {
 			notice = "Notification retry queued. Delivery has not yet been acknowledged."
@@ -44,16 +46,19 @@ func NotificationAttempts(api API, pages *Pages) http.HandlerFunc {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid notification ID.")
 			return
 		}
+
 		values, before, err := parseCursorQuery(r.URL.RawQuery, "before-number")
 		if err != nil {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid attempt page.")
 			return
 		}
+
 		result, err := api.NotificationAttempts(r.Context(), id, before)
 		if err != nil {
 			pages.fail(r, w, currentUser(r), err)
 			return
 		}
+
 		path := "/notifications/" + strconv.FormatInt(id, 10) + "/attempts"
 		pages.render(r, w, http.StatusOK, pageData{
 			Title:                "Notification attempts",
@@ -78,6 +83,7 @@ func RetryNotification(api API, pages *Pages) http.HandlerFunc {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid retry form.")
 			return
 		}
+
 		request := model.NotificationRetryRequest{Actor: currentUser(r).Name}
 		err = pages.auditAction(r, actionNotificationRetry, func() error {
 			return api.RetryNotification(r.Context(), id, request)
@@ -86,6 +92,7 @@ func RetryNotification(api API, pages *Pages) http.HandlerFunc {
 			pages.fail(r, w, currentUser(r), err)
 			return
 		}
+
 		pages.redirect(w, r, "/notifications?notice=retry-queued")
 	}
 }

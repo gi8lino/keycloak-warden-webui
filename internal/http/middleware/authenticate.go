@@ -27,6 +27,7 @@ func Authenticate(identity *auth.Service, logger *slog.Logger, problem func(*htt
 					http.Redirect(w, r, "/setup", http.StatusSeeOther)
 					return
 				}
+
 				http.Redirect(w, r, "/login", http.StatusSeeOther)
 			default:
 				logger.Error("authenticate administrator failed", "event", "authentication_failed", "error", err)

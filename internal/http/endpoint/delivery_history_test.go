@@ -22,43 +22,62 @@ import (
 
 func TestHistoryQueries(t *testing.T) {
 	t.Parallel()
+
 	t.Run("default page", func(t *testing.T) {
 		t.Parallel()
+
 		page, revision, err := parseHistoryQuery("")
 		require.NoError(t, err)
 		assert.Equal(t, 1, page)
 		assert.Zero(t, revision)
 	})
+
 	t.Run("pinned history page", func(t *testing.T) {
 		t.Parallel()
+
 		page, revision, err := parseHistoryQuery("history-page=2&history-through-revision=9")
 		require.NoError(t, err)
 		assert.Equal(t, 2, page)
 		assert.EqualValues(t, 9, revision)
 	})
+
 	t.Run("rejects duplicate selectors", func(t *testing.T) {
 		t.Parallel()
+
 		_, _, err := parseHistoryQuery("history-page=1&history-page=2")
+
 		require.Error(t, err)
 	})
+
 	t.Run("rejects nonpositive page", func(t *testing.T) {
 		t.Parallel()
+
 		_, _, err := parseHistoryQuery("history-page=0")
+
 		require.Error(t, err)
 	})
+
 	t.Run("rejects invalid revision", func(t *testing.T) {
 		t.Parallel()
+
 		_, _, err := parseHistoryQuery("history-through-revision=-1")
+
 		require.Error(t, err)
 	})
+
 	t.Run("rejects overflowing page", func(t *testing.T) {
 		t.Parallel()
+
 		_, _, err := parseHistoryQuery("history-page=99999999999999999999999999")
+
 		require.Error(t, err)
 	})
+
 	t.Run("rejects unknown selectors", func(t *testing.T) {
 		t.Parallel()
+
 		_, _, err := parseHistoryQuery("other=1")
+
 		require.Error(t, err)
 	})
 }
@@ -96,6 +115,7 @@ func TestHistoryNavigation(t *testing.T) {
 
 func TestDeliveryHistoryPage(t *testing.T) {
 	t.Parallel()
+
 	record := model.Record{
 		Decision:          model.Decision{ID: "one", Revision: 9},
 		Deliveries:        []model.Acknowledgement{{Destination: "webhook.receiver", Revision: 8}},
@@ -104,9 +124,12 @@ func TestDeliveryHistoryPage(t *testing.T) {
 	}
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/bans/one", r.URL.Path)
+
 		response := record
+
 		if r.URL.Query().Get("history-page") == "2" {
 			assert.Equal(t, "8", r.URL.Query().Get("history-through-revision"))
+
 			response.HistoryPage = 2
 			response.HistoryNextPage = 3
 			response.DeliveryHistory = []model.Delivery{{
@@ -118,20 +141,28 @@ func TestDeliveryHistoryPage(t *testing.T) {
 				},
 			}}
 		}
+
 		w.Header().Set("Content-Type", "application/json")
+
 		assert.NoError(t, json.NewEncoder(w).Encode(response))
 	}))
 	defer backend.Close()
+
 	api, err := client.New(backend.URL, "secret")
 	require.NoError(t, err)
+
 	pages, err := NewPages(web.Assets, "/ui", appkitauth.ModeLocal, slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "", "test")
 	require.NoError(t, err)
+
 	request := httptest.NewRequest(http.MethodGet, "/ui/bans/one?history-page=2&history-through-revision=8", nil)
 	request.SetPathValue("id", "one")
 	response := httptest.NewRecorder()
 	BanDetails(api, pages)(response, request)
+
 	require.Equal(t, http.StatusOK, response.Code)
+
 	body := response.Body.String()
+
 	assert.Contains(t, body, "retrying")
 	assert.Contains(t, body, `aria-label="Decision summary"`)
 	assert.Contains(t, body, `id="current-deliveries"`)
@@ -181,6 +212,7 @@ func TestDeliveryHistorySnapshots(t *testing.T) {
 
 		backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/bans/one", r.URL.Path)
+
 			w.Header().Set("Content-Type", "application/json")
 
 			if r.URL.Query().Get(historyPageParam) == "2" {
@@ -206,6 +238,7 @@ func TestDeliveryHistorySnapshots(t *testing.T) {
 		BanDetails(api, pages)(response, request)
 
 		require.Equal(t, http.StatusOK, response.Code)
+
 		sections := strings.SplitN(response.Body.String(), `id="delivery-history"`, 2)
 		require.Len(t, sections, 2)
 		assert.Contains(t, sections[0], "203.0.113.11")
@@ -242,6 +275,7 @@ func TestDeliveryHistorySnapshots(t *testing.T) {
 
 		backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/bans/one", r.URL.Path)
+
 			w.Header().Set("Content-Type", "application/json")
 
 			if r.URL.Query().Get(historyPageParam) == "2" {
@@ -267,7 +301,9 @@ func TestDeliveryHistorySnapshots(t *testing.T) {
 		BanDetails(api, pages)(response, request)
 
 		require.Equal(t, http.StatusOK, response.Code)
+
 		body := response.Body.String()
+
 		assert.Contains(t, body, "203.0.113.9")
 		assert.NotContains(t, body, "203.0.113.10")
 		assert.Contains(t, body, "Revision 8")
@@ -291,7 +327,9 @@ func TestDeliveryHistoryWithoutAcknowledgements(t *testing.T) {
 
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/bans/one", r.URL.Path)
+
 		w.Header().Set("Content-Type", "application/json")
+
 		assert.NoError(t, json.NewEncoder(w).Encode(record))
 	}))
 	t.Cleanup(backend.Close)
@@ -309,6 +347,7 @@ func TestDeliveryHistoryWithoutAcknowledgements(t *testing.T) {
 	BanDetails(api, pages)(response, request)
 
 	require.Equal(t, http.StatusOK, response.Code)
+
 	sections := strings.SplitN(response.Body.String(), `id="delivery-history"`, 2)
 	require.Len(t, sections, 2)
 	assert.Contains(t, sections[0], "webhook.retrying")
@@ -321,32 +360,45 @@ func TestDeliveryHistoryWithoutAcknowledgements(t *testing.T) {
 
 func TestLatestDeliveryStatus(t *testing.T) {
 	t.Parallel()
+
 	t.Run("older history cannot describe current status", func(t *testing.T) {
 		t.Parallel()
+
 		status := deliveryStatus(model.Acknowledgement{Destination: "a", Revision: 1}, 2,
 			[]model.Delivery{{Destination: "a", Revision: 1, Status: model.DeliveryDelivered}})
+
 		assert.False(t, status.Known)
 		assert.Empty(t, status.Status)
 	})
+
 	t.Run("current acknowledgement confirms delivery", func(t *testing.T) {
 		t.Parallel()
+
 		status := deliveryStatus(model.Acknowledgement{Revision: 2}, 2, nil)
+
 		assert.True(t, status.Known)
 		assert.Equal(t, model.DeliveryDelivered, status.Status)
 	})
+
 	t.Run("current history preserves its enum", func(t *testing.T) {
 		t.Parallel()
+
 		status := deliveryStatus(model.Acknowledgement{Destination: "a", Revision: 1}, 2,
 			[]model.Delivery{{Destination: "a", Revision: 2, Status: model.DeliveryRetrying}})
+
 		assert.True(t, status.Known)
 		assert.Equal(t, model.DeliveryRetrying, status.Status)
 	})
+
 	t.Run("unknown backend status is not treated as known", func(t *testing.T) {
 		t.Parallel()
+
 		status := deliveryStatus(model.Acknowledgement{Destination: "a"}, 2,
 			[]model.Delivery{{Destination: "a", Revision: 2, Status: model.DeliveryStatus("future")}})
+
 		assert.False(t, status.Known)
 	})
+
 	t.Run("missing acknowledgement does not imply delivered revision zero", func(t *testing.T) {
 		t.Parallel()
 
@@ -357,7 +409,9 @@ func TestLatestDeliveryStatus(t *testing.T) {
 
 	t.Run("reversing attempts preserves API data", func(t *testing.T) {
 		t.Parallel()
+
 		attempts := []model.DeliveryAttempt{{Number: 1}, {Number: 2}}
+
 		assert.EqualValues(t, 2, newestAttempts(attempts)[0].Number)
 		assert.EqualValues(t, 1, attempts[0].Number)
 	})
@@ -484,12 +538,15 @@ func (missingHistoryAPI) GetPageThroughRevision(context.Context, string, int, in
 
 func TestHistoryFailure(t *testing.T) {
 	t.Parallel()
+
 	pages, err := NewPages(web.Assets, "", appkitauth.ModeLocal, slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "", "test")
 	require.NoError(t, err)
+
 	request := httptest.NewRequest(http.MethodGet, "/bans/one?history-page=2", nil)
 	request.SetPathValue("id", "one")
 	response := httptest.NewRecorder()
 	BanDetails(missingHistoryAPI{}, pages)(response, request)
+
 	assert.Equal(t, http.StatusServiceUnavailable, response.Code)
 	assert.Contains(t, response.Body.String(), "currently unavailable")
 	assert.NotContains(t, response.Body.String(), "private failure")

@@ -60,6 +60,7 @@ func parseOverviewQuery(raw string, allowed ...string) (url.Values, int, error) 
 			if err != nil || page < 1 {
 				return nil, 0, errors.New("invalid page")
 			}
+
 			continue
 		}
 
@@ -68,6 +69,7 @@ func parseOverviewQuery(raw string, allowed ...string) (url.Values, int, error) 
 		}
 
 	}
+
 	return values, page, nil
 }
 
@@ -88,10 +90,13 @@ func overviewLinks(prefix, path string, page, next int, filters url.Values, thro
 				query[key] = values
 			}
 		}
+
 		query.Set(overviewPageParam, strconv.Itoa(p))
+
 		if pinned && through > 0 && path == "/ban-history" {
 			query.Set(overviewThroughParam, strconv.FormatInt(through, 10))
 		}
+
 		return prefix + path + "?" + query.Encode()
 	}
 
@@ -124,6 +129,7 @@ func BanHistory(api API, pages *Pages) http.HandlerFunc {
 				pages.Problem(r, w, http.StatusBadRequest, "Invalid IP address filter.")
 				return
 			}
+
 			ip = address.Unmap().String()
 		}
 
@@ -198,10 +204,12 @@ func Deliveries(api API, pages *Pages) http.HandlerFunc {
 		if healthErr != nil {
 			pages.logger.Warn("delivery health unavailable", "error", healthErr)
 		}
+
 		notice := ""
 		if r.URL.Query().Get("notice") == "retry-queued" {
 			notice = "Delivery retry queued. Refresh to check its outcome."
 		}
+
 		pages.render(r, w, http.StatusOK, pageData{
 			DeliveryHealth:    health,
 			HealthUnavailable: healthErr != nil,

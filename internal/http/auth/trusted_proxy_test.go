@@ -19,6 +19,7 @@ func proxyService(t *testing.T) *Service {
 	mode := appkitauth.ModeProxy
 	store := authStore(t)
 	require.NoError(t, store.CreateFounder(t.Context(), "local-admin", "hash", &accounts.IdentityLink{Issuer: proxyIssuer, Subject: "operator"}))
+
 	service, err := New(t.Context(), Config{
 		Mode:       mode,
 		Proxy:      testProxyConfig(),
@@ -44,8 +45,10 @@ func TestTrustedProxy(t *testing.T) {
 		user, err := service.Authenticate(request)
 		require.NoError(t, err)
 		assert.Equal(t, "local-admin", user.Name)
+
 		request.Header.Set("X-Forwarded-User", "local-admin")
 		_, err = service.Authenticate(request)
+
 		require.ErrorIs(t, err, appkitauth.ErrForbidden)
 	})
 
@@ -59,6 +62,7 @@ func TestTrustedProxy(t *testing.T) {
 		request.Header.Set("X-Forwarded-Groups", "warden-admins")
 
 		_, err := service.Authenticate(request)
+
 		require.ErrorIs(t, err, appkitauth.ErrUnauthenticated)
 	})
 
@@ -72,6 +76,7 @@ func TestTrustedProxy(t *testing.T) {
 		request.Header.Set("X-Forwarded-Groups", "warden-admins-extra")
 
 		_, err := service.Authenticate(request)
+
 		require.ErrorIs(t, err, appkitauth.ErrForbidden)
 	})
 
@@ -100,6 +105,7 @@ func TestTrustedProxy(t *testing.T) {
 
 func TestExternalSetup(t *testing.T) {
 	t.Parallel()
+
 	store := authStore(t)
 	mode := appkitauth.ModeProxy
 	service, err := New(t.Context(), Config{
@@ -108,10 +114,12 @@ func TestExternalSetup(t *testing.T) {
 		AdminGroup: "admins", SetupToken: testSetupToken, SetupSubject: "external-owner",
 	}, store)
 	require.NoError(t, err)
+
 	request := httptest.NewRequest(http.MethodPost, "/setup", nil)
 	response := httptest.NewRecorder()
 	require.NoError(t, service.SetupLocal(response, request, testSetupToken, "owner", "correct-password"))
 	assert.Empty(t, response.Result().Cookies())
+
 	request.RemoteAddr = "127.0.0.1:1234"
 	request.Header.Set("X-Forwarded-User", "external-owner")
 	request.Header.Set("X-Forwarded-Groups", "admins")
@@ -120,52 +128,69 @@ func TestExternalSetup(t *testing.T) {
 	assert.Equal(t, "owner", actor.Name)
 	require.NoError(t, service.CreateLocalUser(t.Context(), actor, "second", "correct-password"))
 	require.ErrorIs(t, service.UpdateIdentity(t.Context(), actor, "second", "external-second", true), ErrAccountUnavailable)
+
 	request.Header.Set("X-Forwarded-User", "external-second")
 	_, err = service.Authenticate(request)
+
 	require.ErrorIs(t, err, appkitauth.ErrForbidden)
+
 	pending, err := service.PendingIdentities(t.Context())
 	require.NoError(t, err)
 	assert.Equal(t, []string{"external-second"}, pending)
 	require.NoError(t, service.UpdateIdentity(t.Context(), actor, "second", "external-second", true))
+
 	pending, err = service.PendingIdentities(t.Context())
 	require.NoError(t, err)
 	assert.Empty(t, pending)
+
 	second, err := service.Authenticate(request)
 	require.NoError(t, err)
 	assert.Equal(t, "second", second.Name)
 	require.NoError(t, service.SetLocalAccess(t.Context(), actor, "second", false))
+
 	_, err = service.Authenticate(request)
+
 	require.ErrorIs(t, err, appkitauth.ErrForbidden)
 }
 
 func TestRecoveryDuringOIDCOutage(t *testing.T) {
 	t.Parallel()
+
 	cfg := localConfig()
 	store := authStore(t)
 	localService, err := New(t.Context(), cfg, store)
 	require.NoError(t, err)
+
 	request := httptest.NewRequest(http.MethodPost, "/auth/local", nil)
 	require.NoError(t, localService.SetupLocal(httptest.NewRecorder(), request, testSetupToken, "owner", "correct-password"))
+
 	mode := appkitauth.ModeOIDC
 	cfg.Mode = mode
 	cfg.LocalLogin = true
 	cfg.OIDC.Issuer = "http://127.0.0.1:1"
 	service, err := New(t.Context(), cfg, store)
 	require.NoError(t, err)
+
 	response := httptest.NewRecorder()
 	require.NoError(t, service.SignInLocal(response, request, "owner", "correct-password"))
+
 	request.AddCookie(response.Result().Cookies()[0])
 	user, err := service.Authenticate(request)
 	require.NoError(t, err)
 	assert.True(t, user.Local)
+
 	_, err = service.resolveExternal(t.Context(), cfg.OIDC.Issuer, "provider-subject")
+
 	require.ErrorIs(t, err, appkitauth.ErrForbidden)
 	require.NoError(t, service.UpdateIdentity(t.Context(), user, "owner", "provider-subject", true))
+
 	links, err := service.IdentityLinks(t.Context())
 	require.NoError(t, err)
 	require.Len(t, links, 1)
 	assert.Equal(t, cfg.OIDC.Issuer, links[0].Issuer)
+
 	service.recovery = false
 	_, err = service.Authenticate(request)
+
 	require.ErrorIs(t, err, appkitauth.ErrUnauthenticated)
 }

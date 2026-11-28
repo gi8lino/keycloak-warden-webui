@@ -18,6 +18,7 @@ func (s *Store) initializeUsers(ctx context.Context) error {
 		return err
 	}
 	defer tx.Rollback() // nolint:errcheck
+
 	if _, err = tx.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS local_users (
 		    id INTEGER PRIMARY KEY,
@@ -28,6 +29,7 @@ func (s *Store) initializeUsers(ctx context.Context) error {
 	`); err != nil {
 		return err
 	}
+
 	var legacy bool
 	if err = tx.QueryRowContext(ctx, `
 		SELECT EXISTS (
@@ -91,6 +93,7 @@ func (s *Store) initializeUsers(ctx context.Context) error {
 	`); err != nil {
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -112,6 +115,7 @@ func (s *Store) LocalUsers(ctx context.Context) ([]accounts.LocalUser, error) {
 		if err := rows.Scan(&u.Username, &u.Enabled, &u.Founder); err != nil {
 			return nil, err
 		}
+
 		users = append(users, u)
 	}
 
@@ -188,5 +192,6 @@ func revokeUserSessions(ctx context.Context, tx *sql.Tx, name string) error {
 		WHERE is_local = 1
 		  AND username = ?
 	`, name)
+
 	return err
 }

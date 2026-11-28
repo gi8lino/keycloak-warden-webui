@@ -45,6 +45,7 @@ func New(ctx context.Context, cfg Config, repository *db.Store) (*Service, error
 				return nil, err
 			}
 		}
+
 		service.issuer = cfg.OIDC.Issuer
 
 	case appkitauth.ModeProxy:
@@ -52,6 +53,7 @@ func New(ctx context.Context, cfg Config, repository *db.Store) (*Service, error
 		if err != nil {
 			return nil, err
 		}
+
 		service.proxy = authenticator
 		service.issuer = proxyIssuer
 
@@ -61,11 +63,14 @@ func New(ctx context.Context, cfg Config, repository *db.Store) (*Service, error
 	default:
 		return nil, fmt.Errorf("unsupported authentication mode: %s", service.mode)
 	}
+
 	required, err := repository.SetupRequired(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("check initial administrator: %w", err)
 	}
+
 	service.setupRequired.Store(required)
+
 	if required && len(cfg.SetupToken) < 32 {
 		return nil, errors.New("setup-token must be at least 32 characters until the initial administrator is created")
 	}
@@ -73,6 +78,7 @@ func New(ctx context.Context, cfg Config, repository *db.Store) (*Service, error
 	if required && service.needsSetupIdentity() {
 		return nil, errors.New("initial external setup requires --setup-subject or --local-login")
 	}
+
 	return service, nil
 }
 

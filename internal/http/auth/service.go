@@ -66,6 +66,7 @@ func (s *Service) Authenticate(r *http.Request) (User, error) {
 	if s.proxy != nil {
 		provider.Primary = s.proxy
 	}
+
 	return provider.Authenticate(r)
 }
 

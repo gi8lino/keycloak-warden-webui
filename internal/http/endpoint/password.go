@@ -57,6 +57,7 @@ func ChangePassword(identity *auth.Service, pages *Pages) http.HandlerFunc {
 				passwordError(r, w, pages, user, "New password must contain 12–72 bytes.")
 				return
 			}
+
 			pages.failure(r, w, err, "Unable to update the password.")
 			return
 		}
@@ -68,9 +69,11 @@ func ChangePassword(identity *auth.Service, pages *Pages) http.HandlerFunc {
 		}
 
 		destination := "/login?changed=1"
+
 		if identity.Mode() != appkitauth.ModeLocal {
 			destination = "/auth/local?changed=1"
 		}
+
 		pages.redirect(w, r, destination)
 	}
 }

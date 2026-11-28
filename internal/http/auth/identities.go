@@ -18,6 +18,7 @@ func (s *Service) resolveExternal(ctx context.Context, issuer, subject string) (
 		Resolve:         s.lookupAdministrator,
 		IsAdministrator: func(u User) bool { return u.Name != "" },
 	}
+
 	return accounts.Login(
 		ctx,
 		provisioning.AccessPolicy{
@@ -38,11 +39,13 @@ func (s *Service) lookupAdministrator(ctx context.Context, id provisioning.Ident
 		if err := s.repository.RecordPendingIdentity(ctx, issuer, subject); err != nil {
 			return User{}, err
 		}
+
 		return User{}, appkitauth.ErrForbidden
 	}
 	if err != nil {
 		return User{}, err
 	}
+
 	return User{Name: name, Issuer: issuer, Subject: subject}, nil
 }
 
@@ -51,6 +54,7 @@ func (s *Service) IdentityLinks(ctx context.Context) ([]accounts.IdentityLink, e
 	if s.issuer == "" {
 		return nil, nil
 	}
+
 	return s.repository.IdentityLinks(ctx, s.issuer)
 }
 
@@ -59,6 +63,7 @@ func (s *Service) PendingIdentities(ctx context.Context) ([]string, error) {
 	if s.issuer == "" {
 		return nil, nil
 	}
+
 	return s.repository.PendingIdentities(ctx, s.issuer)
 }
 
@@ -67,6 +72,7 @@ func (s *Service) UpdateIdentity(ctx context.Context, actor User, name, subject 
 	if !s.canUpdateIdentity(actor, subject) {
 		return ErrInvalidLocalInput
 	}
+
 	link := accounts.IdentityLink{Username: name, Issuer: s.issuer, Subject: subject}
 	if add {
 		return accountOperationError(s.repository.ApproveIdentity(ctx, link))
@@ -74,6 +80,7 @@ func (s *Service) UpdateIdentity(ctx context.Context, actor User, name, subject 
 	if actor.Issuer == s.issuer && actor.Subject == subject {
 		return ErrAccountUnavailable
 	}
+
 	return accountOperationError(s.repository.UnlinkIdentity(ctx, link))
 }
 

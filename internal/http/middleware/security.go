@@ -22,6 +22,7 @@ func SecurityHeaders() httpkitmiddleware.Middleware {
 // A missing or malformed Origin and Referer fails closed.
 func RejectCrossSiteWrites(publicURL string) httpkitmiddleware.Middleware {
 	expected, _ := url.Parse(publicURL)
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if isReadOnlyMethod(r.Method) {
@@ -33,6 +34,7 @@ func RejectCrossSiteWrites(publicURL string) httpkitmiddleware.Middleware {
 				http.Error(w, "Cross-origin form submission denied.", http.StatusForbidden)
 				return
 			}
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -48,9 +50,11 @@ func requestOrigin(r *http.Request) string {
 	if origin := r.Header.Get("Origin"); origin != "" {
 		return origin
 	}
+
 	referer, err := url.Parse(r.Header.Get("Referer"))
 	if err != nil || referer.User != nil {
 		return ""
 	}
+
 	return referer.Scheme + "://" + referer.Host
 }

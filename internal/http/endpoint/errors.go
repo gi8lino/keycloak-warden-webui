@@ -41,6 +41,7 @@ func upstreamErrorStatus(err error) int {
 	if backendTimedOut(err) {
 		return http.StatusGatewayTimeout
 	}
+
 	return http.StatusBadGateway
 }
 

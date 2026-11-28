@@ -33,6 +33,7 @@ func NewInfrastructure(ctx context.Context, cfg cli.Flags) (*Infrastructure, err
 	if cfg.AllowInsecureWardenHTTP {
 		options = append(options, client.WithAllowInsecureHTTP())
 	}
+
 	warden, err := client.New(cfg.WardenURL, cfg.WardenToken, options...)
 	if err != nil {
 		_ = store.Close()

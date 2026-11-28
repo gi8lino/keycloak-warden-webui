@@ -24,9 +24,11 @@ func registerAdminRoutes(mux *http.ServeMux, config Config) {
 	// Only fresh installations need a dashboard setup gate. Initialized
 	// installations use the protected route without an extra state check.
 	dashboard := protected(endpoint.Dashboard(config.Warden, config.Pages))
+
 	if config.Identity.SetupRequired() {
 		dashboard = middleware.RedirectToSetup(config.Identity)(dashboard)
 	}
+
 	mux.Handle("GET /{$}", dashboard)
 
 	mux.Handle("GET /ban-history", protected(endpoint.BanHistory(config.Warden, config.Pages)))

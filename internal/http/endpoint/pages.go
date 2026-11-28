@@ -195,6 +195,7 @@ func validID(id string) bool {
 	if id == "" || id == "." || id == ".." || len(id) > 128 {
 		return false
 	}
+
 	return !strings.ContainsAny(id, "/%?#\\")
 }
 
@@ -209,8 +210,10 @@ func formatTime(value any) string {
 			timestamp = *v
 		}
 	}
+
 	if timestamp.IsZero() {
 		return "—"
 	}
+
 	return timestamp.UTC().Format("2006-01-02 15:04:05 UTC")
 }

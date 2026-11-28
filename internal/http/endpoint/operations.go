@@ -88,16 +88,19 @@ func DecisionTimeline(api API, pages *Pages) http.HandlerFunc {
 			NotFound(pages)(w, r)
 			return
 		}
+
 		values, page, err := parseOverviewQuery(r.URL.RawQuery)
 		if err != nil {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid timeline page.")
 			return
 		}
+
 		result, err := api.DecisionTimeline(r.Context(), id, page)
 		if err != nil {
 			pages.fail(r, w, currentUser(r), err)
 			return
 		}
+
 		pages.render(r, w, http.StatusOK, pageData{
 			Title:    "Decision timeline",
 			Page:     "timeline",

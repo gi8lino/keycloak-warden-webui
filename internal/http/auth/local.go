@@ -41,6 +41,7 @@ func (s localCredentials) LookupCredential(ctx context.Context, username string)
 	if err != nil {
 		return User{}, "", err
 	}
+
 	return User{Name: username, Local: true}, hash, nil
 }
 
@@ -74,6 +75,7 @@ func (s *Service) SetupLocal(w http.ResponseWriter, r *http.Request, token, user
 			Username: username,
 		}
 	}
+
 	setup := local.Setup[User]{
 		TokenDigest: &s.setupDigest, Validate: validateSetupCredentials,
 		Create: func(ctx context.Context, name, hash string) (User, error) {
@@ -88,6 +90,7 @@ func (s *Service) SetupLocal(w http.ResponseWriter, r *http.Request, token, user
 		// Another concurrent setup already committed the initial administrator.
 		s.setupRequired.Store(false)
 	}
+
 	if err != nil {
 		return err
 	}
@@ -95,6 +98,7 @@ func (s *Service) SetupLocal(w http.ResponseWriter, r *http.Request, token, user
 	// Disable setup as soon as the database commit succeeds, even if the
 	// subsequent session creation fails.
 	s.setupRequired.Store(false)
+
 	if link != nil {
 		return nil
 	}
@@ -103,7 +107,9 @@ func (s *Service) SetupLocal(w http.ResponseWriter, r *http.Request, token, user
 	if err != nil {
 		return err
 	}
+
 	http.SetCookie(w, s.cookies.Cookie(sessionToken, false))
+
 	return nil
 }
 
@@ -112,11 +118,14 @@ func (s *Service) SignInLocal(w http.ResponseWriter, r *http.Request, username, 
 	if !s.LocalLoginEnabled() {
 		return appkitauth.ErrForbidden
 	}
+
 	_, sessionToken, err := s.local.SignIn(r.Context(), username, password)
 	if err != nil {
 		return err
 	}
+
 	http.SetCookie(w, s.cookies.Cookie(sessionToken, false))
+
 	return nil
 }
 
@@ -133,6 +142,7 @@ func (s *Service) ChangeLocalPassword(ctx context.Context, user User, oldPasswor
 	if !validLocalPassword(newPassword) {
 		return ErrInvalidLocalInput
 	}
+
 	hash, err := s.repository.LookupCredential(ctx, user.Name)
 	if errors.Is(err, db.ErrNotFound) {
 		return appkitauth.ErrInvalidCredentials
@@ -143,14 +153,17 @@ func (s *Service) ChangeLocalPassword(ctx context.Context, user User, oldPasswor
 	if err := local.VerifyPassword(hash, oldPassword); err != nil {
 		return appkitauth.ErrInvalidCredentials
 	}
+
 	newHash, err := local.HashPassword(newPassword)
 	if err != nil {
 		return err
 	}
+
 	err = s.repository.ChangePassword(ctx, user.Name, hash, newHash)
 	if errors.Is(err, db.ErrNotFound) {
 		return appkitauth.ErrInvalidCredentials
 	}
+
 	return err
 }
 
@@ -159,6 +172,7 @@ func (s *Service) LocalUsers(ctx context.Context, actor User) ([]accounts.LocalU
 	if actor.Name == "" {
 		return nil, appkitauth.ErrForbidden
 	}
+
 	return s.repository.LocalUsers(ctx)
 }
 
@@ -167,14 +181,17 @@ func (s *Service) CreateLocalUser(ctx context.Context, actor User, name, passwor
 	if actor.Name == "" {
 		return appkitauth.ErrForbidden
 	}
+
 	name = strings.TrimSpace(name)
 	if !validLocalCredentials(name, password) {
 		return ErrInvalidLocalInput
 	}
+
 	hash, err := local.HashPassword(password)
 	if err != nil {
 		return err
 	}
+
 	return accountOperationError(s.repository.CreateLocalUser(ctx, name, hash))
 }
 
@@ -183,6 +200,7 @@ func (s *Service) SetLocalAccess(ctx context.Context, actor User, name string, e
 	if actor.Name == "" {
 		return appkitauth.ErrForbidden
 	}
+
 	return accountOperationError(s.repository.SetLocalAccess(ctx, actor.Name, name, enabled))
 }
 
@@ -196,5 +214,6 @@ func validateSetupCredentials(name, password string) error {
 	if !validLocalCredentials(name, password) {
 		return ErrInvalidLocalInput
 	}
+
 	return nil
 }

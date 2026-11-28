@@ -36,6 +36,7 @@ func SetupLocal(identity *auth.Service, pages *Pages) http.HandlerFunc {
 			})
 			return
 		}
+
 		err := identity.SetupLocal(w, r, r.FormValue("setupToken"), r.FormValue("username"), password)
 		if err == nil {
 			redirectAfterAuthForm(w, r, identity, pages, "/")
@@ -69,6 +70,7 @@ func whileSetupRequired(identity *auth.Service, pages *Pages, next http.HandlerF
 			NotFound(pages)(w, r)
 			return
 		}
+
 		next(w, r)
 	}
 }

@@ -59,13 +59,16 @@ func Open(ctx context.Context, path string) (*Store, error) {
 	if err != nil {
 		return nil, fmt.Errorf("connect database: %w", err)
 	}
+
 	conn.SetMaxOpenConns(1)
 
 	store := &Store{db: conn}
+
 	if err := store.initialize(ctx); err != nil {
 		_ = conn.Close()
 		return nil, err
 	}
+
 	return store, nil
 }
 
@@ -102,5 +105,6 @@ func (s *Store) initialize(ctx context.Context) error {
 			return fmt.Errorf("initialize Web UI database: %w", err)
 		}
 	}
+
 	return s.initializeUsers(ctx)
 }

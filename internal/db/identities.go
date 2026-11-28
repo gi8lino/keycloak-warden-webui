@@ -89,6 +89,7 @@ func (s *Store) IdentityLinks(ctx context.Context, issuer string) ([]accounts.Id
 		if err := rows.Scan(&link.Username, &link.Issuer, &link.Subject); err != nil {
 			return nil, err
 		}
+
 		links = append(links, link)
 	}
 
@@ -131,6 +132,7 @@ func (s *Store) PendingIdentities(ctx context.Context, issuer string) ([]string,
 		if err := rows.Scan(&subject); err != nil {
 			return nil, err
 		}
+
 		subjects = append(subjects, subject)
 	}
 

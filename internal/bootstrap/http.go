@@ -31,6 +31,7 @@ func NewHTTPConfig(
 	if err != nil {
 		return server.Config{}, fmt.Errorf("parse UI templates: %w", err)
 	}
+
 	static, err := fs.Sub(assets, "static")
 	if err != nil {
 		return server.Config{}, fmt.Errorf("configure static files: %w", err)

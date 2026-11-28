@@ -16,6 +16,7 @@ func TestAuthenticationConfig(t *testing.T) {
 
 	t.Run("local mode does not require proxy configuration", func(t *testing.T) {
 		t.Parallel()
+
 		cfg, err := authenticationConfig(cli.Flags{SetupToken: "bootstrap", SetupSubject: "owner"})
 		require.NoError(t, err)
 		assert.Equal(t, appkitauth.ModeLocal, cfg.Mode)
@@ -25,6 +26,7 @@ func TestAuthenticationConfig(t *testing.T) {
 
 	t.Run("proxy mode preserves explicit header overrides", func(t *testing.T) {
 		t.Parallel()
+
 		flags, err := cli.Parse([]string{
 			"--auth-mode=proxy",
 			"--trusted-proxy-cidrs=127.0.0.1/32",
@@ -32,6 +34,7 @@ func TestAuthenticationConfig(t *testing.T) {
 			"--trusted-group-headers=X-Verified-Groups",
 		}, "test")
 		require.NoError(t, err)
+
 		cfg, err := authenticationConfig(flags)
 		require.NoError(t, err)
 		assert.Equal(t, []string{"127.0.0.1/32"}, cfg.Proxy.TrustedCIDRs)
@@ -42,10 +45,13 @@ func TestAuthenticationConfig(t *testing.T) {
 
 	t.Run("proxy mode rejects missing trust boundary", func(t *testing.T) {
 		t.Parallel()
+
 		mode := appkitauth.ModeProxy
 		flags := cli.Flags{}
 		flags.Authentication.ModeOverride = &mode
+
 		_, err := authenticationConfig(flags)
+
 		require.Error(t, err)
 	})
 }
