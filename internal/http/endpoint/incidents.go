@@ -17,7 +17,7 @@ func Incidents(api API, pages *Pages) http.HandlerFunc {
 			return
 		}
 		rule, kind := values.Get("rule"), values.Get("kind")
-		if len(rule) > 64 || strings.ContainsFunc(rule, func(r rune) bool { return unicode.IsSpace(r) || unicode.IsControl(r) }) || (kind != "" && kind != "user" && kind != "admin") {
+		if !validIncidentRuleFilter(rule) || !validIncidentKindFilter(kind) {
 			pages.Problem(r, w, http.StatusBadRequest, "Invalid incident filters.")
 			return
 		}
@@ -42,5 +42,25 @@ func Incidents(api API, pages *Pages) http.HandlerFunc {
 			IncidentFilter: filter,
 			Cursor:         cursorLinks(pages.prefix, "/incidents", "before-id", result.NextBeforeID, values),
 		})
+	}
+}
+
+// validIncidentRuleFilter accepts an optional bounded rule name without whitespace or controls.
+func validIncidentRuleFilter(rule string) bool {
+	if len(rule) > 64 {
+		return false
+	}
+	return !strings.ContainsFunc(rule, func(r rune) bool {
+		return unicode.IsSpace(r) || unicode.IsControl(r)
+	})
+}
+
+// validIncidentKindFilter accepts the event categories exposed by the incidents API.
+func validIncidentKindFilter(kind string) bool {
+	switch kind {
+	case "", "user", "admin":
+		return true
+	default:
+		return false
 	}
 }
